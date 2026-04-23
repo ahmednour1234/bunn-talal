@@ -101,8 +101,29 @@
                     @error('logo') <p class="text-red-500 text-xs mt-2">{{ $message }}</p> @enderror
 
                     <div wire:loading wire:target="logo" class="mt-3 text-center">
-                        <span class="text-xs text-primary-700 animate-pulse">جاري رفع الصورة...</span>
+                        <span class="text-xs text-primary-700 animate-pulse">جاري تحميل الصورة...</span>
                     </div>
+
+                    @if($logoSaved)
+                        <div class="mt-3 flex items-center gap-2 text-green-600 text-xs font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            تم رفع الشعار بنجاح
+                        </div>
+                    @endif
+
+                    {{-- Upload logo button --}}
+                    @if($logo)
+                        <button type="button" wire:click="uploadLogo" wire:loading.attr="disabled"
+                            class="mt-3 w-full py-2.5 px-4 bg-stone-600 hover:bg-stone-700 text-white font-bold rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                            </svg>
+                            <span wire:loading.remove wire:target="uploadLogo">حفظ الشعار</span>
+                            <span wire:loading wire:target="uploadLogo">جاري الحفظ...</span>
+                        </button>
+                    @endif
                 </div>
 
                 {{-- Save button --}}
