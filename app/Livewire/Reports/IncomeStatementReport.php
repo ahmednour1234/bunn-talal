@@ -96,14 +96,14 @@ class IncomeStatementReport extends Component
         // ── Monthly breakdown for chart ───────────────────────────────
         $monthlyRevenue = SaleOrder::whereNotIn('status', ['draft', 'cancelled'])
             ->whereBetween('date', [$from, $to])
-            ->selectRaw("strftime('%Y-%m', date) as month, SUM(total) as total")
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(total) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total', 'month');
 
         $monthlyExpenses = FinancialTransaction::where('type', 'expense')
             ->whereBetween('date', [$from, $to])
-            ->selectRaw("strftime('%Y-%m', date) as month, SUM(amount) as total")
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(amount) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total', 'month');

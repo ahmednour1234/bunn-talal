@@ -161,13 +161,13 @@ class Dashboard extends Component
         // ── Monthly Revenue vs Expenses (last 6 months) ──────────────
         $revenueByMonth = FinancialTransaction::where('type', 'revenue')
             ->where('date', '>=', now()->subMonths(5)->startOfMonth())
-            ->selectRaw("strftime('%Y-%m', date) as month, SUM(amount) as total")
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(amount) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
 
         $expenseByMonth = FinancialTransaction::where('type', 'expense')
             ->where('date', '>=', now()->subMonths(5)->startOfMonth())
-            ->selectRaw("strftime('%Y-%m', date) as month, SUM(amount) as total")
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(amount) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
 
