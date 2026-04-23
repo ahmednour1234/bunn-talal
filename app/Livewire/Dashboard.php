@@ -66,13 +66,13 @@ class Dashboard extends Component
 
         $salesByMonth = SaleOrder::whereNotIn('status', ['cancelled'])
             ->where('date', '>=', now()->subMonths(5)->startOfMonth())
-            ->selectRaw("strftime('%Y-%m', date) as month, SUM(total) as total")
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(total) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
 
         $purchasesByMonth = PurchaseInvoice::whereNotIn('status', ['cancelled'])
             ->where('date', '>=', now()->subMonths(5)->startOfMonth())
-            ->selectRaw("strftime('%Y-%m', date) as month, SUM(total) as total")
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(total) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
 
