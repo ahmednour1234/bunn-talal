@@ -1,0 +1,256 @@
+name: Collections
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/delegate/trips/{trip}/collections'
+    metadata:
+      custom: []
+      groupName: Collections
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Collections'
+      description: 'Returns all collections recorded during a specific trip.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      trip:
+        custom: []
+        name: trip
+        description: 'The trip ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      trip: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": true, "message": "تم جلب التحصيلات بنجاح",
+            "data": [{"id": 1, "collection_number": "COL-001", "total_amount": 300, "status": "confirmed"}],
+            "code": 200
+          }
+        headers: []
+        description: Success
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/delegate/trips/{trip}/collections'
+    metadata:
+      custom: []
+      groupName: Collections
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Create Collection'
+      description: |-
+        Records a cash collection from a customer during a trip.
+        Each item can be linked to a specific sale order. The sale order's `paid_amount` is updated automatically.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      trip:
+        custom: []
+        name: trip
+        description: 'The trip ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      trip: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'Customer ID.'
+        required: true
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      notes:
+        custom: []
+        name: notes
+        description: 'nullable General notes.'
+        required: false
+        example: 'تحصيل جزئي'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      items:
+        custom: []
+        name: items
+        description: 'List of collection items.'
+        required: true
+        example:
+          - architecto
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'items[].sale_order_id':
+        custom: []
+        name: 'items[].sale_order_id'
+        description: 'nullable The sale order this payment is for.'
+        required: false
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      'items[].amount':
+        custom: []
+        name: 'items[].amount'
+        description: 'Amount collected.'
+        required: true
+        example: 300.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'items[].notes':
+        custom: []
+        name: 'items[].notes'
+        description: 'nullable Per-item notes.'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      customer_id: 3
+      notes: 'تحصيل جزئي'
+      items:
+        - architecto
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "status": true, "message": "تم تسجيل التحصيل بنجاح",
+            "data": {"id": 1, "collection_number": "COL-001", "total_amount": 300},
+            "code": 201
+          }
+        headers: []
+        description: Created
+      -
+        custom: []
+        status: 400
+        content: '{"status": false, "message": "لا يمكن إنشاء تحصيل لهذه الرحلة في وضعها الحالي", "data": null, "code": 400}'
+        headers: []
+        description: 'Invalid trip status'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/delegate/collections/{collection}'
+    metadata:
+      custom: []
+      groupName: Collections
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Collection'
+      description: 'Returns detailed information about a single collection record.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      collection:
+        custom: []
+        name: collection
+        description: 'The collection ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      collection: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": true, "message": "تم جلب تفاصيل التحصيل بنجاح",
+            "data": {"id": 1, "collection_number": "COL-001", "items": []},
+            "code": 200
+          }
+        headers: []
+        description: Success
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

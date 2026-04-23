@@ -1,0 +1,362 @@
+name: 'Reference Data'
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/delegate/units
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Measurement Units'
+      description: 'Returns all active measurement units. Useful when building sale order items.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": true,
+            "message": "تم جلب وحدات القياس بنجاح",
+            "data": [{
+              "id": 1, "name": "كيلوغرام", "symbol": "كغ",
+              "type": "weight", "is_base_unit": true,
+              "base_unit_id": null, "conversion_factor": 1
+            }],
+            "code": 200
+          }
+        headers: []
+        description: Success
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/delegate/accounts
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Accounts'
+      description: 'Returns accounts that are visible to delegates (for recording financial transactions).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"status": true, "message": "تم جلب الحسابات بنجاح", "data": [{"id": 1, "name": "الصندوق الرئيسي", "account_number": "101"}], "code": 200}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/delegate/payment-methods
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Payment Methods'
+      description: 'Returns the available payment method keys and their Arabic labels.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": true,
+            "message": "تم جلب طرق الدفع بنجاح",
+            "data": [
+              {"key": "cash", "label": "نقداً"},
+              {"key": "credit", "label": "آجل"},
+              {"key": "partial", "label": "جزئي (دفعة مقدمة)"}
+            ],
+            "code": 200
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/delegate/areas
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Areas'
+      description: 'Returns active regions (areas) assigned to the authenticated delegate.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"status": true, "message": "تم جلب المناطق بنجاح", "data": [{"id": 1, "name": "صنعاء"}], "code": 200}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/delegate/categories
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Categories'
+      description: 'Returns active product categories assigned to the authenticated delegate.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"status": true, "message": "تم جلب الفئات بنجاح", "data": [{"id": 1, "name": "أجهزة", "image": null}], "code": 200}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/delegate/categories/{category_id}/products'
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Products by Category'
+      description: 'Returns active products in a category. The category must be assigned to the delegate.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      category_id:
+        custom: []
+        name: category_id
+        description: 'The ID of the category.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      category:
+        custom: []
+        name: category
+        description: 'The category ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      category_id: 1
+      category: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": true,
+            "message": "تم جلب المنتجات بنجاح",
+            "data": [{
+              "id": 1, "name": "منتج A", "image": null,
+              "selling_price": 100, "discount": 0, "discount_type": "fixed",
+              "net_price": 100, "final_price": 115,
+              "unit": {"id": 1, "name": "كيلو"},
+              "tax": {"id": 1, "name": "ضريبة القيمة المضافة", "rate": 15, "type": "percentage"}
+            }],
+            "code": 200
+          }
+        headers: []
+        description: Success
+      -
+        custom: []
+        status: 403
+        content: '{"status": false, "message": "هذه الفئة غير مخصصة لك", "data": null, "code": 403}'
+        headers: []
+        description: 'Category not assigned'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/delegate/customers
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Customers'
+      description: "Returns active customers in the delegate's assigned areas, including their outstanding balance."
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": true,
+            "message": "تم جلب العملاء بنجاح",
+            "data": [{
+              "id": 1, "name": "عميل 1", "phone": "0501111111",
+              "balance": 500, "classification": "vip",
+              "area": {"id": 1, "name": "صنعاء"}
+            }],
+            "code": 200
+          }
+        headers: []
+        description: Success
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

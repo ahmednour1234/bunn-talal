@@ -1,0 +1,85 @@
+<?php
+
+use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AreaController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BookingRequestController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CollectionController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\DelegateLoanController;
+use App\Http\Controllers\Api\DispatchController;
+use App\Http\Controllers\Api\PaymentMethodController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\SaleOrderController;
+use App\Http\Controllers\Api\SaleReturnController;
+use App\Http\Controllers\Api\TripController;
+use App\Http\Controllers\Api\UnitController;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Delegate API Routes
+|--------------------------------------------------------------------------
+*/
+
+// ── Public — no auth required ──────────────────────────────────────────
+Route::post('/delegate/login', [AuthController::class, 'login']);
+
+// ── Protected — requires valid Sanctum token + active delegate ──────────
+Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
+
+    // Auth
+    Route::post('/delegate/logout', [AuthController::class, 'logout']);
+
+    // Profile
+    Route::get('/delegate/profile', [ProfileController::class, 'show']);
+
+    // Reference / Lookup Data
+    Route::get('/delegate/units',           [UnitController::class, 'index']);
+    Route::get('/delegate/accounts',        [AccountController::class, 'index']);
+    Route::get('/delegate/payment-methods', [PaymentMethodController::class, 'index']);
+    Route::get('/delegate/areas',           [AreaController::class, 'index']);
+    Route::get('/delegate/categories',      [CategoryController::class, 'index']);
+    Route::get('/delegate/categories/{category}/products', [ProductController::class, 'index']);
+    Route::get('/delegate/customers',       [CustomerController::class, 'index']);
+
+    // Loans / Custody
+    Route::get('/delegate/loans', [DelegateLoanController::class, 'index']);
+
+    // ── Trips ────────────────────────────────────────────────────────────
+    Route::get('/delegate/trips',         [TripController::class, 'index']);
+    Route::post('/delegate/trips',        [TripController::class, 'store']);
+    Route::get('/delegate/trips/{trip}',  [TripController::class, 'show']);
+    Route::patch('/delegate/trips/{trip}/start', [TripController::class, 'start']);
+    Route::patch('/delegate/trips/{trip}/end',   [TripController::class, 'end']);
+
+    // ── Booking Requests (within a trip) ─────────────────────────────────
+    Route::get('/delegate/trips/{trip}/booking-requests',  [BookingRequestController::class, 'index']);
+    Route::post('/delegate/trips/{trip}/booking-requests', [BookingRequestController::class, 'store']);
+    Route::get('/delegate/booking-requests/{bookingRequest}',          [BookingRequestController::class, 'show']);
+    Route::patch('/delegate/booking-requests/{bookingRequest}/cancel', [BookingRequestController::class, 'cancel']);
+
+    // ── Inventory Dispatches — View Only ─────────────────────────────────
+    Route::get('/delegate/trips/{trip}/dispatches', [DispatchController::class, 'index']);
+    Route::get('/delegate/dispatches/{dispatch}',   [DispatchController::class, 'show']);
+
+    // ── Sale Orders ───────────────────────────────────────────────────────
+    Route::get('/delegate/trips/{trip}/orders',  [SaleOrderController::class, 'index']);
+    Route::post('/delegate/trips/{trip}/orders', [SaleOrderController::class, 'store']);
+    Route::get('/delegate/orders/{order}',                    [SaleOrderController::class, 'show']);
+    Route::post('/delegate/orders/{order}/payments',          [SaleOrderController::class, 'addPayment']);
+    Route::patch('/delegate/orders/{order}/cancel',           [SaleOrderController::class, 'cancel']);
+
+    // ── Collections (تحصيلات) ────────────────────────────────────────────
+    Route::get('/delegate/trips/{trip}/collections',  [CollectionController::class, 'index']);
+    Route::post('/delegate/trips/{trip}/collections', [CollectionController::class, 'store']);
+    Route::get('/delegate/collections/{collection}',  [CollectionController::class, 'show']);
+
+    // ── Sale Returns ──────────────────────────────────────────────────────
+    Route::get('/delegate/trips/{trip}/returns',  [SaleReturnController::class, 'index']);
+    Route::post('/delegate/trips/{trip}/returns', [SaleReturnController::class, 'store']);
+    Route::get('/delegate/returns/{return}',      [SaleReturnController::class, 'show']);
+});
+

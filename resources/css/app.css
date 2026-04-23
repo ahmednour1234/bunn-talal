@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Tajawal', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-primary-50:  #F7F4F1;
+    --color-primary-100: #F0E8DF;
+    --color-primary-200: #E6C58A;
+    --color-primary-300: #C9A66B;
+    --color-primary-400: #B8916A;
+    --color-primary-500: #8D6E63;
+    --color-primary-600: #8D6E63;
+    --color-primary-700: #6D4C41;
+    --color-primary-800: #4E342E;
+    --color-primary-900: #3E2723;
+
+    --color-surface: #F7F4F1;
+    --color-surface-dark: #EDE5DB;
+    --color-card: #ffffff;
+    --color-sidebar: #6D4C41;
+    --color-sidebar-hover: #4E342E;
+    --color-sidebar-active: #3E2723;
+}
+
+/* Sidebar custom scrollbar */
+.sidebar-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Alpine x-cloak */
+[x-cloak] {
+    display: none !important;
+}
