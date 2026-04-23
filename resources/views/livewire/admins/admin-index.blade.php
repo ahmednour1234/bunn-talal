@@ -20,6 +20,7 @@
     </div>
 
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
         <table class="w-full text-sm text-right table-fixed">
             <colgroup>
                 <col class="w-10">
@@ -89,6 +90,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
     @if($admins->hasPages())<div class="mt-4">{{ $admins->links() }}</div>@endif
 </div>

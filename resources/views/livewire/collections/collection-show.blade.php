@@ -74,6 +74,7 @@
             {{-- Order Items --}}
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                 <h2 class="text-sm font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100">الطلبات المحصّلة</h2>
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm text-right">
                     <thead>
                         <tr class="text-xs font-bold text-white" style="background:#6D4C41">
@@ -104,6 +105,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
 
         </div>

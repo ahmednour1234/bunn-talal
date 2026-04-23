@@ -66,6 +66,7 @@
     {{-- Items --}}
     <div class="bg-card rounded-2xl shadow-sm border border-primary-100 overflow-hidden mb-4">
         <div class="p-4 border-b border-gray-100"><h2 class="text-lg font-semibold text-primary-700">المنتجات</h2></div>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-primary-50/50">
                 <tr>
@@ -90,6 +91,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- Payments --}}
@@ -133,6 +135,7 @@
             </div>
         @endif
 
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-green-50/50">
                 <tr>
@@ -159,6 +162,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- Actions --}}

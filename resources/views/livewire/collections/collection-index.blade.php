@@ -86,6 +86,7 @@
 
     {{-- Table --}}
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
         <table class="w-full table-fixed text-sm text-right">
             <colgroup>
                 <col style="width:5%">
@@ -154,6 +155,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
 
         @if($collections->hasPages())
         <div class="px-4 py-3 border-t border-gray-100">

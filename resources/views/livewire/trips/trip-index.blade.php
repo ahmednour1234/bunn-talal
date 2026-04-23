@@ -46,6 +46,7 @@
 
     {{-- Table --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
         <table class="w-full text-sm text-right">
             <thead>
                 <tr class="bg-primary-700 text-white text-xs">
@@ -118,6 +119,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
         <div class="px-4 py-3 border-t border-gray-50">
             {{ $trips->links() }}
         </div>

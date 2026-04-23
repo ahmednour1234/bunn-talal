@@ -89,6 +89,7 @@
             </button>
         </div>
 
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wide">
@@ -212,6 +213,7 @@
             </tfoot>
             @endif
         </table>
+        </div>
     </div>
 
     {{-- Notes + Submit --}}

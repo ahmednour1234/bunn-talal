@@ -79,6 +79,7 @@
         @if(count($productItems) === 0)
         <p class="text-center text-gray-400 py-10 text-sm">لا توجد أوامر صرف مرتبطة بهذه الرحلة</p>
         @else
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wide">
@@ -158,6 +159,7 @@
                 </tr>
             </tfoot>
         </table>
+        </div>
         @endif
     </div>
 

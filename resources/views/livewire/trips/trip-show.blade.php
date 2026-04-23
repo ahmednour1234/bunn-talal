@@ -360,6 +360,7 @@
                         <h3 class="text-xs font-bold text-gray-700">المنتجات المصروفة مع المندوب</h3>
                         <span class="text-xs text-gray-400">{{ $dispatchedProducts->count() }} منتج</span>
                     </div>
+                    <div class="overflow-x-auto">
                     <table class="w-full text-sm text-right">
                         <thead>
                             <tr class="text-xs text-gray-400 border-b border-gray-100">
@@ -412,6 +413,7 @@
                             </tr>
                         </tfoot>
                     </table>
+                    </div>
                 </div>
                 @endif
 
@@ -423,6 +425,7 @@
             @if($dispatches->isEmpty())
             <p class="text-center text-gray-400 py-10 text-sm">لا توجد أوامر صرف مرتبطة بهذه الرحلة</p>
             @else
+            <div class="overflow-x-auto">
             <table class="w-full text-sm text-right">
                 <thead><tr class="text-xs text-gray-400 border-b border-gray-100">
                     <th class="pb-2 font-semibold">رقم الأمر</th>
@@ -479,6 +482,7 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
             @endif
             @endif
 
@@ -487,6 +491,7 @@
             @if($saleOrders->isEmpty())
             <p class="text-center text-gray-400 py-10 text-sm">لا توجد فواتير بيع مرتبطة</p>
             @else
+            <div class="overflow-x-auto">
             <table class="w-full text-sm text-right">
                 <thead><tr class="text-xs text-gray-400 border-b border-gray-100">
                     <th class="pb-2 font-semibold">رقم الفاتورة</th>
@@ -507,6 +512,7 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
             @endif
             @endif
 
@@ -515,6 +521,7 @@
             @if($collections->isEmpty())
             <p class="text-center text-gray-400 py-10 text-sm">لا توجد تحصيلات مرتبطة</p>
             @else
+            <div class="overflow-x-auto">
             <table class="w-full text-sm text-right">
                 <thead><tr class="text-xs text-gray-400 border-b border-gray-100">
                     <th class="pb-2 font-semibold">رقم التحصيل</th>
@@ -533,6 +540,7 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
             @endif
             @endif
 
@@ -541,6 +549,7 @@
             @if($saleReturns->isEmpty())
             <p class="text-center text-gray-400 py-10 text-sm">لا توجد مرتجعات مرتبطة</p>
             @else
+            <div class="overflow-x-auto">
             <table class="w-full text-sm text-right">
                 <thead><tr class="text-xs text-gray-400 border-b border-gray-100">
                     <th class="pb-2 font-semibold">رقم المرتجع</th>
@@ -559,6 +568,7 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
             @endif
             @endif
 
@@ -574,6 +584,7 @@
             @if($bookingRequests->isEmpty())
             <p class="text-center text-gray-400 py-10 text-sm">لا توجد طلبات حجز</p>
             @else
+            <div class="overflow-x-auto">
             <table class="w-full text-sm text-right">
                 <thead><tr class="text-xs text-gray-400 border-b border-gray-100">
                     <th class="pb-2 font-semibold">المندوب</th>
@@ -677,6 +688,7 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
             @endif
             @endif
 

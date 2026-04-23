@@ -214,6 +214,7 @@
                 <h3 class="text-xs font-bold text-gray-700">أداء المناديب في الرحلات</h3>
                 <a href="{{ route('trips.index') }}" class="text-xs text-primary-600 font-semibold hover:text-primary-800">عرض الكل</a>
             </div>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm text-right">
                 <thead>
                     <tr class="text-xs font-semibold text-gray-400 border-b border-gray-50">
@@ -274,6 +275,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
         @endif
 
