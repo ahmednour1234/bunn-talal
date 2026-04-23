@@ -10,6 +10,7 @@
         <h2 class="text-base lg:text-lg font-bold text-primary-700">{{ $title ?? 'لوحة التحكم' }}</h2>
     </div>
     <div class="flex items-center gap-3 lg:gap-4">
+        <livewire:notification-bell />
         <span class="text-sm text-gray-600">{{ auth('admin')->user()?->name ?? 'مدير' }}</span>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
