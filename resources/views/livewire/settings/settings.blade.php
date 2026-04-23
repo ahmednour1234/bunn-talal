@@ -24,17 +24,28 @@
                     <h2 class="text-base font-bold text-gray-800 mb-5 pb-3 border-b border-gray-100">بيانات الشركة</h2>
 
                     <div class="mb-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">العملة <span class="text-red-500">*</span></label>
+                        <select wire:model="currency"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all">
+                            <option value="">-- اختر العملة --</option>
+                            <option value="ريال يمني">ريال يمني (YER)</option>
+                            <option value="ريال سعودي">ريال سعودي (SAR)</option>
+                            <option value="دولار أمريكي">دولار أمريكي (USD)</option>
+                            <option value="يورو">يورو (EUR)</option>
+                            <option value="درهم إماراتي">درهم إماراتي (AED)</option>
+                            <option value="دينار كويتي">دينار كويتي (KWD)</option>
+                            <option value="دينار أردني">دينار أردني (JOD)</option>
+                            <option value="جنيه مصري">جنيه مصري (EGP)</option>
+                            <option value="ريال قطري">ريال قطري (QAR)</option>
+                        </select>
+                        @error('currency') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="mb-5">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">اسم البرنامج / الشركة <span class="text-red-500">*</span></label>
                         <input wire:model="app_name" type="text" placeholder="أدخل اسم البرنامج..."
                             class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all">
                         @error('app_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div class="mb-5">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">العملة <span class="text-red-500">*</span></label>
-                        <input wire:model="currency" type="text" placeholder="مثال: ريال، دولار، YER..."
-                            class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all">
-                        @error('currency') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-5">

@@ -14,7 +14,7 @@ class AppSettings extends Component
     #[Validate('required|string|max:100')]
     public string $app_name = '';
 
-    #[Validate('required|string|max:20')]
+    #[Validate('required|string|in:ريال يمني,ريال سعودي,دولار أمريكي,يورو,درهم إماراتي,دينار كويتي,دينار أردني,جنيه مصري,ريال قطري')]
     public string $currency = '';
 
     #[Validate('nullable|string|max:50')]
