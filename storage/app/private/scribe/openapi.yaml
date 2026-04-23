@@ -1,0 +1,2541 @@
+openapi: 3.0.3
+info:
+  title: 'Delegate Mobile API'
+  description: 'REST API for the sales delegate mobile application. All endpoints return JSON.'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost'
+tags:
+  -
+    name: Authentication
+    description: ''
+  -
+    name: 'Booking Requests'
+    description: ''
+  -
+    name: Collections
+    description: ''
+  -
+    name: 'Inventory Dispatches'
+    description: ''
+  -
+    name: 'Loans & Custody'
+    description: ''
+  -
+    name: Profile
+    description: ''
+  -
+    name: 'Reference Data'
+    description: ''
+  -
+    name: 'Sale Orders'
+    description: ''
+  -
+    name: 'Sale Returns'
+    description: ''
+  -
+    name: Trips
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'You can retrieve your token by visiting your dashboard and clicking <b>Generate API token</b>.'
+security:
+  -
+    default: []
+paths:
+  /api/delegate/login:
+    post:
+      summary: Login
+      operationId: login
+      description: 'Authenticate a delegate and receive a Bearer token.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم تسجيل الدخول بنجاح'
+                  data:
+                    token: 1|abc123...
+                    delegate:
+                      id: 1
+                      name: أحمد
+                      email: ahmed@example.com
+                      phone: '0501234567'
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم تسجيل الدخول بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: 1|abc123...
+                      delegate:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: أحمد
+                          email:
+                            type: string
+                            example: ahmed@example.com
+                          phone:
+                            type: string
+                            example: '0501234567'
+                  code:
+                    type: integer
+                    example: 200
+        401:
+          description: 'Wrong credentials'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة'
+                  data: null
+                  code: 401
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'البريد الإلكتروني أو كلمة المرور غير صحيحة'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 401
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: "The delegate's email address."
+                  example: ahmed@example.com
+                password:
+                  type: string
+                  description: "The delegate's password."
+                  example: secret123
+              required:
+                - email
+                - password
+      security: []
+  /api/delegate/logout:
+    post:
+      summary: Logout
+      operationId: logout
+      description: 'Revoke the current access token.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم تسجيل الخروج بنجاح'
+                  data: null
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم تسجيل الخروج بنجاح'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - Authentication
+  '/api/delegate/trips/{trip}/booking-requests':
+    get:
+      summary: 'List Booking Requests'
+      operationId: listBookingRequests
+      description: 'Returns booking requests for a specific trip.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب طلبات الحجز بنجاح'
+                  data:
+                    -
+                      id: 1
+                      customer_name: 'عميل A'
+                      status: pending
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب طلبات الحجز بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        customer_name: 'عميل A'
+                        status: pending
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        customer_name:
+                          type: string
+                          example: 'عميل A'
+                        status:
+                          type: string
+                          example: pending
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Booking Requests'
+    post:
+      summary: 'Create Booking Request'
+      operationId: createBookingRequest
+      description: "Creates a booking request (potential future sale) during an active trip.\nStatus flow: `pending` → `confirmed` → `converted` (to sale order) or `cancelled`."
+      parameters: []
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم إنشاء طلب الحجز بنجاح'
+                  data:
+                    id: 1
+                    customer_name: 'عميل جديد'
+                    status: pending
+                  code: 201
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم إنشاء طلب الحجز بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      customer_name:
+                        type: string
+                        example: 'عميل جديد'
+                      status:
+                        type: string
+                        example: pending
+                  code:
+                    type: integer
+                    example: 201
+        400:
+          description: 'Trip not active'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'لا يمكن إنشاء طلب حجز لرحلة غير نشطة'
+                  data: null
+                  code: 400
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'لا يمكن إنشاء طلب حجز لرحلة غير نشطة'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 400
+      tags:
+        - 'Booking Requests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_name:
+                  type: string
+                  description: 'Customer name.'
+                  example: 'عميل جديد'
+                customer_phone:
+                  type: string
+                  description: 'nullable Customer phone.'
+                  example: '0501234567'
+                  nullable: true
+                customer_address:
+                  type: string
+                  description: 'nullable Customer address.'
+                  example: 'شارع الجامعة'
+                  nullable: true
+                notes:
+                  type: string
+                  description: 'nullable Notes.'
+                  example: 'يريد تسليم مساء'
+                  nullable: true
+                items:
+                  type: array
+                  description: 'List of products to book.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+              required:
+                - customer_name
+                - items
+    parameters:
+      -
+        in: path
+        name: trip
+        description: 'The trip ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/booking-requests/{bookingRequest}':
+    get:
+      summary: 'Get Booking Request'
+      operationId: getBookingRequest
+      description: 'Returns a single booking request with its items and linked sale order (if converted).'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب تفاصيل طلب الحجز بنجاح'
+                  data:
+                    id: 1
+                    status: pending
+                    items: []
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب تفاصيل طلب الحجز بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: pending
+                      items:
+                        type: array
+                        example: []
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Booking Requests'
+    parameters:
+      -
+        in: path
+        name: bookingRequest
+        description: 'The booking request ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/booking-requests/{bookingRequest}/cancel':
+    patch:
+      summary: 'Cancel Booking Request'
+      operationId: cancelBookingRequest
+      description: 'Cancels a `pending` booking request. Cannot cancel if already confirmed or converted.'
+      parameters: []
+      responses:
+        200:
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم إلغاء طلب الحجز بنجاح'
+                  data: null
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم إلغاء طلب الحجز بنجاح'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 200
+        400:
+          description: 'Not pending'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'لا يمكن إلغاء هذا الطلب في وضعه الحالي'
+                  data: null
+                  code: 400
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'لا يمكن إلغاء هذا الطلب في وضعه الحالي'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 400
+      tags:
+        - 'Booking Requests'
+    parameters:
+      -
+        in: path
+        name: bookingRequest
+        description: 'The booking request ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/trips/{trip}/collections':
+    get:
+      summary: 'List Collections'
+      operationId: listCollections
+      description: 'Returns all collections recorded during a specific trip.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب التحصيلات بنجاح'
+                  data:
+                    -
+                      id: 1
+                      collection_number: COL-001
+                      total_amount: 300
+                      status: confirmed
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب التحصيلات بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        collection_number: COL-001
+                        total_amount: 300
+                        status: confirmed
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        collection_number:
+                          type: string
+                          example: COL-001
+                        total_amount:
+                          type: integer
+                          example: 300
+                        status:
+                          type: string
+                          example: confirmed
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - Collections
+    post:
+      summary: 'Create Collection'
+      operationId: createCollection
+      description: "Records a cash collection from a customer during a trip.\nEach item can be linked to a specific sale order. The sale order's `paid_amount` is updated automatically."
+      parameters: []
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم تسجيل التحصيل بنجاح'
+                  data:
+                    id: 1
+                    collection_number: COL-001
+                    total_amount: 300
+                  code: 201
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم تسجيل التحصيل بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      collection_number:
+                        type: string
+                        example: COL-001
+                      total_amount:
+                        type: integer
+                        example: 300
+                  code:
+                    type: integer
+                    example: 201
+        400:
+          description: 'Invalid trip status'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'لا يمكن إنشاء تحصيل لهذه الرحلة في وضعها الحالي'
+                  data: null
+                  code: 400
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'لا يمكن إنشاء تحصيل لهذه الرحلة في وضعها الحالي'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 400
+      tags:
+        - Collections
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                  description: 'Customer ID.'
+                  example: 3
+                notes:
+                  type: string
+                  description: 'nullable General notes.'
+                  example: 'تحصيل جزئي'
+                  nullable: true
+                items:
+                  type: array
+                  description: 'List of collection items.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+              required:
+                - customer_id
+                - items
+    parameters:
+      -
+        in: path
+        name: trip
+        description: 'The trip ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/collections/{collection}':
+    get:
+      summary: 'Get Collection'
+      operationId: getCollection
+      description: 'Returns detailed information about a single collection record.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب تفاصيل التحصيل بنجاح'
+                  data:
+                    id: 1
+                    collection_number: COL-001
+                    items: []
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب تفاصيل التحصيل بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      collection_number:
+                        type: string
+                        example: COL-001
+                      items:
+                        type: array
+                        example: []
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - Collections
+    parameters:
+      -
+        in: path
+        name: collection
+        description: 'The collection ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/trips/{trip}/dispatches':
+    get:
+      summary: 'List Dispatches'
+      operationId: listDispatches
+      description: 'Returns inventory dispatches for a trip (view-only — delegates cannot create dispatches).'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب أوامر الصرف بنجاح'
+                  data:
+                    -
+                      id: 1
+                      status: approved
+                      total_cost: 5000
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب أوامر الصرف بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        status: approved
+                        total_cost: 5000
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        status:
+                          type: string
+                          example: approved
+                        total_cost:
+                          type: integer
+                          example: 5000
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Inventory Dispatches'
+    parameters:
+      -
+        in: path
+        name: trip
+        description: 'The trip ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/dispatches/{dispatch}':
+    get:
+      summary: 'Get Dispatch'
+      operationId: getDispatch
+      description: 'Returns detailed information about a single inventory dispatch including all items.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب تفاصيل أمر الصرف بنجاح'
+                  data:
+                    id: 1
+                    status: approved
+                    items: []
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب تفاصيل أمر الصرف بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: approved
+                      items:
+                        type: array
+                        example: []
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Inventory Dispatches'
+    parameters:
+      -
+        in: path
+        name: dispatch
+        description: 'The dispatch ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/delegate/loans:
+    get:
+      summary: 'List Loans & Custody'
+      operationId: listLoansCustody
+      description: "Returns the delegate's custody/loan records with a summary of totals."
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب سجلات العهدة بنجاح'
+                  data:
+                    summary:
+                      total_amount: 5000
+                      total_paid: 3000
+                      total_remaining: 2000
+                      overdue_count: 1
+                    loans:
+                      -
+                        id: 1
+                        amount: 5000
+                        paid_amount: 3000
+                        remaining: 2000
+                        due_date: '2026-05-01'
+                        is_paid: false
+                        is_overdue: false
+                        paid_at: null
+                        note: 'عهدة رحلة'
+                        created_at: '2026-04-01T00:00:00Z'
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب سجلات العهدة بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      summary:
+                        type: object
+                        properties:
+                          total_amount:
+                            type: integer
+                            example: 5000
+                          total_paid:
+                            type: integer
+                            example: 3000
+                          total_remaining:
+                            type: integer
+                            example: 2000
+                          overdue_count:
+                            type: integer
+                            example: 1
+                      loans:
+                        type: array
+                        example:
+                          -
+                            id: 1
+                            amount: 5000
+                            paid_amount: 3000
+                            remaining: 2000
+                            due_date: '2026-05-01'
+                            is_paid: false
+                            is_overdue: false
+                            paid_at: null
+                            note: 'عهدة رحلة'
+                            created_at: '2026-04-01T00:00:00Z'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            amount:
+                              type: integer
+                              example: 5000
+                            paid_amount:
+                              type: integer
+                              example: 3000
+                            remaining:
+                              type: integer
+                              example: 2000
+                            due_date:
+                              type: string
+                              example: '2026-05-01'
+                            is_paid:
+                              type: boolean
+                              example: false
+                            is_overdue:
+                              type: boolean
+                              example: false
+                            paid_at:
+                              type: string
+                              example: null
+                              nullable: true
+                            note:
+                              type: string
+                              example: 'عهدة رحلة'
+                            created_at:
+                              type: string
+                              example: '2026-04-01T00:00:00Z'
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Loans & Custody'
+  /api/delegate/profile:
+    get:
+      summary: 'Get Profile'
+      operationId: getProfile
+      description: "Returns the authenticated delegate's profile, assigned areas, branches and categories."
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب بيانات الحساب بنجاح'
+                  data:
+                    id: 1
+                    name: أحمد
+                    email: ahmed@example.com
+                    phone: '0501234567'
+                    credit_sales_limit: 5000
+                    cash_custody: 1000
+                    total_collected: 3200
+                    total_due: 1800
+                    sales_commission_rate: 2.5
+                    is_active: true
+                    areas:
+                      -
+                        id: 1
+                        name: صنعاء
+                    branches:
+                      -
+                        id: 1
+                        name: 'الفرع الرئيسي'
+                    categories:
+                      -
+                        id: 1
+                        name: أجهزة
+                        image: null
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب بيانات الحساب بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: أحمد
+                      email:
+                        type: string
+                        example: ahmed@example.com
+                      phone:
+                        type: string
+                        example: '0501234567'
+                      credit_sales_limit:
+                        type: integer
+                        example: 5000
+                      cash_custody:
+                        type: integer
+                        example: 1000
+                      total_collected:
+                        type: integer
+                        example: 3200
+                      total_due:
+                        type: integer
+                        example: 1800
+                      sales_commission_rate:
+                        type: number
+                        example: 2.5
+                      is_active:
+                        type: boolean
+                        example: true
+                      areas:
+                        type: array
+                        example:
+                          -
+                            id: 1
+                            name: صنعاء
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: صنعاء
+                      branches:
+                        type: array
+                        example:
+                          -
+                            id: 1
+                            name: 'الفرع الرئيسي'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 'الفرع الرئيسي'
+                      categories:
+                        type: array
+                        example:
+                          -
+                            id: 1
+                            name: أجهزة
+                            image: null
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: أجهزة
+                            image:
+                              type: string
+                              example: null
+                              nullable: true
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - Profile
+  /api/delegate/units:
+    get:
+      summary: 'List Measurement Units'
+      operationId: listMeasurementUnits
+      description: 'Returns all active measurement units. Useful when building sale order items.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب وحدات القياس بنجاح'
+                  data:
+                    -
+                      id: 1
+                      name: كيلوغرام
+                      symbol: كغ
+                      type: weight
+                      is_base_unit: true
+                      base_unit_id: null
+                      conversion_factor: 1
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب وحدات القياس بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: كيلوغرام
+                        symbol: كغ
+                        type: weight
+                        is_base_unit: true
+                        base_unit_id: null
+                        conversion_factor: 1
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: كيلوغرام
+                        symbol:
+                          type: string
+                          example: كغ
+                        type:
+                          type: string
+                          example: weight
+                        is_base_unit:
+                          type: boolean
+                          example: true
+                        base_unit_id:
+                          type: string
+                          example: null
+                          nullable: true
+                        conversion_factor:
+                          type: integer
+                          example: 1
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Reference Data'
+  /api/delegate/accounts:
+    get:
+      summary: 'List Accounts'
+      operationId: listAccounts
+      description: 'Returns accounts that are visible to delegates (for recording financial transactions).'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب الحسابات بنجاح'
+                  data:
+                    -
+                      id: 1
+                      name: 'الصندوق الرئيسي'
+                      account_number: '101'
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب الحسابات بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'الصندوق الرئيسي'
+                        account_number: '101'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'الصندوق الرئيسي'
+                        account_number:
+                          type: string
+                          example: '101'
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Reference Data'
+  /api/delegate/payment-methods:
+    get:
+      summary: 'List Payment Methods'
+      operationId: listPaymentMethods
+      description: 'Returns the available payment method keys and their Arabic labels.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب طرق الدفع بنجاح'
+                  data:
+                    -
+                      key: cash
+                      label: نقداً
+                    -
+                      key: credit
+                      label: آجل
+                    -
+                      key: partial
+                      label: 'جزئي (دفعة مقدمة)'
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب طرق الدفع بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        key: cash
+                        label: نقداً
+                      -
+                        key: credit
+                        label: آجل
+                      -
+                        key: partial
+                        label: 'جزئي (دفعة مقدمة)'
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                          example: cash
+                        label:
+                          type: string
+                          example: نقداً
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Reference Data'
+  /api/delegate/areas:
+    get:
+      summary: 'List Areas'
+      operationId: listAreas
+      description: 'Returns active regions (areas) assigned to the authenticated delegate.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب المناطق بنجاح'
+                  data:
+                    -
+                      id: 1
+                      name: صنعاء
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب المناطق بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: صنعاء
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: صنعاء
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Reference Data'
+  /api/delegate/categories:
+    get:
+      summary: 'List Categories'
+      operationId: listCategories
+      description: 'Returns active product categories assigned to the authenticated delegate.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب الفئات بنجاح'
+                  data:
+                    -
+                      id: 1
+                      name: أجهزة
+                      image: null
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب الفئات بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: أجهزة
+                        image: null
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: أجهزة
+                        image:
+                          type: string
+                          example: null
+                          nullable: true
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Reference Data'
+  '/api/delegate/categories/{category_id}/products':
+    get:
+      summary: 'List Products by Category'
+      operationId: listProductsByCategory
+      description: 'Returns active products in a category. The category must be assigned to the delegate.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب المنتجات بنجاح'
+                  data:
+                    -
+                      id: 1
+                      name: 'منتج A'
+                      image: null
+                      selling_price: 100
+                      discount: 0
+                      discount_type: fixed
+                      net_price: 100
+                      final_price: 115
+                      unit:
+                        id: 1
+                        name: كيلو
+                      tax:
+                        id: 1
+                        name: 'ضريبة القيمة المضافة'
+                        rate: 15
+                        type: percentage
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب المنتجات بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'منتج A'
+                        image: null
+                        selling_price: 100
+                        discount: 0
+                        discount_type: fixed
+                        net_price: 100
+                        final_price: 115
+                        unit:
+                          id: 1
+                          name: كيلو
+                        tax:
+                          id: 1
+                          name: 'ضريبة القيمة المضافة'
+                          rate: 15
+                          type: percentage
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'منتج A'
+                        image:
+                          type: string
+                          example: null
+                          nullable: true
+                        selling_price:
+                          type: integer
+                          example: 100
+                        discount:
+                          type: integer
+                          example: 0
+                        discount_type:
+                          type: string
+                          example: fixed
+                        net_price:
+                          type: integer
+                          example: 100
+                        final_price:
+                          type: integer
+                          example: 115
+                        unit:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: كيلو
+                        tax:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 'ضريبة القيمة المضافة'
+                            rate:
+                              type: integer
+                              example: 15
+                            type:
+                              type: string
+                              example: percentage
+                  code:
+                    type: integer
+                    example: 200
+        403:
+          description: 'Category not assigned'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'هذه الفئة غير مخصصة لك'
+                  data: null
+                  code: 403
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'هذه الفئة غير مخصصة لك'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 403
+      tags:
+        - 'Reference Data'
+    parameters:
+      -
+        in: path
+        name: category_id
+        description: 'The ID of the category.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: category
+        description: 'The category ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/delegate/customers:
+    get:
+      summary: 'List Customers'
+      operationId: listCustomers
+      description: "Returns active customers in the delegate's assigned areas, including their outstanding balance."
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب العملاء بنجاح'
+                  data:
+                    -
+                      id: 1
+                      name: 'عميل 1'
+                      phone: '0501111111'
+                      balance: 500
+                      classification: vip
+                      area:
+                        id: 1
+                        name: صنعاء
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب العملاء بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'عميل 1'
+                        phone: '0501111111'
+                        balance: 500
+                        classification: vip
+                        area:
+                          id: 1
+                          name: صنعاء
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'عميل 1'
+                        phone:
+                          type: string
+                          example: '0501111111'
+                        balance:
+                          type: integer
+                          example: 500
+                        classification:
+                          type: string
+                          example: vip
+                        area:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: صنعاء
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Reference Data'
+  '/api/delegate/trips/{trip}/orders':
+    get:
+      summary: 'List Sale Orders'
+      operationId: listSaleOrders
+      description: 'Returns all sale orders created during a specific trip.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب أوامر البيع بنجاح'
+                  data:
+                    -
+                      id: 1
+                      order_number: INV-001
+                      status: confirmed
+                      total: 500
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب أوامر البيع بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        order_number: INV-001
+                        status: confirmed
+                        total: 500
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        order_number:
+                          type: string
+                          example: INV-001
+                        status:
+                          type: string
+                          example: confirmed
+                        total:
+                          type: integer
+                          example: 500
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Sale Orders'
+    post:
+      summary: 'Create Sale Order'
+      operationId: createSaleOrder
+      description: "Creates a new sale order for a customer during an active trip.\nFor `cash`: the full amount is automatically recorded as paid.\nFor `credit`: zero payment is recorded; customer owes full amount.\nFor `partial`: provide `paid_amount` for the upfront payment."
+      parameters: []
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم إنشاء فاتورة البيع بنجاح'
+                  data:
+                    id: 1
+                    order_number: INV-001
+                    total: 500
+                    paid_amount: 500
+                  code: 201
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم إنشاء فاتورة البيع بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      order_number:
+                        type: string
+                        example: INV-001
+                      total:
+                        type: integer
+                        example: 500
+                      paid_amount:
+                        type: integer
+                        example: 500
+                  code:
+                    type: integer
+                    example: 201
+        400:
+          description: 'Trip not active'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'لا يمكن إنشاء فاتورة بيع لرحلة غير نشطة'
+                  data: null
+                  code: 400
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'لا يمكن إنشاء فاتورة بيع لرحلة غير نشطة'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 400
+      tags:
+        - 'Sale Orders'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                  description: 'Customer ID.'
+                  example: 3
+                payment_method:
+                  type: string
+                  description: 'One of: `cash`, `credit`, `partial`.'
+                  example: cash
+                discount_amount:
+                  type: number
+                  description: 'nullable Order-level discount value.'
+                  example: 50.0
+                  nullable: true
+                discount_type:
+                  type: string
+                  description: 'nullable `fixed` or `percentage`.'
+                  example: fixed
+                  nullable: true
+                due_date:
+                  type: string
+                  description: 'nullable Payment due date (YYYY-MM-DD) for credit orders.'
+                  example: '2026-06-01'
+                  nullable: true
+                notes:
+                  type: string
+                  description: 'nullable Notes.'
+                  example: 'تسليم سريع'
+                  nullable: true
+                paid_amount:
+                  type: number
+                  description: 'nullable Required when payment_method is `partial`.'
+                  example: 200.0
+                  nullable: true
+                items:
+                  type: array
+                  description: 'Sale items.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+              required:
+                - customer_id
+                - payment_method
+                - items
+    parameters:
+      -
+        in: path
+        name: trip
+        description: 'The trip ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/orders/{order}':
+    get:
+      summary: 'Get Sale Order'
+      operationId: getSaleOrder
+      description: 'Returns a single sale order with its items and payment history.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب تفاصيل الفاتورة بنجاح'
+                  data:
+                    id: 1
+                    order_number: INV-001
+                    items: []
+                    payments: []
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب تفاصيل الفاتورة بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      order_number:
+                        type: string
+                        example: INV-001
+                      items:
+                        type: array
+                        example: []
+                      payments:
+                        type: array
+                        example: []
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Sale Orders'
+    parameters:
+      -
+        in: path
+        name: order
+        description: 'The order ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/orders/{order}/payments':
+    post:
+      summary: 'Add Payment'
+      operationId: addPayment
+      description: 'Records a new payment against a credit or partial-payment order.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم تسجيل الدفعة بنجاح'
+                  data:
+                    id: 1
+                    paid_amount: 350
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم تسجيل الدفعة بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      paid_amount:
+                        type: integer
+                        example: 350
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Sale Orders'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  description: 'The payment amount.'
+                  example: 150.0
+                notes:
+                  type: string
+                  description: 'nullable Notes about this payment.'
+                  example: 'دفعة جزئية'
+                  nullable: true
+              required:
+                - amount
+    parameters:
+      -
+        in: path
+        name: order
+        description: 'The order ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/orders/{order}/cancel':
+    patch:
+      summary: 'Cancel Sale Order'
+      operationId: cancelSaleOrder
+      description: 'Cancels a sale order. Cannot cancel if it has already been paid in full.'
+      parameters: []
+      responses:
+        200:
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم إلغاء فاتورة البيع بنجاح'
+                  data: null
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم إلغاء فاتورة البيع بنجاح'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Sale Orders'
+    parameters:
+      -
+        in: path
+        name: order
+        description: 'The order ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/trips/{trip}/returns':
+    get:
+      summary: 'List Sale Returns'
+      operationId: listSaleReturns
+      description: 'Returns all sale returns recorded during a specific trip.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب المرتجعات بنجاح'
+                  data:
+                    -
+                      id: 1
+                      return_number: RET-001
+                      status: confirmed
+                      total: 200
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب المرتجعات بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        return_number: RET-001
+                        status: confirmed
+                        total: 200
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        return_number:
+                          type: string
+                          example: RET-001
+                        status:
+                          type: string
+                          example: confirmed
+                        total:
+                          type: integer
+                          example: 200
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Sale Returns'
+    post:
+      summary: 'Create Sale Return'
+      operationId: createSaleReturn
+      description: "Creates a return against an existing sale order during a trip.\nThe delegate must own the original sale order."
+      parameters: []
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم إنشاء المرتجع بنجاح'
+                  data:
+                    id: 1
+                    return_number: RET-001
+                    total: 200
+                  code: 201
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم إنشاء المرتجع بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      return_number:
+                        type: string
+                        example: RET-001
+                      total:
+                        type: integer
+                        example: 200
+                  code:
+                    type: integer
+                    example: 201
+        400:
+          description: 'Invalid trip status'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'لا يمكن إنشاء مرتجع لهذه الرحلة في وضعها الحالي'
+                  data: null
+                  code: 400
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'لا يمكن إنشاء مرتجع لهذه الرحلة في وضعها الحالي'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 400
+      tags:
+        - 'Sale Returns'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sale_order_id:
+                  type: integer
+                  description: 'The original sale order ID.'
+                  example: 1
+                notes:
+                  type: string
+                  description: 'nullable Notes.'
+                  example: 'منتج تالف'
+                  nullable: true
+                items:
+                  type: array
+                  description: 'Items being returned.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+              required:
+                - sale_order_id
+                - items
+    parameters:
+      -
+        in: path
+        name: trip
+        description: 'The trip ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/returns/{return}':
+    get:
+      summary: 'Get Sale Return'
+      operationId: getSaleReturn
+      description: 'Returns a single sale return with all items and the linked sale order.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب تفاصيل المرتجع بنجاح'
+                  data:
+                    id: 1
+                    return_number: RET-001
+                    items: []
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب تفاصيل المرتجع بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      return_number:
+                        type: string
+                        example: RET-001
+                      items:
+                        type: array
+                        example: []
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - 'Sale Returns'
+    parameters:
+      -
+        in: path
+        name: return
+        description: 'The return ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/delegate/trips:
+    get:
+      summary: 'List Trips'
+      operationId: listTrips
+      description: 'Returns all trips belonging to the authenticated delegate.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب الرحلات بنجاح'
+                  data:
+                    -
+                      id: 1
+                      trip_number: TRIP-001
+                      status: draft
+                      status_label: مسودة
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب الرحلات بنجاح'
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        trip_number: TRIP-001
+                        status: draft
+                        status_label: مسودة
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        trip_number:
+                          type: string
+                          example: TRIP-001
+                        status:
+                          type: string
+                          example: draft
+                        status_label:
+                          type: string
+                          example: مسودة
+                  code:
+                    type: integer
+                    example: 200
+      tags:
+        - Trips
+    post:
+      summary: 'Create Trip'
+      operationId: createTrip
+      description: 'Creates a new trip in `draft` status for the delegate. The branch must be assigned to the delegate.'
+      parameters: []
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم إنشاء الرحلة بنجاح'
+                  data:
+                    id: 1
+                    trip_number: TRIP-001
+                    status: draft
+                  code: 201
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم إنشاء الرحلة بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      trip_number:
+                        type: string
+                        example: TRIP-001
+                      status:
+                        type: string
+                        example: draft
+                  code:
+                    type: integer
+                    example: 201
+        403:
+          description: 'Unassigned branch'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'هذا الفرع غير مخصص لك'
+                  data: null
+                  code: 403
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'هذا الفرع غير مخصص لك'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 403
+      tags:
+        - Trips
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                branch_id:
+                  type: integer
+                  description: 'The ID of an assigned branch.'
+                  example: 1
+                expected_return_date:
+                  type: string
+                  description: 'nullable Expected return date (YYYY-MM-DD). Must be today or later.'
+                  example: '2026-05-01'
+                  nullable: true
+                notes:
+                  type: string
+                  description: 'nullable Optional notes.'
+                  example: 'الرحلة الأسبوعية'
+                  nullable: true
+              required:
+                - branch_id
+  '/api/delegate/trips/{trip}':
+    get:
+      summary: 'Get Trip'
+      operationId: getTrip
+      description: 'Returns detailed information about a single trip.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم جلب تفاصيل الرحلة بنجاح'
+                  data:
+                    id: 1
+                    trip_number: TRIP-001
+                    status: active
+                    branch:
+                      id: 1
+                      name: 'الفرع الرئيسي'
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم جلب تفاصيل الرحلة بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      trip_number:
+                        type: string
+                        example: TRIP-001
+                      status:
+                        type: string
+                        example: active
+                      branch:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'الفرع الرئيسي'
+                  code:
+                    type: integer
+                    example: 200
+        403:
+          description: 'Not your trip'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'هذه الرحلة لا تخصك'
+                  data: null
+                  code: 403
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'هذه الرحلة لا تخصك'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 403
+      tags:
+        - Trips
+    parameters:
+      -
+        in: path
+        name: trip
+        description: 'The trip ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/trips/{trip}/start':
+    patch:
+      summary: 'Start Trip'
+      operationId: startTrip
+      description: 'Transitions a trip from `draft` (or `returning`) to `active`.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم تشغيل الرحلة بنجاح'
+                  data:
+                    status: active
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم تشغيل الرحلة بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: active
+                  code:
+                    type: integer
+                    example: 200
+        400:
+          description: 'Invalid status'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'لا يمكن تشغيل الرحلة بحالتها الحالية'
+                  data: null
+                  code: 400
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'لا يمكن تشغيل الرحلة بحالتها الحالية'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 400
+      tags:
+        - Trips
+    parameters:
+      -
+        in: path
+        name: trip
+        description: 'The trip ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/delegate/trips/{trip}/end':
+    patch:
+      summary: 'End Trip'
+      operationId: endTrip
+      description: 'Transitions an `active` (or `in_transit`) trip to `returning` and syncs totals.'
+      parameters: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: true
+                  message: 'تم إنهاء الرحلة بنجاح'
+                  data:
+                    status: returning
+                  code: 200
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'تم إنهاء الرحلة بنجاح'
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: returning
+                  code:
+                    type: integer
+                    example: 200
+        400:
+          description: 'Invalid status'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: false
+                  message: 'لا يمكن إنهاء الرحلة بحالتها الحالية'
+                  data: null
+                  code: 400
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'لا يمكن إنهاء الرحلة بحالتها الحالية'
+                  data:
+                    type: string
+                    example: null
+                    nullable: true
+                  code:
+                    type: integer
+                    example: 400
+      tags:
+        - Trips
+    parameters:
+      -
+        in: path
+        name: trip
+        description: 'The trip ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer

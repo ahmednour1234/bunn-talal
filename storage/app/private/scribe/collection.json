@@ -1,0 +1,1408 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "http:\/\/localhost"
+        }
+    ],
+    "info": {
+        "name": "Delegate Mobile API",
+        "_postman_id": "9f05710c-03c9-4c7b-9efb-5e5e0a9cbea1",
+        "description": "REST API for the sales delegate mobile application. All endpoints return JSON.",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "description": "",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/login",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/login"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"ahmed@example.com\",\"password\":\"secret123\"}"
+                        },
+                        "description": "Authenticate a delegate and receive a Bearer token.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true,\n  \"message\": \"\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\n    \"token\": \"1|abc123...\",\n    \"delegate\": { \"id\": 1, \"name\": \"\u0623\u062d\u0645\u062f\", \"email\": \"ahmed@example.com\", \"phone\": \"0501234567\" }\n  },\n  \"code\": 200\n}",
+                            "name": "Success"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n  \"status\": false,\n  \"message\": \"\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0623\u0648 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d\u0629\",\n  \"data\": null,\n  \"code\": 401\n}",
+                            "name": "Wrong credentials"
+                        }
+                    ]
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/logout",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/logout"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Revoke the current access token."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c \u0628\u0646\u062c\u0627\u062d\", \"data\": null, \"code\": 200}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Booking Requests",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Booking Requests",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/booking-requests",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/booking-requests",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns booking requests for a specific trip."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0637\u0644\u0628\u0627\u062a \u0627\u0644\u062d\u062c\u0632 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\"id\": 1, \"customer_name\": \"\u0639\u0645\u064a\u0644 A\", \"status\": \"pending\"}],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Booking Request",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/booking-requests",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/booking-requests",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"customer_name\":\"\u0639\u0645\u064a\u0644 \u062c\u062f\u064a\u062f\",\"customer_phone\":\"0501234567\",\"customer_address\":\"\u0634\u0627\u0631\u0639 \u0627\u0644\u062c\u0627\u0645\u0639\u0629\",\"notes\":\"\u064a\u0631\u064a\u062f \u062a\u0633\u0644\u064a\u0645 \u0645\u0633\u0627\u0621\",\"items\":[\"architecto\"]}"
+                        },
+                        "description": "Creates a booking request (potential future sale) during an active trip.\nStatus flow: `pending` \u2192 `confirmed` \u2192 `converted` (to sale order) or `cancelled`."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0637\u0644\u0628 \u0627\u0644\u062d\u062c\u0632 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"customer_name\": \"\u0639\u0645\u064a\u0644 \u062c\u062f\u064a\u062f\", \"status\": \"pending\"},\n  \"code\": 201\n}",
+                            "name": "Created"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\"status\": false, \"message\": \"\u0644\u0627 \u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0637\u0644\u0628 \u062d\u062c\u0632 \u0644\u0631\u062d\u0644\u0629 \u063a\u064a\u0631 \u0646\u0634\u0637\u0629\", \"data\": null, \"code\": 400}",
+                            "name": "Trip not active"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Booking Request",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/booking-requests\/:bookingRequest",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/booking-requests\/:bookingRequest",
+                            "variable": [
+                                {
+                                    "id": "bookingRequest",
+                                    "key": "bookingRequest",
+                                    "value": "1",
+                                    "description": "The booking request ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns a single booking request with its items and linked sale order (if converted)."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u062a\u0641\u0627\u0635\u064a\u0644 \u0637\u0644\u0628 \u0627\u0644\u062d\u062c\u0632 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"status\": \"pending\", \"items\": []},\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Cancel Booking Request",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/booking-requests\/:bookingRequest\/cancel",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/booking-requests\/:bookingRequest\/cancel",
+                            "variable": [
+                                {
+                                    "id": "bookingRequest",
+                                    "key": "bookingRequest",
+                                    "value": "1",
+                                    "description": "The booking request ID."
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Cancels a `pending` booking request. Cannot cancel if already confirmed or converted."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0637\u0644\u0628 \u0627\u0644\u062d\u062c\u0632 \u0628\u0646\u062c\u0627\u062d\", \"data\": null, \"code\": 200}",
+                            "name": "Cancelled"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\"status\": false, \"message\": \"\u0644\u0627 \u064a\u0645\u0643\u0646 \u0625\u0644\u063a\u0627\u0621 \u0647\u0630\u0627 \u0627\u0644\u0637\u0644\u0628 \u0641\u064a \u0648\u0636\u0639\u0647 \u0627\u0644\u062d\u0627\u0644\u064a\", \"data\": null, \"code\": 400}",
+                            "name": "Not pending"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Collections",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Collections",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/collections",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/collections",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns all collections recorded during a specific trip."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0627\u0644\u062a\u062d\u0635\u064a\u0644\u0627\u062a \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\"id\": 1, \"collection_number\": \"COL-001\", \"total_amount\": 300, \"status\": \"confirmed\"}],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Collection",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/collections",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/collections",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"customer_id\":3,\"notes\":\"\u062a\u062d\u0635\u064a\u0644 \u062c\u0632\u0626\u064a\",\"items\":[\"architecto\"]}"
+                        },
+                        "description": "Records a cash collection from a customer during a trip.\nEach item can be linked to a specific sale order. The sale order's `paid_amount` is updated automatically."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062a\u062d\u0635\u064a\u0644 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"collection_number\": \"COL-001\", \"total_amount\": 300},\n  \"code\": 201\n}",
+                            "name": "Created"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\"status\": false, \"message\": \"\u0644\u0627 \u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u062a\u062d\u0635\u064a\u0644 \u0644\u0647\u0630\u0647 \u0627\u0644\u0631\u062d\u0644\u0629 \u0641\u064a \u0648\u0636\u0639\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a\", \"data\": null, \"code\": 400}",
+                            "name": "Invalid trip status"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Collection",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/collections\/:collection",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/collections\/:collection",
+                            "variable": [
+                                {
+                                    "id": "collection",
+                                    "key": "collection",
+                                    "value": "1",
+                                    "description": "The collection ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns detailed information about a single collection record."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u062a\u062d\u0635\u064a\u0644 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"collection_number\": \"COL-001\", \"items\": []},\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Inventory Dispatches",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Dispatches",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/dispatches",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/dispatches",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns inventory dispatches for a trip (view-only \u2014 delegates cannot create dispatches)."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0635\u0631\u0641 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\"id\": 1, \"status\": \"approved\", \"total_cost\": 5000}],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Dispatch",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/dispatches\/:dispatch",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/dispatches\/:dispatch",
+                            "variable": [
+                                {
+                                    "id": "dispatch",
+                                    "key": "dispatch",
+                                    "value": "1",
+                                    "description": "The dispatch ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns detailed information about a single inventory dispatch including all items."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u062a\u0641\u0627\u0635\u064a\u0644 \u0623\u0645\u0631 \u0627\u0644\u0635\u0631\u0641 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"status\": \"approved\", \"items\": []},\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Loans & Custody",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Loans & Custody",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/loans",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/loans"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the delegate's custody\/loan records with a summary of totals."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true,\n  \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0639\u0647\u062f\u0629 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\n    \"summary\": {\"total_amount\": 5000, \"total_paid\": 3000, \"total_remaining\": 2000, \"overdue_count\": 1},\n    \"loans\": [{\n      \"id\": 1, \"amount\": 5000, \"paid_amount\": 3000, \"remaining\": 2000,\n      \"due_date\": \"2026-05-01\", \"is_paid\": false, \"is_overdue\": false,\n      \"paid_at\": null, \"note\": \"\u0639\u0647\u062f\u0629 \u0631\u062d\u0644\u0629\", \"created_at\": \"2026-04-01T00:00:00Z\"\n    }]\n  },\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Profile",
+            "description": "",
+            "item": [
+                {
+                    "name": "Get Profile",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/profile",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/profile"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the authenticated delegate's profile, assigned areas, branches and categories."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true,\n  \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062d\u0633\u0627\u0628 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\n    \"id\": 1, \"name\": \"\u0623\u062d\u0645\u062f\", \"email\": \"ahmed@example.com\", \"phone\": \"0501234567\",\n    \"credit_sales_limit\": 5000, \"cash_custody\": 1000, \"total_collected\": 3200,\n    \"total_due\": 1800, \"sales_commission_rate\": 2.5, \"is_active\": true,\n    \"areas\": [{\"id\": 1, \"name\": \"\u0635\u0646\u0639\u0627\u0621\"}],\n    \"branches\": [{\"id\": 1, \"name\": \"\u0627\u0644\u0641\u0631\u0639 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\"}],\n    \"categories\": [{\"id\": 1, \"name\": \"\u0623\u062c\u0647\u0632\u0629\", \"image\": null}]\n  },\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Reference Data",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Measurement Units",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/units",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/units"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns all active measurement units. Useful when building sale order items."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true,\n  \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0648\u062d\u062f\u0627\u062a \u0627\u0644\u0642\u064a\u0627\u0633 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\n    \"id\": 1, \"name\": \"\u0643\u064a\u0644\u0648\u063a\u0631\u0627\u0645\", \"symbol\": \"\u0643\u063a\",\n    \"type\": \"weight\", \"is_base_unit\": true,\n    \"base_unit_id\": null, \"conversion_factor\": 1\n  }],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "List Accounts",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/accounts",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/accounts"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns accounts that are visible to delegates (for recording financial transactions)."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0627\u0644\u062d\u0633\u0627\u0628\u0627\u062a \u0628\u0646\u062c\u0627\u062d\", \"data\": [{\"id\": 1, \"name\": \"\u0627\u0644\u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\", \"account_number\": \"101\"}], \"code\": 200}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "List Payment Methods",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/payment-methods",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/payment-methods"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the available payment method keys and their Arabic labels."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true,\n  \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0637\u0631\u0642 \u0627\u0644\u062f\u0641\u0639 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [\n    {\"key\": \"cash\", \"label\": \"\u0646\u0642\u062f\u0627\u064b\"},\n    {\"key\": \"credit\", \"label\": \"\u0622\u062c\u0644\"},\n    {\"key\": \"partial\", \"label\": \"\u062c\u0632\u0626\u064a (\u062f\u0641\u0639\u0629 \u0645\u0642\u062f\u0645\u0629)\"}\n  ],\n  \"code\": 200\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "List Areas",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/areas",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/areas"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns active regions (areas) assigned to the authenticated delegate."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0627\u0644\u0645\u0646\u0627\u0637\u0642 \u0628\u0646\u062c\u0627\u062d\", \"data\": [{\"id\": 1, \"name\": \"\u0635\u0646\u0639\u0627\u0621\"}], \"code\": 200}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "List Categories",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/categories",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/categories"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns active product categories assigned to the authenticated delegate."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0627\u0644\u0641\u0626\u0627\u062a \u0628\u0646\u062c\u0627\u062d\", \"data\": [{\"id\": 1, \"name\": \"\u0623\u062c\u0647\u0632\u0629\", \"image\": null}], \"code\": 200}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "List Products by Category",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/categories\/:category_id\/products",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/categories\/:category_id\/products",
+                            "variable": [
+                                {
+                                    "id": "category_id",
+                                    "key": "category_id",
+                                    "value": "1",
+                                    "description": "The ID of the category."
+                                },
+                                {
+                                    "id": "category",
+                                    "key": "category",
+                                    "value": "1",
+                                    "description": "The category ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns active products in a category. The category must be assigned to the delegate."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true,\n  \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\n    \"id\": 1, \"name\": \"\u0645\u0646\u062a\u062c A\", \"image\": null,\n    \"selling_price\": 100, \"discount\": 0, \"discount_type\": \"fixed\",\n    \"net_price\": 100, \"final_price\": 115,\n    \"unit\": {\"id\": 1, \"name\": \"\u0643\u064a\u0644\u0648\"},\n    \"tax\": {\"id\": 1, \"name\": \"\u0636\u0631\u064a\u0628\u0629 \u0627\u0644\u0642\u064a\u0645\u0629 \u0627\u0644\u0645\u0636\u0627\u0641\u0629\", \"rate\": 15, \"type\": \"percentage\"}\n  }],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"status\": false, \"message\": \"\u0647\u0630\u0647 \u0627\u0644\u0641\u0626\u0629 \u063a\u064a\u0631 \u0645\u062e\u0635\u0635\u0629 \u0644\u0643\", \"data\": null, \"code\": 403}",
+                            "name": "Category not assigned"
+                        }
+                    ]
+                },
+                {
+                    "name": "List Customers",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/customers",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/customers"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns active customers in the delegate's assigned areas, including their outstanding balance."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true,\n  \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\n    \"id\": 1, \"name\": \"\u0639\u0645\u064a\u0644 1\", \"phone\": \"0501111111\",\n    \"balance\": 500, \"classification\": \"vip\",\n    \"area\": {\"id\": 1, \"name\": \"\u0635\u0646\u0639\u0627\u0621\"}\n  }],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Sale Orders",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Sale Orders",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/orders",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/orders",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns all sale orders created during a specific trip."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0628\u064a\u0639 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\"id\": 1, \"order_number\": \"INV-001\", \"status\": \"confirmed\", \"total\": 500}],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Sale Order",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/orders",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/orders",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"customer_id\":3,\"payment_method\":\"cash\",\"discount_amount\":50,\"discount_type\":\"fixed\",\"due_date\":\"2026-06-01\",\"notes\":\"\u062a\u0633\u0644\u064a\u0645 \u0633\u0631\u064a\u0639\",\"paid_amount\":200,\"items\":[\"architecto\"]}"
+                        },
+                        "description": "Creates a new sale order for a customer during an active trip.\nFor `cash`: the full amount is automatically recorded as paid.\nFor `credit`: zero payment is recorded; customer owes full amount.\nFor `partial`: provide `paid_amount` for the upfront payment."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0641\u0627\u062a\u0648\u0631\u0629 \u0627\u0644\u0628\u064a\u0639 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"order_number\": \"INV-001\", \"total\": 500, \"paid_amount\": 500},\n  \"code\": 201\n}",
+                            "name": "Created"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\"status\": false, \"message\": \"\u0644\u0627 \u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0641\u0627\u062a\u0648\u0631\u0629 \u0628\u064a\u0639 \u0644\u0631\u062d\u0644\u0629 \u063a\u064a\u0631 \u0646\u0634\u0637\u0629\", \"data\": null, \"code\": 400}",
+                            "name": "Trip not active"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Sale Order",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/orders\/:order",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/orders\/:order",
+                            "variable": [
+                                {
+                                    "id": "order",
+                                    "key": "order",
+                                    "value": "1",
+                                    "description": "The order ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns a single sale order with its items and payment history."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"order_number\": \"INV-001\", \"items\": [], \"payments\": []},\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Add Payment",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/orders\/:order\/payments",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/orders\/:order\/payments",
+                            "variable": [
+                                {
+                                    "id": "order",
+                                    "key": "order",
+                                    "value": "1",
+                                    "description": "The order ID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"amount\":150,\"notes\":\"\u062f\u0641\u0639\u0629 \u062c\u0632\u0626\u064a\u0629\"}"
+                        },
+                        "description": "Records a new payment against a credit or partial-payment order."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u0641\u0639\u0629 \u0628\u0646\u062c\u0627\u062d\", \"data\": {\"id\": 1, \"paid_amount\": 350}, \"code\": 200}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Cancel Sale Order",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/orders\/:order\/cancel",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/orders\/:order\/cancel",
+                            "variable": [
+                                {
+                                    "id": "order",
+                                    "key": "order",
+                                    "value": "1",
+                                    "description": "The order ID."
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Cancels a sale order. Cannot cancel if it has already been paid in full."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0641\u0627\u062a\u0648\u0631\u0629 \u0627\u0644\u0628\u064a\u0639 \u0628\u0646\u062c\u0627\u062d\", \"data\": null, \"code\": 200}",
+                            "name": "Cancelled"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Sale Returns",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Sale Returns",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/returns",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/returns",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns all sale returns recorded during a specific trip."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0627\u0644\u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\"id\": 1, \"return_number\": \"RET-001\", \"status\": \"confirmed\", \"total\": 200}],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Sale Return",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/returns",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/returns",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"sale_order_id\":1,\"notes\":\"\u0645\u0646\u062a\u062c \u062a\u0627\u0644\u0641\",\"items\":[\"architecto\"]}"
+                        },
+                        "description": "Creates a return against an existing sale order during a trip.\nThe delegate must own the original sale order."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0631\u062a\u062c\u0639 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"return_number\": \"RET-001\", \"total\": 200},\n  \"code\": 201\n}",
+                            "name": "Created"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\"status\": false, \"message\": \"\u0644\u0627 \u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0645\u0631\u062a\u062c\u0639 \u0644\u0647\u0630\u0647 \u0627\u0644\u0631\u062d\u0644\u0629 \u0641\u064a \u0648\u0636\u0639\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a\", \"data\": null, \"code\": 400}",
+                            "name": "Invalid trip status"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Sale Return",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/returns\/:return",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/returns\/:return",
+                            "variable": [
+                                {
+                                    "id": "return",
+                                    "key": "return",
+                                    "value": "1",
+                                    "description": "The return ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns a single sale return with all items and the linked sale order."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0631\u062a\u062c\u0639 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"return_number\": \"RET-001\", \"items\": []},\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Trips",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Trips",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns all trips belonging to the authenticated delegate."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u0627\u0644\u0631\u062d\u0644\u0627\u062a \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": [{\"id\": 1, \"trip_number\": \"TRIP-001\", \"status\": \"draft\", \"status_label\": \"\u0645\u0633\u0648\u062f\u0629\"}],\n  \"code\": 200\n}",
+                            "name": "Success"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Trip",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"branch_id\":1,\"expected_return_date\":\"2026-05-01\",\"notes\":\"\u0627\u0644\u0631\u062d\u0644\u0629 \u0627\u0644\u0623\u0633\u0628\u0648\u0639\u064a\u0629\"}"
+                        },
+                        "description": "Creates a new trip in `draft` status for the delegate. The branch must be assigned to the delegate."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0631\u062d\u0644\u0629 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"trip_number\": \"TRIP-001\", \"status\": \"draft\"},\n  \"code\": 201\n}",
+                            "name": "Created"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"status\": false, \"message\": \"\u0647\u0630\u0627 \u0627\u0644\u0641\u0631\u0639 \u063a\u064a\u0631 \u0645\u062e\u0635\u0635 \u0644\u0643\", \"data\": null, \"code\": 403}",
+                            "name": "Unassigned branch"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Trip",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns detailed information about a single trip."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"status\": true, \"message\": \"\u062a\u0645 \u062c\u0644\u0628 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0631\u062d\u0644\u0629 \u0628\u0646\u062c\u0627\u062d\",\n  \"data\": {\"id\": 1, \"trip_number\": \"TRIP-001\", \"status\": \"active\", \"branch\": {\"id\": 1, \"name\": \"\u0627\u0644\u0641\u0631\u0639 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\"}},\n  \"code\": 200\n}",
+                            "name": "Success"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"status\": false, \"message\": \"\u0647\u0630\u0647 \u0627\u0644\u0631\u062d\u0644\u0629 \u0644\u0627 \u062a\u062e\u0635\u0643\", \"data\": null, \"code\": 403}",
+                            "name": "Not your trip"
+                        }
+                    ]
+                },
+                {
+                    "name": "Start Trip",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/start",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/start",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Transitions a trip from `draft` (or `returning`) to `active`."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u062a\u0634\u063a\u064a\u0644 \u0627\u0644\u0631\u062d\u0644\u0629 \u0628\u0646\u062c\u0627\u062d\", \"data\": {\"status\": \"active\"}, \"code\": 200}",
+                            "name": "Success"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\"status\": false, \"message\": \"\u0644\u0627 \u064a\u0645\u0643\u0646 \u062a\u0634\u063a\u064a\u0644 \u0627\u0644\u0631\u062d\u0644\u0629 \u0628\u062d\u0627\u0644\u062a\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a\u0629\", \"data\": null, \"code\": 400}",
+                            "name": "Invalid status"
+                        }
+                    ]
+                },
+                {
+                    "name": "End Trip",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/delegate\/trips\/:trip\/end",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/delegate\/trips\/:trip\/end",
+                            "variable": [
+                                {
+                                    "id": "trip",
+                                    "key": "trip",
+                                    "value": "1",
+                                    "description": "The trip ID."
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Transitions an `active` (or `in_transit`) trip to `returning` and syncs totals."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\": true, \"message\": \"\u062a\u0645 \u0625\u0646\u0647\u0627\u0621 \u0627\u0644\u0631\u062d\u0644\u0629 \u0628\u0646\u062c\u0627\u062d\", \"data\": {\"status\": \"returning\"}, \"code\": 200}",
+                            "name": "Success"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\"status\": false, \"message\": \"\u0644\u0627 \u064a\u0645\u0643\u0646 \u0625\u0646\u0647\u0627\u0621 \u0627\u0644\u0631\u062d\u0644\u0629 \u0628\u062d\u0627\u0644\u062a\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a\u0629\", \"data\": null, \"code\": 400}",
+                            "name": "Invalid status"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "Authorization",
+                "type": "string"
+            }
+        ]
+    }
+}
