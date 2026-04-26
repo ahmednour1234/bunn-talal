@@ -137,6 +137,14 @@
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الراتب الأساسي <span class="text-red-500">*</span></label>
+                        <input type="number" wire:model="basic_salary" step="0.01" min="0"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm" placeholder="0.00">
+                        <p class="text-xs text-gray-400 mt-1">يُستخدم تلقائياً عند إنشاء راتب شهري</p>
+                        @error('basic_salary') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">محصّل <span class="text-red-500">*</span></label>
                         <input type="number" wire:model="total_collected" step="0.01" min="0"
                             class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm" placeholder="0.00">

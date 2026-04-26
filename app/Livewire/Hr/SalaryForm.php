@@ -68,7 +68,7 @@ class SalaryForm extends Component
         }
 
         $d = Delegate::find($this->delegate_id, [
-            'id', 'name', 'sales_commission_rate', 'cash_custody', 'total_collected', 'total_due',
+            'id', 'name', 'sales_commission_rate', 'cash_custody', 'total_collected', 'total_due', 'basic_salary',
         ]);
 
         if (!$d) {
@@ -79,10 +79,16 @@ class SalaryForm extends Component
         $this->delegateInfo = [
             'name'                 => $d->name,
             'sales_commission_rate'=> (float) $d->sales_commission_rate,
+            'basic_salary'         => (float) $d->basic_salary,
             'cash_custody'         => (float) $d->cash_custody,
             'total_collected'      => (float) $d->total_collected,
             'total_due'            => (float) $d->total_due,
         ];
+
+        // Auto-fill basic_salary only when creating a new record
+        if (!$this->salaryId && $d->basic_salary > 0) {
+            $this->basic_salary = (string) $d->basic_salary;
+        }
     }
 
     public function applyDueAsDeduction(): void

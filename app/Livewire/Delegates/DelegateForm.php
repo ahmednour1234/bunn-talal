@@ -26,6 +26,7 @@ class DelegateForm extends Component
     public string $total_collected = '0';
     public string $total_due = '0';
     public string $sales_commission_rate = '0';
+    public string $basic_salary = '0';
     public ?string $current_latitude = null;
     public ?string $current_longitude = null;
     public bool $is_active = true;
@@ -49,6 +50,7 @@ class DelegateForm extends Component
             $this->total_collected = (string) ($delegate->total_collected * 1);
             $this->total_due = (string) ($delegate->total_due * 1);
             $this->sales_commission_rate = (string) ($delegate->sales_commission_rate * 1);
+            $this->basic_salary = (string) ($delegate->basic_salary * 1);
             $this->current_latitude = $delegate->current_latitude;
             $this->current_longitude = $delegate->current_longitude;
             $this->is_active = $delegate->is_active;
@@ -71,6 +73,7 @@ class DelegateForm extends Component
             'total_collected' => 'required|numeric|min:0',
             'total_due' => 'required|numeric|min:0',
             'sales_commission_rate' => 'required|numeric|min:0|max:100',
+            'basic_salary' => 'required|numeric|min:0',
             'current_latitude' => 'nullable|numeric|between:-90,90',
             'current_longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean',
@@ -115,6 +118,7 @@ class DelegateForm extends Component
             'total_collected' => $this->total_collected,
             'total_due' => $this->total_due,
             'sales_commission_rate' => $this->sales_commission_rate,
+            'basic_salary' => $this->basic_salary,
             'current_latitude' => $this->current_latitude ?: null,
             'current_longitude' => $this->current_longitude ?: null,
             'is_active' => $this->is_active,
