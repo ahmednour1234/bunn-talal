@@ -51,4 +51,20 @@ class HrController extends Controller
     {
         return view('pages.hr.salaries.edit', compact('id'));
     }
+
+    // ─── Reports ─────────────────────────────────────────────
+    public function reportsLeaves()
+    {
+        return view('pages.hr.reports.leaves');
+    }
+
+    public function reportsAttendance()
+    {
+        return view('pages.hr.reports.attendance');
+    }
+
+    public function reportsSalaries()
+    {
+        return view('pages.hr.reports.salaries');
+    }
 }

@@ -63,9 +63,12 @@
     ];
 
     $hrLinks = [
-        ['route' => 'hr.leaves.index',     'icon' => 'calendar', 'label' => 'الإجازات',      'permission' => 'hr.view'],
-        ['route' => 'hr.attendance.index',  'icon' => 'finger-print', 'label' => 'الحضور والبصمة', 'permission' => 'hr.view'],
-        ['route' => 'hr.salaries.index',    'icon' => 'banknotes', 'label' => 'الرواتب',      'permission' => 'hr.view'],
+        ['route' => 'hr.leaves.index',      'icon' => 'calendar',     'label' => 'الإجازات',          'permission' => 'hr.view'],
+        ['route' => 'hr.attendance.index',   'icon' => 'finger-print', 'label' => 'الحضور والبصمة',    'permission' => 'hr.view'],
+        ['route' => 'hr.salaries.index',     'icon' => 'banknotes',    'label' => 'الرواتب',            'permission' => 'hr.view'],
+        ['route' => 'hr.reports.leaves',     'icon' => 'chart-bar',    'label' => 'تقرير الإجازات',    'permission' => 'hr.view'],
+        ['route' => 'hr.reports.attendance', 'icon' => 'chart-bar',    'label' => 'تقرير الحضور',      'permission' => 'hr.view'],
+        ['route' => 'hr.reports.salaries',   'icon' => 'chart-bar',    'label' => 'تقرير الرواتب',     'permission' => 'hr.view'],
     ];
 
     $collectionActive = request()->routeIs('collections.*');

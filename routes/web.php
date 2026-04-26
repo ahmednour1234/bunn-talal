@@ -395,4 +395,11 @@ Route::middleware('auth:admin')->group(function () {
     Route::middleware('permission:hr.edit')->group(function () {
         Route::get('/hr/salaries/{id}/edit', [HrController::class, 'salariesEdit'])->name('hr.salaries.edit');
     });
+
+    // ── HR Reports ────────────────────────────────────────────────────────
+    Route::middleware('permission:hr.view')->group(function () {
+        Route::get('/hr/reports/leaves',     [HrController::class, 'reportsLeaves'])->name('hr.reports.leaves');
+        Route::get('/hr/reports/attendance', [HrController::class, 'reportsAttendance'])->name('hr.reports.attendance');
+        Route::get('/hr/reports/salaries',   [HrController::class, 'reportsSalaries'])->name('hr.reports.salaries');
+    });
 });
