@@ -24,6 +24,9 @@ class SalaryForm extends Component
     public string $notes = '';
     public string $status = 'pending';
 
+    // Delegate financial info card (reactive)
+    public array $delegateInfo = [];
+
     public function mount(HrSalaryService $service, ?int $id = null, ?int $delegateId = null): void
     {
         $this->month = now()->month;
@@ -31,6 +34,7 @@ class SalaryForm extends Component
 
         if ($delegateId) {
             $this->delegate_id = $delegateId;
+            $this->loadDelegateInfo();
         }
 
         if ($id) {
@@ -47,6 +51,44 @@ class SalaryForm extends Component
             $this->treasury_id  = $sal->treasury_id;
             $this->notes        = $sal->notes ?? '';
             $this->status       = $sal->status;
+            $this->loadDelegateInfo();
+        }
+    }
+
+    public function updatedDelegateId(): void
+    {
+        $this->loadDelegateInfo();
+    }
+
+    private function loadDelegateInfo(): void
+    {
+        if (!$this->delegate_id) {
+            $this->delegateInfo = [];
+            return;
+        }
+
+        $d = Delegate::find($this->delegate_id, [
+            'id', 'name', 'sales_commission_rate', 'cash_custody', 'total_collected', 'total_due',
+        ]);
+
+        if (!$d) {
+            $this->delegateInfo = [];
+            return;
+        }
+
+        $this->delegateInfo = [
+            'name'                 => $d->name,
+            'sales_commission_rate'=> (float) $d->sales_commission_rate,
+            'cash_custody'         => (float) $d->cash_custody,
+            'total_collected'      => (float) $d->total_collected,
+            'total_due'            => (float) $d->total_due,
+        ];
+    }
+
+    public function applyDueAsDeduction(): void
+    {
+        if (!empty($this->delegateInfo['total_due'])) {
+            $this->deductions = (string) $this->delegateInfo['total_due'];
         }
     }
 
