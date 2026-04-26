@@ -62,6 +62,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'suppliers.edit', 'display_name' => 'تعديل مورد', 'group_name' => 'الموردين'],
             ['name' => 'suppliers.delete', 'display_name' => 'حذف مورد', 'group_name' => 'الموردين'],
 
+            // HR
+            ['name' => 'hr.view', 'display_name' => 'عرض الموارد البشرية', 'group_name' => 'الموارد البشرية'],
+            ['name' => 'hr.create', 'display_name' => 'إضافة سجلات الموارد البشرية', 'group_name' => 'الموارد البشرية'],
+            ['name' => 'hr.edit', 'display_name' => 'تعديل سجلات الموارد البشرية', 'group_name' => 'الموارد البشرية'],
+            ['name' => 'hr.delete', 'display_name' => 'حذف سجلات الموارد البشرية', 'group_name' => 'الموارد البشرية'],
+
             // Delegates
             ['name' => 'delegates.view', 'display_name' => 'عرض المناديب', 'group_name' => 'المناديب'],
             ['name' => 'delegates.create', 'display_name' => 'إضافة مندوب', 'group_name' => 'المناديب'],

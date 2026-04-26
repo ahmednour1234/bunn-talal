@@ -138,7 +138,7 @@
 
     {{-- ══════════════════ TABS ══════════════════ --}}
     <div class="flex items-center gap-1 bg-white border border-gray-100 rounded-2xl shadow-sm p-1.5 w-fit">
-        @foreach([['overview','نظرة عامة','M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25'],['trips','الرحلات','M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12'],['loans','السلف والمديونية','M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z']] as [$key, $label, $icon])
+        @foreach([['overview','نظرة عامة','M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25'],['trips','الرحلات','M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12'],['loans','السلف والمديونية','M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z'],['hr','الموارد البشرية','M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z']] as [$key, $label, $icon])
         <button wire:click="$set('activeTab', '{{ $key }}')"
             class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all
                 {{ $activeTab === $key
@@ -519,6 +519,151 @@
             </table>
             </div>
             @endif
+        </div>
+    </div>
+    @endif
+
+    {{-- ══════════════════ HR TAB ══════════════════ --}}
+    @if($activeTab === 'hr')
+    <div class="space-y-6">
+        {{-- Quick links --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="{{ route('hr.leaves.create') }}?delegateId={{ $delegate->id }}"
+                class="bg-white rounded-2xl border border-blue-100 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+                <div class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-semibold">الإجازات</p>
+                    <p class="text-xl font-extrabold text-blue-700">{{ $delegate->hrLeaves()->count() }}</p>
+                    <p class="text-xs text-blue-500">+ إضافة إجازة</p>
+                </div>
+            </a>
+            <a href="{{ route('hr.attendance.create') }}?delegateId={{ $delegate->id }}"
+                class="bg-white rounded-2xl border border-green-100 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+                <div class="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.864 4.243A7.5 7.5 0 0 1 19.5 10.5c0 2.92-.556 5.709-1.568 8.268M5.742 6.364A7.465 7.465 0 0 0 4.5 10.5a7.464 7.464 0 0 1-1.15 3.993m1.989 3.559A11.209 11.209 0 0 0 8.25 10.5a3.75 3.75 0 1 1 7.5 0c0 .527-.021 1.049-.064 1.565M12 10.5a14.94 14.94 0 0 1-3.6 9.75m6.633-4.596a18.666 18.666 0 0 1-2.485 5.33"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-semibold">سجلات الحضور</p>
+                    <p class="text-xl font-extrabold text-green-700">{{ $delegate->hrAttendances()->whereMonth('date', now()->month)->count() }}</p>
+                    <p class="text-xs text-green-500">هذا الشهر — + تسجيل</p>
+                </div>
+            </a>
+            <a href="{{ route('hr.salaries.create') }}?delegateId={{ $delegate->id }}"
+                class="bg-white rounded-2xl border border-amber-100 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+                <div class="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-semibold">الرواتب</p>
+                    @php $pendingSalary = $delegate->hrSalaries()->where('status','pending')->count(); @endphp
+                    <p class="text-xl font-extrabold {{ $pendingSalary > 0 ? 'text-amber-700' : 'text-gray-400' }}">{{ $pendingSalary }}</p>
+                    <p class="text-xs text-amber-500">قيد الانتظار — + إضافة</p>
+                </div>
+            </a>
+        </div>
+
+        {{-- Last Leaves --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="bg-blue-50 border-b border-blue-100 px-5 py-3 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-blue-800">آخر الإجازات</h3>
+                <a href="{{ route('hr.leaves.index') }}" class="text-xs text-blue-600 hover:underline">عرض الكل</a>
+            </div>
+            @php $lastLeaves = $delegate->hrLeaves()->latest()->take(5)->get(); @endphp
+            @if($lastLeaves->isEmpty())
+                <p class="text-center text-sm text-gray-400 py-6">لا توجد إجازات</p>
+            @else
+            <div class="divide-y divide-gray-50">
+                @foreach($lastLeaves as $leave)
+                <div class="flex items-center justify-between px-5 py-3">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700">{{ $leave->type_label }}</p>
+                        <p class="text-xs text-gray-400">{{ $leave->start_date->format('Y-m-d') }} → {{ $leave->end_date->format('Y-m-d') }} ({{ $leave->days }} يوم)</p>
+                    </div>
+                    @if($leave->status === 'approved')
+                        <span class="text-xs bg-green-100 text-green-700 font-bold px-2.5 py-1 rounded-full">موافق</span>
+                    @elseif($leave->status === 'rejected')
+                        <span class="text-xs bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-full">مرفوض</span>
+                    @else
+                        <span class="text-xs bg-amber-100 text-amber-700 font-bold px-2.5 py-1 rounded-full">قيد الانتظار</span>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+
+        {{-- Last Salaries --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="bg-amber-50 border-b border-amber-100 px-5 py-3 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-amber-800">آخر الرواتب</h3>
+                <a href="{{ route('hr.salaries.index') }}" class="text-xs text-amber-600 hover:underline">عرض الكل</a>
+            </div>
+            @php $lastSalaries = $delegate->hrSalaries()->orderByDesc('year')->orderByDesc('month')->take(6)->get(); @endphp
+            @if($lastSalaries->isEmpty())
+                <p class="text-center text-sm text-gray-400 py-6">لا توجد رواتب</p>
+            @else
+            <div class="overflow-x-auto">
+            <table class="w-full text-sm text-right">
+                <thead><tr class="text-[11px] text-gray-400 font-bold border-b border-gray-100">
+                    <th class="px-4 py-3 bg-gray-50/80">الشهر</th>
+                    <th class="px-4 py-3 bg-gray-50/80">الأساسي</th>
+                    <th class="px-4 py-3 bg-gray-50/80">الصافي</th>
+                    <th class="px-4 py-3 bg-gray-50/80">الحالة</th>
+                </tr></thead>
+                <tbody class="divide-y divide-gray-50">
+                @foreach($lastSalaries as $sal)
+                <tr class="hover:bg-gray-50/50">
+                    <td class="px-4 py-3 font-semibold text-gray-700">{{ $sal->month_label }} {{ $sal->year }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ number_format($sal->basic_salary, 2) }}</td>
+                    <td class="px-4 py-3 font-bold text-primary-700">{{ number_format($sal->net_salary, 2) }}</td>
+                    <td class="px-4 py-3">
+                        @if($sal->status === 'paid')
+                            <span class="text-[11px] bg-green-100 text-green-700 font-bold px-2.5 py-1 rounded-full">مصروف ✓</span>
+                        @else
+                            <span class="text-[11px] bg-amber-100 text-amber-700 font-bold px-2.5 py-1 rounded-full">قيد الانتظار</span>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+                </tbody>
+            </table>
+            </div>
+            @endif
+        </div>
+
+        {{-- Attendance summary this month --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="bg-green-50 border-b border-green-100 px-5 py-3 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-green-800">ملخص الحضور - {{ now()->locale('ar')->monthName }}</h3>
+                <a href="{{ route('hr.attendance.index') }}" class="text-xs text-green-600 hover:underline">عرض الكل</a>
+            </div>
+            @php
+                $monthAtt = $delegate->hrAttendances()->whereMonth('date', now()->month)->whereYear('date', now()->year)->get();
+                $presentDays  = $monthAtt->where('status','present')->count();
+                $absentDays   = $monthAtt->where('status','absent')->count();
+                $lateDays     = $monthAtt->where('status','late')->count();
+                $leaveDays    = $monthAtt->where('status','on_leave')->count();
+            @endphp
+            <div class="grid grid-cols-4 gap-0 divide-x divide-x-reverse divide-gray-100">
+                <div class="text-center py-5">
+                    <p class="text-2xl font-extrabold text-green-600">{{ $presentDays }}</p>
+                    <p class="text-xs text-gray-400 font-semibold mt-1">حاضر</p>
+                </div>
+                <div class="text-center py-5">
+                    <p class="text-2xl font-extrabold text-red-500">{{ $absentDays }}</p>
+                    <p class="text-xs text-gray-400 font-semibold mt-1">غائب</p>
+                </div>
+                <div class="text-center py-5">
+                    <p class="text-2xl font-extrabold text-amber-500">{{ $lateDays }}</p>
+                    <p class="text-xs text-gray-400 font-semibold mt-1">متأخر</p>
+                </div>
+                <div class="text-center py-5">
+                    <p class="text-2xl font-extrabold text-blue-500">{{ $leaveDays }}</p>
+                    <p class="text-xs text-gray-400 font-semibold mt-1">إجازة</p>
+                </div>
+            </div>
         </div>
     </div>
     @endif

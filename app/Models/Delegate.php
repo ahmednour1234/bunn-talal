@@ -75,4 +75,19 @@ class Delegate extends Authenticatable
     {
         return $this->hasMany(DelegateLoan::class);
     }
+
+    public function hrLeaves()
+    {
+        return $this->hasMany(HrLeave::class);
+    }
+
+    public function hrAttendances()
+    {
+        return $this->hasMany(HrAttendance::class);
+    }
+
+    public function hrSalaries()
+    {
+        return $this->hasMany(HrSalary::class);
+    }
 }

@@ -62,6 +62,12 @@
         ['route' => 'trips.booking-requests', 'icon' => 'clipboard-document-list', 'label' => 'طلبات الحجز', 'permission' => 'trips.view'],
     ];
 
+    $hrLinks = [
+        ['route' => 'hr.leaves.index',     'icon' => 'calendar', 'label' => 'الإجازات',      'permission' => 'hr.view'],
+        ['route' => 'hr.attendance.index',  'icon' => 'finger-print', 'label' => 'الحضور والبصمة', 'permission' => 'hr.view'],
+        ['route' => 'hr.salaries.index',    'icon' => 'banknotes', 'label' => 'الرواتب',      'permission' => 'hr.view'],
+    ];
+
     $collectionActive = request()->routeIs('collections.*');
 
     $settingsActive = collect($settingsLinks)->contains(fn($l) => request()->routeIs($l['route'] . '*')) || request()->routeIs('settings.index');
@@ -72,6 +78,7 @@
     $branchReportActive = collect($branchReportLinks)->contains(fn($l) => request()->routeIs($l['route'] . '*'));
     $installmentActive = collect($installmentLinks)->contains(fn($l) => request()->routeIs($l['route'] . '*'));
     $tripsActive = collect($tripsLinks)->contains(fn($l) => request()->routeIs($l['route'] . '*')) || request()->routeIs('trips.*');
+    $hrActive = collect($hrLinks)->contains(fn($l) => request()->routeIs($l['route'] . '*')) || request()->routeIs('hr.*');
     $appName = \App\Models\Setting::get('app_name', 'بن طلال');
     $logoPath = \App\Models\Setting::get('logo');
 @endphp
@@ -384,6 +391,49 @@
                 </div>
                 <span>التحصيلات</span>
             </a>
+        </div>
+        @endif
+
+        {{-- الموارد البشرية HR --}}
+        @if(auth('admin')->user()?->hasPermission('hr.view'))
+        <div class="mx-5 my-2 border-t border-white/8"></div>
+        <div x-data="{ open: {{ $hrActive ? 'true' : 'false' }} }" class="px-3 mb-1">
+            <button @click="open = !open"
+                class="flex items-center justify-between w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200
+                       {{ $hrActive ? 'bg-white/20 text-white font-bold shadow-lg shadow-black/10' : 'text-white/75 hover:bg-white/10 hover:text-white' }}">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg {{ $hrActive ? 'bg-amber-400/25' : 'bg-white/10' }} flex items-center justify-center flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] {{ $hrActive ? 'text-amber-300' : '' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                        </svg>
+                    </div>
+                    <span>الموارد البشرية</span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"
+                     class="w-3.5 h-3.5 transition-transform duration-300 text-white/50" :class="open ? 'rotate-180' : ''">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+            </button>
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 max-h-0"
+                 x-transition:enter-end="opacity-100 max-h-[400px]"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 x-cloak
+                 class="mt-1 mr-6 border-r-2 border-white/10 pr-2 space-y-0.5">
+                @foreach ($hrLinks as $link)
+                    @if ($link['permission'] === null || auth('admin')->user()?->hasPermission($link['permission']))
+                        <a href="{{ route($link['route']) }}"
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-all duration-200
+                                  {{ request()->routeIs($link['route'] . '*') ? 'bg-white/15 text-white font-semibold' : 'text-white/55 hover:bg-white/8 hover:text-white/90' }}">
+                            <x-icon :name="$link['icon']" class="w-4 h-4 flex-shrink-0 {{ request()->routeIs($link['route'] . '*') ? 'text-amber-300' : '' }}" />
+                            <span>{{ $link['label'] }}</span>
+                        </a>
+                    @endif
+                @endforeach
+            </div>
         </div>
         @endif
 

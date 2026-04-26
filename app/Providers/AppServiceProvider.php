@@ -54,6 +54,12 @@ use App\Repositories\Eloquent\SaleOrderRepository;
 use App\Repositories\Eloquent\SaleQuotationRepository;
 use App\Repositories\Eloquent\SaleReturnRepository;
 use App\Repositories\Eloquent\InstallmentPlanRepository;
+use App\Repositories\Contracts\HrLeaveRepositoryInterface;
+use App\Repositories\Contracts\HrAttendanceRepositoryInterface;
+use App\Repositories\Contracts\HrSalaryRepositoryInterface;
+use App\Repositories\Eloquent\HrLeaveRepository;
+use App\Repositories\Eloquent\HrAttendanceRepository;
+use App\Repositories\Eloquent\HrSalaryRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -86,6 +92,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SaleQuotationRepositoryInterface::class, SaleQuotationRepository::class);
         $this->app->bind(SaleReturnRepositoryInterface::class, SaleReturnRepository::class);
         $this->app->bind(InstallmentPlanRepositoryInterface::class, InstallmentPlanRepository::class);
+        $this->app->bind(HrLeaveRepositoryInterface::class, HrLeaveRepository::class);
+        $this->app->bind(HrAttendanceRepositoryInterface::class, HrAttendanceRepository::class);
+        $this->app->bind(HrSalaryRepositoryInterface::class, HrSalaryRepository::class);
     }
 
     public function boot(): void

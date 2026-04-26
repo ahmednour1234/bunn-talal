@@ -35,6 +35,7 @@ use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\HrController;
 use Illuminate\Support\Facades\Route;
 
 // Guest Routes
@@ -360,5 +361,38 @@ Route::middleware('auth:admin')->group(function () {
         Route::get('/reports/branch-inventory', [BranchReportController::class, 'inventory'])->name('reports.branch-inventory');
         Route::get('/reports/branch-inventory/export/pdf', [BranchReportController::class, 'inventoryPdf'])->name('reports.branch-inventory.export.pdf');
         Route::get('/reports/branch-movements', [BranchReportController::class, 'movements'])->name('reports.branch-movements');
+    });
+
+    // HR - Leaves
+    Route::middleware('permission:hr.view')->group(function () {
+        Route::get('/hr/leaves', [HrController::class, 'leavesIndex'])->name('hr.leaves.index');
+    });
+    Route::middleware('permission:hr.create')->group(function () {
+        Route::get('/hr/leaves/create', [HrController::class, 'leavesCreate'])->name('hr.leaves.create');
+    });
+    Route::middleware('permission:hr.edit')->group(function () {
+        Route::get('/hr/leaves/{id}/edit', [HrController::class, 'leavesEdit'])->name('hr.leaves.edit');
+    });
+
+    // HR - Attendance
+    Route::middleware('permission:hr.view')->group(function () {
+        Route::get('/hr/attendance', [HrController::class, 'attendanceIndex'])->name('hr.attendance.index');
+    });
+    Route::middleware('permission:hr.create')->group(function () {
+        Route::get('/hr/attendance/create', [HrController::class, 'attendanceCreate'])->name('hr.attendance.create');
+    });
+    Route::middleware('permission:hr.edit')->group(function () {
+        Route::get('/hr/attendance/{id}/edit', [HrController::class, 'attendanceEdit'])->name('hr.attendance.edit');
+    });
+
+    // HR - Salaries
+    Route::middleware('permission:hr.view')->group(function () {
+        Route::get('/hr/salaries', [HrController::class, 'salariesIndex'])->name('hr.salaries.index');
+    });
+    Route::middleware('permission:hr.create')->group(function () {
+        Route::get('/hr/salaries/create', [HrController::class, 'salariesCreate'])->name('hr.salaries.create');
+    });
+    Route::middleware('permission:hr.edit')->group(function () {
+        Route::get('/hr/salaries/{id}/edit', [HrController::class, 'salariesEdit'])->name('hr.salaries.edit');
     });
 });

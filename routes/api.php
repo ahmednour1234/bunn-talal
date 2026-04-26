@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DelegateLoanController;
+use App\Http\Controllers\Api\HrLeaveApiController;
+use App\Http\Controllers\Api\HrAttendanceApiController;
+use App\Http\Controllers\Api\HrSalaryApiController;
 use App\Http\Controllers\Api\DispatchController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\ProductController;
@@ -81,5 +84,19 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::get('/delegate/trips/{trip}/returns',  [SaleReturnController::class, 'index']);
     Route::post('/delegate/trips/{trip}/returns', [SaleReturnController::class, 'store']);
     Route::get('/delegate/returns/{return}',      [SaleReturnController::class, 'show']);
+
+    // ── HR - Leaves ───────────────────────────────────────────────────────
+    Route::get('/delegate/hr/leaves',            [HrLeaveApiController::class, 'index']);
+    Route::post('/delegate/hr/leaves',           [HrLeaveApiController::class, 'store']);
+    Route::get('/delegate/hr/leaves/{leave}',    [HrLeaveApiController::class, 'show']);
+
+    // ── HR - Attendance ───────────────────────────────────────────────────
+    Route::get('/delegate/hr/attendance',               [HrAttendanceApiController::class, 'index']);
+    Route::get('/delegate/hr/attendance/summary',       [HrAttendanceApiController::class, 'summary']);
+    Route::get('/delegate/hr/attendance/{attendance}',  [HrAttendanceApiController::class, 'show']);
+
+    // ── HR - Salaries ─────────────────────────────────────────────────────
+    Route::get('/delegate/hr/salaries',          [HrSalaryApiController::class, 'index']);
+    Route::get('/delegate/hr/salaries/{salary}', [HrSalaryApiController::class, 'show']);
 });
 
