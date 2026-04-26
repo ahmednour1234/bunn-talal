@@ -125,24 +125,24 @@ Route::middleware('auth:admin')->group(function () {
     });
 
     // Customers
+    Route::middleware('permission:customers.create')->group(function () {
+        Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+    });
     Route::middleware('permission:customers.view')->group(function () {
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('/customers/{id}', [CustomerController::class, 'show'])->name('customers.show');
-    });
-    Route::middleware('permission:customers.create')->group(function () {
-        Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
     });
     Route::middleware('permission:customers.edit')->group(function () {
         Route::get('/customers/{id}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
     });
 
     // Delegates
+    Route::middleware('permission:delegates.create')->group(function () {
+        Route::get('/delegates/create', [DelegateController::class, 'create'])->name('delegates.create');
+    });
     Route::middleware('permission:delegates.view')->group(function () {
         Route::get('/delegates', [DelegateController::class, 'index'])->name('delegates.index');
         Route::get('/delegates/{id}', [DelegateController::class, 'show'])->name('delegates.show');
-    });
-    Route::middleware('permission:delegates.create')->group(function () {
-        Route::get('/delegates/create', [DelegateController::class, 'create'])->name('delegates.create');
     });
     Route::middleware('permission:delegates.edit')->group(function () {
         Route::get('/delegates/{id}/edit', [DelegateController::class, 'edit'])->name('delegates.edit');
