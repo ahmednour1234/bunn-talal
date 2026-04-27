@@ -32,16 +32,16 @@ class StatisticsController extends Controller
      *
      * @response 200 scenario="Success" {
      *   "status": true,
-     *   "message": "ØªÙ… Ø¬Ù„Ø¨ Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø¨Ù†Ø¬Ø§Ø­",
+     *   "message": "تم جلب الإحصائيات بنجاح",
      *   "data": [
-     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª", "value": 15000.00 },
-     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„ØªØ­ØµÙŠÙ„Ø§Øª", "value": 12000.00 },
-     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø±ØªØ¬Ø¹Ø§Øª", "value": 500.00 },
-     *     { "label": "Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø³ØªØ­Ù‚", "value": 3000.00 },
-     *     { "label": "Ø¹Ø¯Ø¯ Ø§Ù„Ø±Ø­Ù„Ø§Øª", "value": 10 },
-     *     { "label": "Ø¹Ø¯Ø¯ Ø£ÙˆØ§Ù…Ø± Ø§Ù„Ø¨ÙŠØ¹", "value": 45 },
-     *     { "label": "Ø¹Ø¯Ø¯ Ø§Ù„ØªØ­ØµÙŠÙ„Ø§Øª", "value": 38 },
-     *     { "label": "Ø¹Ø¯Ø¯ Ø§Ù„Ù…Ø±ØªØ¬Ø¹Ø§Øª", "value": 5 }
+     *     { "label": "إجمالي المبيعات", "value": 15000.00 },
+     *     { "label": "إجمالي التحصيلات", "value": 12000.00 },
+     *     { "label": "إجمالي المرتجعات", "value": 500.00 },
+     *     { "label": "المبلغ المستحق", "value": 3000.00 },
+     *     { "label": "عدد الرحلات", "value": 10 },
+     *     { "label": "عدد أوامر البيع", "value": 45 },
+     *     { "label": "عدد التحصيلات", "value": 38 },
+     *     { "label": "عدد المرتجعات", "value": 5 }
      *   ],
      *   "code": 200
      * }
@@ -65,7 +65,7 @@ class StatisticsController extends Controller
             $filters
         );
 
-        return $this->successResponse($statistics, 'ØªÙ… Ø¬Ù„Ø¨ Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø¨Ù†Ø¬Ø§Ø­');
+        return $this->successResponse($statistics, 'تم جلب الإحصائيات بنجاح');
     }
 
     /**
@@ -114,6 +114,6 @@ class StatisticsController extends Controller
         $filters    = $request->only(['date', 'month', 'year', 'from_date', 'to_date']);
         $statistics = $this->statisticsService->getDelegateHrStatistics($request->user()->id, $filters);
 
-        return $this->successResponse($statistics, 'ØªÙ… Ø¬Ù„Ø¨ Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø§Ù„Ù…ÙˆØ§Ø±Ø¯ Ø§Ù„Ø¨Ø´Ø±ÙŠØ© Ø¨Ù†Ø¬Ø§Ø­');
+        return $this->successResponse($statistics, 'تم جلب إحصائيات الموارد البشرية بنجاح');
     }
 }
