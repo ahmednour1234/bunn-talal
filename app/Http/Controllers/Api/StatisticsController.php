@@ -32,16 +32,16 @@ class StatisticsController extends Controller
      *
      * @response 200 scenario="Success" {
      *   "status": true,
-     *   "message": "تم جلب الإحصائيات بنجاح",
+     *   "message": "ØªÙ… Ø¬Ù„Ø¨ Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø¨Ù†Ø¬Ø§Ø­",
      *   "data": [
-     *     { "label": "إجمالي المبيعات", "value": 15000.00 },
-     *     { "label": "إجمالي التحصيلات", "value": 12000.00 },
-     *     { "label": "إجمالي المرتجعات", "value": 500.00 },
-     *     { "label": "المبلغ المستحق", "value": 3000.00 },
-     *     { "label": "عدد الرحلات", "value": 10 },
-     *     { "label": "عدد أوامر البيع", "value": 45 },
-     *     { "label": "عدد التحصيلات", "value": 38 },
-     *     { "label": "عدد المرتجعات", "value": 5 }
+     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª", "value": 15000.00 },
+     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„ØªØ­ØµÙŠÙ„Ø§Øª", "value": 12000.00 },
+     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø±ØªØ¬Ø¹Ø§Øª", "value": 500.00 },
+     *     { "label": "Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø³ØªØ­Ù‚", "value": 3000.00 },
+     *     { "label": "Ø¹Ø¯Ø¯ Ø§Ù„Ø±Ø­Ù„Ø§Øª", "value": 10 },
+     *     { "label": "Ø¹Ø¯Ø¯ Ø£ÙˆØ§Ù…Ø± Ø§Ù„Ø¨ÙŠØ¹", "value": 45 },
+     *     { "label": "Ø¹Ø¯Ø¯ Ø§Ù„ØªØ­ØµÙŠÙ„Ø§Øª", "value": 38 },
+     *     { "label": "Ø¹Ø¯Ø¯ Ø§Ù„Ù…Ø±ØªØ¬Ø¹Ø§Øª", "value": 5 }
      *   ],
      *   "code": 200
      * }
@@ -65,7 +65,7 @@ class StatisticsController extends Controller
             $filters
         );
 
-        return $this->successResponse($statistics, 'تم جلب الإحصائيات بنجاح');
+        return $this->successResponse($statistics, 'ØªÙ… Ø¬Ù„Ø¨ Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø¨Ù†Ø¬Ø§Ø­');
     }
 
     /**
@@ -84,19 +84,19 @@ class StatisticsController extends Controller
      *
      * @response 200 scenario="Success" {
      *   "status": true,
-     *   "message": "تم جلب إحصائيات الموارد البشرية بنجاح",
+     *   "message": "ØªÙ… Ø¬Ù„Ø¨ Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø§Ù„Ù…ÙˆØ§Ø±Ø¯ Ø§Ù„Ø¨Ø´Ø±ÙŠØ© Ø¨Ù†Ø¬Ø§Ø­",
      *   "data": [
-     *     { "label": "أيام الحضور", "value": 20 },
-     *     { "label": "أيام الغياب", "value": 2 },
-     *     { "label": "أيام التأخير", "value": 3 },
-     *     { "label": "طلبات الإجازة", "value": 4 },
-     *     { "label": "الإجازات الموافق عليها", "value": 2 },
-     *     { "label": "الإجازات المعلقة", "value": 1 },
-     *     { "label": "الإجازات المرفوضة", "value": 1 },
-     *     { "label": "إجمالي الرواتب المدفوعة", "value": 9000.00 },
-     *     { "label": "إجمالي العمولات", "value": 1500.00 },
-     *     { "label": "إجمالي البدلات", "value": 500.00 },
-     *     { "label": "إجمالي الخصومات", "value": 200.00 }
+     *     { "label": "Ø£ÙŠØ§Ù… Ø§Ù„Ø­Ø¶ÙˆØ±", "value": 20 },
+     *     { "label": "Ø£ÙŠØ§Ù… Ø§Ù„ØºÙŠØ§Ø¨", "value": 2 },
+     *     { "label": "Ø£ÙŠØ§Ù… Ø§Ù„ØªØ£Ø®ÙŠØ±", "value": 3 },
+     *     { "label": "Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø¥Ø¬Ø§Ø²Ø©", "value": 4 },
+     *     { "label": "Ø§Ù„Ø¥Ø¬Ø§Ø²Ø§Øª Ø§Ù„Ù…ÙˆØ§ÙÙ‚ Ø¹Ù„ÙŠÙ‡Ø§", "value": 2 },
+     *     { "label": "Ø§Ù„Ø¥Ø¬Ø§Ø²Ø§Øª Ø§Ù„Ù…Ø¹Ù„Ù‚Ø©", "value": 1 },
+     *     { "label": "Ø§Ù„Ø¥Ø¬Ø§Ø²Ø§Øª Ø§Ù„Ù…Ø±ÙÙˆØ¶Ø©", "value": 1 },
+     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø±ÙˆØ§ØªØ¨ Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø©", "value": 9000.00 },
+     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¹Ù…ÙˆÙ„Ø§Øª", "value": 1500.00 },
+     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¨Ø¯Ù„Ø§Øª", "value": 500.00 },
+     *     { "label": "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø®ØµÙˆÙ…Ø§Øª", "value": 200.00 }
      *   ],
      *   "code": 200
      * }
@@ -114,6 +114,6 @@ class StatisticsController extends Controller
         $filters    = $request->only(['date', 'month', 'year', 'from_date', 'to_date']);
         $statistics = $this->statisticsService->getDelegateHrStatistics($request->user()->id, $filters);
 
-        return $this->successResponse($statistics, 'تم جلب إحصائيات الموارد البشرية بنجاح');
+        return $this->successResponse($statistics, 'ØªÙ… Ø¬Ù„Ø¨ Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø§Ù„Ù…ÙˆØ§Ø±Ø¯ Ø§Ù„Ø¨Ø´Ø±ÙŠØ© Ø¨Ù†Ø¬Ø§Ø­');
     }
 }
