@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AreaController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\StatisticsController;
 use App\Http\Controllers\Api\BookingRequestController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CollectionController;
@@ -35,6 +36,9 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
 
     // Auth
     Route::post('/delegate/logout', [AuthController::class, 'logout']);
+
+    // Statistics
+    Route::get('/delegate/statistics', [StatisticsController::class, 'index']);
 
     // Profile
     Route::get('/delegate/profile', [ProfileController::class, 'show']);
