@@ -101,7 +101,7 @@ class StatisticsRepository implements StatisticsRepositoryInterface
             $filters, 'start_date'
         )->count();
 
-        // Salaries — use dedicated month/year columns
+        // Salaries â€” use dedicated month/year columns
         $salaryQuery = HrSalary::where('delegate_id', $delegateId)->where('status', 'paid');
 
         if (!empty($filters['month'])) {

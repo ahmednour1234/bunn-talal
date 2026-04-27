@@ -15,14 +15,14 @@ class StatisticsService
         $data = $this->statisticsRepository->delegateStatistics($delegateId, $filters);
 
         return [
-            ['label' => 'إجمالي المبيعات',   'value' => $data['total_sales']],
-            ['label' => 'إجمالي التحصيلات',  'value' => $data['total_collections']],
-            ['label' => 'إجمالي المرتجعات',  'value' => $data['total_returns']],
-            ['label' => 'المبلغ المستحق',     'value' => $totalDue],
-            ['label' => 'عدد الرحلات',        'value' => $data['trips_count']],
-            ['label' => 'عدد أوامر البيع',    'value' => $data['orders_count']],
-            ['label' => 'عدد التحصيلات',      'value' => $data['collections_count']],
-            ['label' => 'عدد المرتجعات',      'value' => $data['returns_count']],
+            ['label' => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª',   'value' => $data['total_sales']],
+            ['label' => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„ØªØ­ØµÙŠÙ„Ø§Øª',  'value' => $data['total_collections']],
+            ['label' => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø±ØªØ¬Ø¹Ø§Øª',  'value' => $data['total_returns']],
+            ['label' => 'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø³ØªØ­Ù‚',     'value' => $totalDue],
+            ['label' => 'Ø¹Ø¯Ø¯ Ø§Ù„Ø±Ø­Ù„Ø§Øª',        'value' => $data['trips_count']],
+            ['label' => 'Ø¹Ø¯Ø¯ Ø£ÙˆØ§Ù…Ø± Ø§Ù„Ø¨ÙŠØ¹',    'value' => $data['orders_count']],
+            ['label' => 'Ø¹Ø¯Ø¯ Ø§Ù„ØªØ­ØµÙŠÙ„Ø§Øª',      'value' => $data['collections_count']],
+            ['label' => 'Ø¹Ø¯Ø¯ Ø§Ù„Ù…Ø±ØªØ¬Ø¹Ø§Øª',      'value' => $data['returns_count']],
         ];
     }
 
@@ -31,17 +31,17 @@ class StatisticsService
         $data = $this->statisticsRepository->delegateHrStatistics($delegateId, $filters);
 
         return [
-            ['label' => 'أيام الحضور',               'value' => $data['present_days']],
-            ['label' => 'أيام الغياب',                'value' => $data['absent_days']],
-            ['label' => 'أيام التأخير',               'value' => $data['late_days']],
-            ['label' => 'طلبات الإجازة',              'value' => $data['total_leaves']],
-            ['label' => 'الإجازات الموافق عليها',     'value' => $data['approved_leaves']],
-            ['label' => 'الإجازات المعلقة',           'value' => $data['pending_leaves']],
-            ['label' => 'الإجازات المرفوضة',          'value' => $data['rejected_leaves']],
-            ['label' => 'إجمالي الرواتب المدفوعة',   'value' => $data['total_salaries']],
-            ['label' => 'إجمالي العمولات',            'value' => $data['total_commissions']],
-            ['label' => 'إجمالي البدلات',             'value' => $data['total_bonuses']],
-            ['label' => 'إجمالي الخصومات',            'value' => $data['total_deductions']],
+            ['label' => 'Ø£ÙŠØ§Ù… Ø§Ù„Ø­Ø¶ÙˆØ±',               'value' => $data['present_days']],
+            ['label' => 'Ø£ÙŠØ§Ù… Ø§Ù„ØºÙŠØ§Ø¨',                'value' => $data['absent_days']],
+            ['label' => 'Ø£ÙŠØ§Ù… Ø§Ù„ØªØ£Ø®ÙŠØ±',               'value' => $data['late_days']],
+            ['label' => 'Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø¥Ø¬Ø§Ø²Ø©',              'value' => $data['total_leaves']],
+            ['label' => 'Ø§Ù„Ø¥Ø¬Ø§Ø²Ø§Øª Ø§Ù„Ù…ÙˆØ§ÙÙ‚ Ø¹Ù„ÙŠÙ‡Ø§',     'value' => $data['approved_leaves']],
+            ['label' => 'Ø§Ù„Ø¥Ø¬Ø§Ø²Ø§Øª Ø§Ù„Ù…Ø¹Ù„Ù‚Ø©',           'value' => $data['pending_leaves']],
+            ['label' => 'Ø§Ù„Ø¥Ø¬Ø§Ø²Ø§Øª Ø§Ù„Ù…Ø±ÙÙˆØ¶Ø©',          'value' => $data['rejected_leaves']],
+            ['label' => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø±ÙˆØ§ØªØ¨ Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø©',   'value' => $data['total_salaries']],
+            ['label' => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¹Ù…ÙˆÙ„Ø§Øª',            'value' => $data['total_commissions']],
+            ['label' => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¨Ø¯Ù„Ø§Øª',             'value' => $data['total_bonuses']],
+            ['label' => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø®ØµÙˆÙ…Ø§Øª',            'value' => $data['total_deductions']],
         ];
     }
 }
