@@ -76,18 +76,18 @@ class ProductController extends Controller
                         $factor    = (float) $u->conversion_factor / $productFactor;
                         $sellPrice = round((float) $product->selling_price * $factor, 2);
 
-                        // Net price after discount
+                        // Discount
+                        $discountAmount = 0;
                         if ($product->discount > 0) {
                             if ($product->discount_type === 'percentage') {
-                                $netPrice = round($sellPrice * (1 - $product->discount / 100), 2);
+                                $discountAmount = round($sellPrice * $product->discount / 100, 2);
                             } else {
-                                $netPrice = round(max(0, $sellPrice - (float) $product->discount * $factor), 2);
+                                $discountAmount = round((float) $product->discount * $factor, 2);
                             }
-                        } else {
-                            $netPrice = $sellPrice;
                         }
+                        $netPrice = round(max(0, $sellPrice - $discountAmount), 2);
 
-                        // Final price after tax
+                        // Tax
                         $taxAmount = 0;
                         if ($product->tax) {
                             $taxAmount = $product->tax->type === 'percentage'
@@ -99,10 +99,14 @@ class ProductController extends Controller
                             'id'                 => $u->id,
                             'name'               => $u->name,
                             'symbol'             => $u->symbol,
-                            'conversion_factor'  => (float) $u->conversion_factor,
-                            'unit_selling_price' => $sellPrice,
-                            'unit_net_price'     => $netPrice,
-                            'unit_final_price'   => round($netPrice + $taxAmount, 2),
+                            'price'              => $sellPrice,
+                            'discount_amount'    => $discountAmount,
+                            'price_after_discount' => $netPrice,
+                            'tax_name'           => $product->tax?->name,
+                            'tax_rate'           => $product->tax?->rate,
+                            'tax_type'           => $product->tax?->type,
+                            'tax_amount'         => $taxAmount,
+                            'price_with_tax'     => round($netPrice + $taxAmount, 2),
                         ];
                     })->values()->toArray();
                 }
