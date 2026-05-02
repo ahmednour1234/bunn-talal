@@ -347,7 +347,7 @@ class ProductController extends Controller
                     'rate' => $product->tax->rate,
                     'type' => $product->tax->type,
                 ] : null,
-                'available_quantity' => (int) $stockInBaseUnit,
+                'available_quantity' => (float) $stockInBaseUnit,
                 'available_units' => $availableUnits,
             ];
         });
