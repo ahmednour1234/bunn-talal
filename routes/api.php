@@ -50,9 +50,10 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::get('/delegate/accounts',        [AccountController::class, 'index']);
     Route::get('/delegate/payment-methods', [PaymentMethodController::class, 'index']);
     Route::get('/delegate/areas',           [AreaController::class, 'index']);
-    Route::get('/delegate/categories',      [CategoryController::class, 'index']);
-    Route::get('/delegate/categories/{category}/products', [ProductController::class, 'index']);
-    Route::get('/delegate/trip/products', [ProductController::class, 'tripProducts']);
+    Route::get('/delegate/categories',                      [CategoryController::class, 'index']);
+    Route::get('/delegate/categories/{category}/products',  [ProductController::class, 'index']);
+    Route::get('/delegate/trip/products',                   [ProductController::class, 'tripProducts']);
+    Route::get('/delegate/trips/products',                  [ProductController::class, 'tripProducts']);
     Route::get('/delegate/customers',       [CustomerController::class, 'index']);
     Route::post('/delegate/customers',      [CustomerController::class, 'store']);
 
@@ -62,7 +63,6 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     // ── Trips ────────────────────────────────────────────────────────────
     Route::get('/delegate/trips',                [TripController::class, 'index']);
     Route::post('/delegate/trips',               [TripController::class, 'store']);
-    Route::get('/delegate/trips/products',       [ProductController::class, 'tripProducts']); // must be before {trip}
     Route::get('/delegate/trips/{trip}',         [TripController::class, 'show']);
     Route::patch('/delegate/trips/{trip}/start', [TripController::class, 'start']);
     Route::patch('/delegate/trips/{trip}/end',   [TripController::class, 'end']);
