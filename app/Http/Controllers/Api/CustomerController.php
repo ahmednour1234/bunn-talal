@@ -33,12 +33,7 @@ class CustomerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $delegate = $request->user();
-
-        $areaIds = $delegate->areas()->pluck('areas.id');
-
-        $customers = Customer::whereIn('area_id', $areaIds)
-            ->where('is_active', true)
+        $customers = Customer::where('is_active', true)
             ->with('area:id,name')
             ->select('id', 'name', 'phone', 'email', 'area_id', 'address', 'latitude', 'longitude', 'classification', 'balance')
             ->get()
