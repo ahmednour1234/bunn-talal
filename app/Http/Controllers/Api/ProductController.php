@@ -109,11 +109,17 @@ class ProductController extends Controller
                                 : round((float) $product->tax->rate * $factor, 2);
                         }
 
+                        $discountRate = $product->discount_type === 'percentage'
+                            ? (float) $product->discount
+                            : ($sellPrice > 0 ? round($discountAmount / $sellPrice * 100, 2) : 0);
+
                         return [
                             'id'                   => $u->id,
                             'name'                 => $u->name,
                             'symbol'               => $u->symbol,
                             'price'                => $sellPrice,
+                            'discount_type'        => $product->discount_type,
+                            'discount_rate'        => $discountRate,
                             'discount_amount'      => $discountAmount,
                             'price_after_discount' => $netPrice,
                             'tax_name'             => $product->tax?->name,
@@ -262,11 +268,17 @@ class ProductController extends Controller
                         ? floor($stockInBaseUnit * $productFactor / $u->conversion_factor)
                         : 0;
 
+                    $discountRate = $product->discount_type === 'percentage'
+                        ? (float) $product->discount
+                        : ($sellPrice > 0 ? round($discountAmount / $sellPrice * 100, 2) : 0);
+
                     return [
                         'id'                   => $u->id,
                         'name'                 => $u->name,
                         'symbol'               => $u->symbol,
                         'price'                => $sellPrice,
+                        'discount_type'        => $product->discount_type,
+                        'discount_rate'        => $discountRate,
                         'discount_amount'      => $discountAmount,
                         'price_after_discount' => $netPrice,
                         'tax_name'             => $product->tax?->name,
