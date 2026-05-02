@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class TripService
 {
-    public function getByDelegate(int $delegateId)
+    public function getByDelegate($delegateId)
     {
         return Trip::where('delegate_id', $delegateId)
             ->with(['branch:id,name'])
@@ -15,7 +15,7 @@ class TripService
             ->get();
     }
 
-    public function getById(int $id): Trip
+    public function getById($id): Trip
     {
         return Trip::with(['branch:id,name', 'custodyTreasury:id,name'])->findOrFail($id);
     }
