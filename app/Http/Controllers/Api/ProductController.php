@@ -37,7 +37,8 @@ class ProductController extends Controller
      */
     public function index(Request $request, Category $category): JsonResponse
     {
-        $delegate = $request->user();
+        $delegate    = $request->user();
+        $branchIds   = $delegate->branches()->pluck('branches.id');
 
         // Verify the category is actually assigned to this delegate
         $assigned = $delegate->categories()->where('categories.id', $category->id)->exists();
@@ -52,12 +53,15 @@ class ProductController extends Controller
                 'unit.derivedUnits',
                 'unit.baseUnit.derivedUnits',
                 'tax:id,name,rate,type',
+                'branches' => fn ($q) => $q->whereIn('branch_id', $branchIds),
             ])
             ->select('id', 'name', 'image', 'category_id', 'unit_id', 'tax_id', 'selling_price', 'discount', 'discount_type')
             ->get()
             ->map(function ($product) {
-                $unit           = $product->unit;
-                $availableUnits = [];
+                $unit              = $product->unit;
+                $availableUnits    = [];
+                // Total stock in product's base unit across delegate's branches
+                $stockInBaseUnit   = $product->branches->sum('pivot.quantity');
 
                 if ($unit) {
                     // Build the full unit family (base unit + all derived of same type)
@@ -72,9 +76,17 @@ class ProductController extends Controller
 
                     $productFactor = (float) $unit->conversion_factor;
 
-                    $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor) {
+                    $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor, $stockInBaseUnit) {
                         $factor    = (float) $u->conversion_factor / $productFactor;
                         $sellPrice = round((float) $product->selling_price * $factor, 2);
+
+                        // Stock converted to this unit
+                        // productFactor = conversion of the product unit (e.g. kg=1000 if base is gram)
+                        // u->conversion_factor = this unit's factor
+                        // stockInBaseUnit is already in the product's unit's base
+                        $stockInThisUnit = $u->conversion_factor > 0
+                            ? floor($stockInBaseUnit * $productFactor / $u->conversion_factor)
+                            : 0;
 
                         // Discount
                         $discountAmount = 0;
@@ -96,17 +108,18 @@ class ProductController extends Controller
                         }
 
                         return [
-                            'id'                 => $u->id,
-                            'name'               => $u->name,
-                            'symbol'             => $u->symbol,
-                            'price'              => $sellPrice,
-                            'discount_amount'    => $discountAmount,
+                            'id'                   => $u->id,
+                            'name'                 => $u->name,
+                            'symbol'               => $u->symbol,
+                            'price'                => $sellPrice,
+                            'discount_amount'      => $discountAmount,
                             'price_after_discount' => $netPrice,
-                            'tax_name'           => $product->tax?->name,
-                            'tax_rate'           => $product->tax?->rate,
-                            'tax_type'           => $product->tax?->type,
-                            'tax_amount'         => $taxAmount,
-                            'price_with_tax'     => round($netPrice + $taxAmount, 2),
+                            'tax_name'             => $product->tax?->name,
+                            'tax_rate'             => $product->tax?->rate,
+                            'tax_type'             => $product->tax?->type,
+                            'tax_amount'           => $taxAmount,
+                            'price_with_tax'       => round($netPrice + $taxAmount, 2),
+                            'available_quantity'   => (int) $stockInThisUnit,
                         ];
                     })->values()->toArray();
                 }
