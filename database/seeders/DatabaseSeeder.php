@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             UnitSeeder::class,
             AreaSeeder::class,
             AccountingSeeder::class,
+            TaxSeeder::class,
             CategorySeeder::class,
             ProductSeeder::class,
         ]);

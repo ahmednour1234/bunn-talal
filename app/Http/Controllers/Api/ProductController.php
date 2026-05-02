@@ -48,26 +48,82 @@ class ProductController extends Controller
 
         $products = $category->products()
             ->where('is_active', true)
-            ->with(['unit:id,name', 'tax:id,name,rate,type'])
+            ->with([
+                'unit.derivedUnits',
+                'unit.baseUnit.derivedUnits',
+                'tax:id,name,rate,type',
+            ])
             ->select('id', 'name', 'image', 'category_id', 'unit_id', 'tax_id', 'selling_price', 'discount', 'discount_type')
             ->get()
             ->map(function ($product) {
+                $unit           = $product->unit;
+                $availableUnits = [];
+
+                if ($unit) {
+                    // Build the full unit family (base unit + all derived of same type)
+                    if ($unit->isBaseUnit()) {
+                        $familyUnits = collect([$unit])->merge($unit->derivedUnits);
+                    } else {
+                        $base        = $unit->baseUnit;
+                        $familyUnits = $base
+                            ? collect([$base])->merge($base->derivedUnits)
+                            : collect([$unit]);
+                    }
+
+                    $productFactor = (float) $unit->conversion_factor;
+
+                    $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor) {
+                        $factor    = (float) $u->conversion_factor / $productFactor;
+                        $sellPrice = round((float) $product->selling_price * $factor, 2);
+
+                        // Net price after discount
+                        if ($product->discount > 0) {
+                            if ($product->discount_type === 'percentage') {
+                                $netPrice = round($sellPrice * (1 - $product->discount / 100), 2);
+                            } else {
+                                $netPrice = round(max(0, $sellPrice - (float) $product->discount * $factor), 2);
+                            }
+                        } else {
+                            $netPrice = $sellPrice;
+                        }
+
+                        // Final price after tax
+                        $taxAmount = 0;
+                        if ($product->tax) {
+                            $taxAmount = $product->tax->type === 'percentage'
+                                ? round($netPrice * $product->tax->rate / 100, 2)
+                                : round((float) $product->tax->rate * $factor, 2);
+                        }
+
+                        return [
+                            'id'                 => $u->id,
+                            'name'               => $u->name,
+                            'symbol'             => $u->symbol,
+                            'conversion_factor'  => (float) $u->conversion_factor,
+                            'unit_selling_price' => $sellPrice,
+                            'unit_net_price'     => $netPrice,
+                            'unit_final_price'   => round($netPrice + $taxAmount, 2),
+                        ];
+                    })->values()->toArray();
+                }
+
                 return [
-                    'id'             => $product->id,
-                    'name'           => $product->name,
-                    'image'          => $product->image ? asset('storage/' . $product->image) : null,
-                    'selling_price'  => $product->selling_price,
-                    'discount'       => $product->discount,
-                    'discount_type'  => $product->discount_type,
-                    'net_price'      => $product->net_price,
-                    'final_price'    => $product->final_price,
-                    'unit'           => $product->unit ? ['id' => $product->unit->id, 'name' => $product->unit->name] : null,
-                    'tax'            => $product->tax ? [
+                    'id'              => $product->id,
+                    'name'            => $product->name,
+                    'image'           => $product->image ? asset('storage/' . $product->image) : null,
+                    'selling_price'   => $product->selling_price,
+                    'discount'        => $product->discount,
+                    'discount_type'   => $product->discount_type,
+                    'net_price'       => $product->net_price,
+                    'final_price'     => $product->final_price,
+                    'unit'            => $unit ? ['id' => $unit->id, 'name' => $unit->name, 'symbol' => $unit->symbol] : null,
+                    'tax'             => $product->tax ? [
                         'id'   => $product->tax->id,
                         'name' => $product->tax->name,
                         'rate' => $product->tax->rate,
                         'type' => $product->tax->type,
                     ] : null,
+                    'available_units' => $availableUnits,
                 ];
             });
 
