@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             TaxSeeder::class,
             CategorySeeder::class,
             ProductSeeder::class,
+            BranchSeeder::class,
+            BranchProductSeeder::class,
         ]);
     }
 }
