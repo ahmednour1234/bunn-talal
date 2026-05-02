@@ -106,7 +106,7 @@ class TripController extends Controller
      * }
      * @response 403 scenario="Not your trip" {"status": false, "message": "هذه الرحلة لا تخصك", "data": null, "code": 403}
      */
-    public function show(Request $request, int $tripId): JsonResponse
+    public function show(Request $request, $tripId): JsonResponse
     {
         $trip = $this->tripService->getById($tripId);
 
@@ -129,7 +129,7 @@ class TripController extends Controller
      * @response 200 scenario="Success" {"status": true, "message": "تم تشغيل الرحلة بنجاح", "data": {"status": "active"}, "code": 200}
      * @response 400 scenario="Invalid status" {"status": false, "message": "لا يمكن تشغيل الرحلة بحالتها الحالية", "data": null, "code": 400}
      */
-    public function start(Request $request, int $tripId): JsonResponse
+    public function start(Request $request, $tripId): JsonResponse
     {
         $trip = $this->tripService->getById($tripId);
 
@@ -154,7 +154,7 @@ class TripController extends Controller
      * @response 200 scenario="Success" {"status": true, "message": "تم إنهاء الرحلة بنجاح", "data": {"status": "returning"}, "code": 200}
      * @response 400 scenario="Invalid status" {"status": false, "message": "لا يمكن إنهاء الرحلة بحالتها الحالية", "data": null, "code": 400}
      */
-    public function end(Request $request, int $tripId): JsonResponse
+    public function end(Request $request, $tripId): JsonResponse
     {
         $trip = $this->tripService->getById($tripId);
 

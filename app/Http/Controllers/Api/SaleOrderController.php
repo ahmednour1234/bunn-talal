@@ -31,7 +31,7 @@ class SaleOrderController extends Controller
      *   "code": 200
      * }
      */
-    public function index(Request $request, int $tripId): JsonResponse
+    public function index(Request $request, $tripId): JsonResponse
     {
         $trip = Trip::findOrFail($tripId);
 
@@ -84,7 +84,7 @@ class SaleOrderController extends Controller
      * }
      * @response 400 scenario="Trip not active" {"status": false, "message": "لا يمكن إنشاء فاتورة بيع لرحلة غير نشطة", "data": null, "code": 400}
      */
-    public function store(Request $request, int $tripId): JsonResponse
+    public function store(Request $request, $tripId): JsonResponse
     {
         $trip = Trip::findOrFail($tripId);
 

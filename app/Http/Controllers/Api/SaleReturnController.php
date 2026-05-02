@@ -32,7 +32,7 @@ class SaleReturnController extends Controller
      *   "code": 200
      * }
      */
-    public function index(Request $request, int $tripId): JsonResponse
+    public function index(Request $request, $tripId): JsonResponse
     {
         $trip = Trip::findOrFail($tripId);
 
@@ -80,7 +80,7 @@ class SaleReturnController extends Controller
      * }
      * @response 400 scenario="Invalid trip status" {"status": false, "message": "لا يمكن إنشاء مرتجع لهذه الرحلة في وضعها الحالي", "data": null, "code": 400}
      */
-    public function store(Request $request, int $tripId): JsonResponse
+    public function store(Request $request, $tripId): JsonResponse
     {
         $trip = Trip::findOrFail($tripId);
 

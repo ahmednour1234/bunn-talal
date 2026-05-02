@@ -28,7 +28,7 @@ class DispatchController extends Controller
      *   "code": 200
      * }
      */
-    public function index(Request $request, int $tripId): JsonResponse
+    public function index(Request $request, $tripId): JsonResponse
     {
         $trip = Trip::findOrFail($tripId);
 
