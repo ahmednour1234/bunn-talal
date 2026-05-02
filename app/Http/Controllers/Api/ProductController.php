@@ -303,3 +303,4 @@ class ProductController extends Controller
 
         return $this->successResponse($products, 'تم جلب منتجات الرحلة بنجاح');
     }
+}
