@@ -16,16 +16,19 @@ class CustomerController extends Controller
     /**
      * List Customers
      *
-     * Returns active customers in the delegate's assigned areas, including their outstanding balance.
+     * Returns all active customers with optional search filters.
      *
      * @group Reference Data
+     *
+     * @queryParam search string Filter by customer name or phone number. Example: أحمد
+     * @queryParam area string Filter by area/city name (partial match). Example: صنعاء
      *
      * @response 200 scenario="Success" {
      *   "status": true,
      *   "message": "تم جلب العملاء بنجاح",
      *   "data": [{
      *     "id": 1, "name": "عميل 1", "phone": "0501111111",
-     *     "balance": 500, "classification": "vip",
+     *     "balance": 500, "classification": "regular",
      *     "area": {"id": 1, "name": "صنعاء"}
      *   }],
      *   "code": 200
@@ -33,23 +36,43 @@ class CustomerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $customers = Customer::where('is_active', true)
-            ->with('area:id,name')
+        $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'area'   => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $query = Customer::where('is_active', true)->with('area:id,name');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('area')) {
+            $query->whereHas('area', fn ($q) =>
+                $q->where('name', 'like', '%' . $request->area . '%')
+            );
+        }
+
+        $customers = $query
             ->select('id', 'name', 'phone', 'email', 'area_id', 'address', 'latitude', 'longitude', 'classification', 'balance')
             ->get()
             ->map(function ($customer) {
                 return [
-                    'id'             => $customer->id,
-                    'name'           => $customer->name,
-                    'phone'          => $customer->phone,
-                    'email'          => $customer->email,
-                    'address'        => $customer->address,
-                    'latitude'       => $customer->latitude,
-                    'longitude'      => $customer->longitude,
-                    'classification' => $customer->classification,
+                    'id'                   => $customer->id,
+                    'name'                 => $customer->name,
+                    'phone'                => $customer->phone,
+                    'email'                => $customer->email,
+                    'address'              => $customer->address,
+                    'latitude'             => $customer->latitude,
+                    'longitude'            => $customer->longitude,
+                    'classification'       => $customer->classification,
                     'classification_label' => $customer->classification_label,
-                    'balance'        => $customer->balance,
-                    'area'           => $customer->area ? ['id' => $customer->area->id, 'name' => $customer->area->name] : null,
+                    'balance'              => $customer->balance,
+                    'area'                 => $customer->area ? ['id' => $customer->area->id, 'name' => $customer->area->name] : null,
                 ];
             });
 
