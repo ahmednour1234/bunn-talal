@@ -24,8 +24,8 @@ class CategoryController extends Controller
     {
         $categories = $request->user()
             ->categories()
-            ->where('is_active', true)
-            ->select('id', 'name', 'image')
+            ->where('categories.is_active', true)
+            ->select('categories.id', 'categories.name', 'categories.image')
             ->get()
             ->map(function ($category) {
                 return [
