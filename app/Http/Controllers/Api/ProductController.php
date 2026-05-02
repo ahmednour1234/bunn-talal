@@ -141,28 +141,29 @@ class ProductController extends Controller
                 }
 
                 return [
-                    'id'              => $product->id,
-                    'name'            => $product->name,
-                    'image'           => $product->image ? asset('storage/' . $product->image) : null,
-                    'selling_price'   => $product->selling_price,
-                    'discount'        => $product->discount,
-                    'discount_type'   => $product->discount_type,
-                    'discount_amount' => $product->net_price !== null ? round((float)$product->selling_price - (float)$product->net_price, 2) : 0,
-                    'net_price'       => $product->net_price,
-                    'tax_amount'      => $product->tax && $product->net_price
+                    'id'                 => $product->id,
+                    'name'               => $product->name,
+                    'image'              => $product->image ? asset('storage/' . $product->image) : null,
+                    'available_quantity' => (float) $stockInBaseUnit,
+                    'selling_price'      => $product->selling_price,
+                    'discount'           => $product->discount,
+                    'discount_type'      => $product->discount_type,
+                    'discount_amount'    => $product->net_price !== null ? round((float)$product->selling_price - (float)$product->net_price, 2) : 0,
+                    'net_price'          => $product->net_price,
+                    'tax_amount'         => $product->tax && $product->net_price
                         ? ($product->tax->type === 'percentage'
                             ? round((float)$product->net_price * $product->tax->rate / 100, 2)
                             : round((float)$product->tax->rate, 2))
                         : 0,
-                    'final_price'     => $product->final_price,
-                    'unit'            => $unit ? ['id' => $unit->id, 'name' => $unit->name, 'symbol' => $unit->symbol] : null,
-                    'tax'             => $product->tax ? [
+                    'final_price'        => $product->final_price,
+                    'unit'               => $unit ? ['id' => $unit->id, 'name' => $unit->name, 'symbol' => $unit->symbol] : null,
+                    'tax'                => $product->tax ? [
                         'id'   => $product->tax->id,
                         'name' => $product->tax->name,
                         'rate' => $product->tax->rate,
                         'type' => $product->tax->type,
                     ] : null,
-                    'available_units' => $availableUnits,
+                    'available_units'    => $availableUnits,
                 ];
             });
 
