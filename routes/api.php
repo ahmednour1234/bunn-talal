@@ -53,6 +53,7 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::get('/delegate/categories',      [CategoryController::class, 'index']);
     Route::get('/delegate/categories/{category}/products', [ProductController::class, 'index']);
     Route::get('/delegate/customers',       [CustomerController::class, 'index']);
+    Route::post('/delegate/customers',      [CustomerController::class, 'store']);
 
     // Loans / Custody
     Route::get('/delegate/loans', [DelegateLoanController::class, 'index']);
