@@ -17,6 +17,15 @@ class DelegateRepository extends BaseRepository implements DelegateRepositoryInt
         return $this->model->where('email', $email)->first();
     }
 
+    public function updateLocation(int $id, float $latitude, float $longitude): bool
+    {
+        return (bool) $this->model->where('id', $id)->update([
+            'current_latitude'    => $latitude,
+            'current_longitude'   => $longitude,
+            'location_updated_at' => now(),
+        ]);
+    }
+
     protected function applySearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {

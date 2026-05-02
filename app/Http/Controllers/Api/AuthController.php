@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\DelegateRepositoryInterface;
+use App\Services\DelegateService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ class AuthController extends Controller
     use ApiResponse;
 
     public function __construct(
-        private readonly DelegateRepositoryInterface $delegateRepository
+        private readonly DelegateRepositoryInterface $delegateRepository,
+        private readonly DelegateService $delegateService,
     ) {}
 
     /**
@@ -88,5 +90,44 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return $this->successResponse(null, 'تم تسجيل الخروج بنجاح');
+    }
+
+    /**
+     * Update Location
+     *
+     * Update the authenticated delegate's current GPS coordinates.
+     *
+     * @group Authentication
+     *
+     * @bodyParam latitude  number required The current latitude of the delegate.  Example: 15.352700
+     * @bodyParam longitude number required The current longitude of the delegate. Example: 44.206200
+     *
+     * @response 200 scenario="Success" {
+     *   "status": true,
+     *   "message": "تم تحديث الموقع بنجاح",
+     *   "data": null,
+     *   "code": 200
+     * }
+     * @response 422 scenario="Validation error" {
+     *   "status": false,
+     *   "message": "The given data was invalid.",
+     *   "data": null,
+     *   "code": 422
+     * }
+     */
+    public function updateLocation(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'latitude'  => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        $this->delegateService->updateLocation(
+            $request->user()->id,
+            (float) $validated['latitude'],
+            (float) $validated['longitude'],
+        );
+
+        return $this->successResponse(null, 'تم تحديث الموقع بنجاح');
     }
 }

@@ -35,7 +35,8 @@ Route::post('/delegate/login', [AuthController::class, 'login']);
 Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
 
     // Auth
-    Route::post('/delegate/logout', [AuthController::class, 'logout']);
+    Route::post('/delegate/logout',          [AuthController::class, 'logout']);
+    Route::post('/delegate/update-location', [AuthController::class, 'updateLocation']);
 
     // Statistics
     Route::get('/delegate/statistics',    [StatisticsController::class, 'index']);

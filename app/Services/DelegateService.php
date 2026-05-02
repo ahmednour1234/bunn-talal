@@ -17,6 +17,11 @@ class DelegateService
         return $this->delegateRepository->getAll();
     }
 
+    public function updateLocation(int $id, float $latitude, float $longitude): bool
+    {
+        return $this->delegateRepository->updateLocation($id, $latitude, $longitude);
+    }
+
     public function getDelegateById(int $id)
     {
         return $this->delegateRepository->getById($id);
