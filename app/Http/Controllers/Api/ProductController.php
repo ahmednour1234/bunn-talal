@@ -66,14 +66,18 @@ class ProductController extends Controller
                 $stockInBaseUnit   = $product->branches->sum('pivot.quantity');
 
                 if ($unit) {
-                    // Build the full unit family (base unit + all derived of same type)
+                    // Build the full unit family, product's own unit FIRST
                     if ($unit->isBaseUnit()) {
                         $familyUnits = collect([$unit])->merge($unit->derivedUnits);
                     } else {
                         $base        = $unit->baseUnit;
-                        $familyUnits = $base
+                        $allUnits    = $base
                             ? collect([$base])->merge($base->derivedUnits)
                             : collect([$unit]);
+                        // Put the product's own unit first, then the rest
+                        $familyUnits = collect([$unit])->merge(
+                            $allUnits->filter(fn($u) => $u->id !== $unit->id)->values()
+                        );
                     }
 
                     $productFactor = (float) $unit->conversion_factor;
@@ -250,10 +254,14 @@ class ProductController extends Controller
                 if ($unit->isBaseUnit()) {
                     $familyUnits = collect([$unit])->merge($unit->derivedUnits);
                 } else {
-                    $base        = $unit->baseUnit;
-                    $familyUnits = $base
+                    $base     = $unit->baseUnit;
+                    $allUnits = $base
                         ? collect([$base])->merge($base->derivedUnits)
                         : collect([$unit]);
+                    // Put the product's own unit first, then the rest
+                    $familyUnits = collect([$unit])->merge(
+                        $allUnits->filter(fn($u) => $u->id !== $unit->id)->values()
+                    );
                 }
 
                 $productFactor  = (float) $unit->conversion_factor;
