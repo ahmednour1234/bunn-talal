@@ -90,7 +90,7 @@ class ProductController extends Controller
 
                         // Stock converted to this unit
                         $stockInThisUnit = $u->conversion_factor > 0
-                            ? floor($stockInFamilyBase / $u->conversion_factor)
+                            ? $stockInFamilyBase / $u->conversion_factor
                             : 0;
 
                         // Remainder in the family base unit (e.g. kg→50, remainder 700g)
@@ -135,7 +135,7 @@ class ProductController extends Controller
                             'tax_type'             => $product->tax?->type,
                             'tax_amount'           => $taxAmount,
                             'price_with_tax'       => round($netPrice + $taxAmount, 2),
-                            'available_quantity'   => (int) $stockInThisUnit,
+                            'available_quantity'   => (float) $stockInThisUnit,
                             'remainder_quantity'   => (float) $remainderInBase,
                             'remainder_unit'       => $u->id !== $baseUnit->id
                                 ? ['id' => $baseUnit->id, 'name' => $baseUnit->name, 'symbol' => $baseUnit->symbol]
@@ -273,7 +273,7 @@ class ProductController extends Controller
                     $stockInFamilyBase = $stockInBaseUnit * $productFactor;
 
                     $stockInThisUnit = $u->conversion_factor > 0
-                        ? floor($stockInFamilyBase / $u->conversion_factor)
+                        ? $stockInFamilyBase / $u->conversion_factor
                         : 0;
 
                     $remainderInBase = $u->conversion_factor > 0
@@ -315,7 +315,7 @@ class ProductController extends Controller
                         'tax_type'             => $product->tax?->type,
                         'tax_amount'           => $taxAmount,
                         'price_with_tax'       => round($netPrice + $taxAmount, 2),
-                        'available_quantity'   => (int) $stockInThisUnit,
+                        'available_quantity'   => (float) $stockInThisUnit,
                         'remainder_quantity'   => (float) $remainderInBase,
                         'remainder_unit'       => $u->id !== $baseUnit->id
                             ? ['id' => $baseUnit->id, 'name' => $baseUnit->name, 'symbol' => $baseUnit->symbol]
