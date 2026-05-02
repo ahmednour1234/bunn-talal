@@ -77,17 +77,21 @@ class ProductController extends Controller
                     }
 
                     $productFactor = (float) $unit->conversion_factor;
+                    $baseUnit      = $unit->isBaseUnit() ? $unit : ($unit->baseUnit ?? $unit);
 
-                    $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor, $stockInBaseUnit) {
-                        $factor    = (float) $u->conversion_factor / $productFactor;
-                        $sellPrice = round((float) $product->selling_price * $factor, 2);
+                    $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor, $stockInBaseUnit, $baseUnit) {
+                        $factor           = (float) $u->conversion_factor / $productFactor;
+                        $sellPrice        = round((float) $product->selling_price * $factor, 2);
+                        $stockInFamilyBase = $stockInBaseUnit * $productFactor;
 
                         // Stock converted to this unit
-                        // productFactor = conversion of the product unit (e.g. kg=1000 if base is gram)
-                        // u->conversion_factor = this unit's factor
-                        // stockInBaseUnit is already in the product's unit's base
                         $stockInThisUnit = $u->conversion_factor > 0
-                            ? floor($stockInBaseUnit * $productFactor / $u->conversion_factor)
+                            ? floor($stockInFamilyBase / $u->conversion_factor)
+                            : 0;
+
+                        // Remainder in the family base unit (e.g. kg→50, remainder 700g)
+                        $remainderInBase = $u->conversion_factor > 0
+                            ? fmod($stockInFamilyBase, $u->conversion_factor)
                             : 0;
 
                         // Discount
@@ -128,6 +132,10 @@ class ProductController extends Controller
                             'tax_amount'           => $taxAmount,
                             'price_with_tax'       => round($netPrice + $taxAmount, 2),
                             'available_quantity'   => (int) $stockInThisUnit,
+                            'remainder_quantity'   => (float) $remainderInBase,
+                            'remainder_unit'       => $u->id !== $baseUnit->id
+                                ? ['id' => $baseUnit->id, 'name' => $baseUnit->name, 'symbol' => $baseUnit->symbol]
+                                : null,
                         ];
                     })->values()->toArray();
                 }
@@ -248,10 +256,20 @@ class ProductController extends Controller
                 }
 
                 $productFactor  = (float) $unit->conversion_factor;
+                $baseUnit       = $unit->isBaseUnit() ? $unit : ($unit->baseUnit ?? $unit);
 
-                $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor, $stockInBaseUnit) {
-                    $factor    = (float) $u->conversion_factor / $productFactor;
-                    $sellPrice = round((float) $product->selling_price * $factor, 2);
+                $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor, $stockInBaseUnit, $baseUnit) {
+                    $factor            = (float) $u->conversion_factor / $productFactor;
+                    $sellPrice         = round((float) $product->selling_price * $factor, 2);
+                    $stockInFamilyBase = $stockInBaseUnit * $productFactor;
+
+                    $stockInThisUnit = $u->conversion_factor > 0
+                        ? floor($stockInFamilyBase / $u->conversion_factor)
+                        : 0;
+
+                    $remainderInBase = $u->conversion_factor > 0
+                        ? fmod($stockInFamilyBase, $u->conversion_factor)
+                        : 0;
 
                     $discountAmount = 0;
                     if ($product->discount > 0) {
@@ -269,10 +287,6 @@ class ProductController extends Controller
                             ? round($netPrice * $product->tax->rate / 100, 2)
                             : round((float) $product->tax->rate * $factor, 2);
                     }
-
-                    $stockInThisUnit = $u->conversion_factor > 0
-                        ? floor($stockInBaseUnit * $productFactor / $u->conversion_factor)
-                        : 0;
 
                     $discountRate = $product->discount_type === 'percentage'
                         ? (float) $product->discount
@@ -293,6 +307,10 @@ class ProductController extends Controller
                         'tax_amount'           => $taxAmount,
                         'price_with_tax'       => round($netPrice + $taxAmount, 2),
                         'available_quantity'   => (int) $stockInThisUnit,
+                        'remainder_quantity'   => (float) $remainderInBase,
+                        'remainder_unit'       => $u->id !== $baseUnit->id
+                            ? ['id' => $baseUnit->id, 'name' => $baseUnit->name, 'symbol' => $baseUnit->symbol]
+                            : null,
                     ];
                 })->values()->toArray();
             }
