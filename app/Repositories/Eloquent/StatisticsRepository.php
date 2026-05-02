@@ -27,7 +27,8 @@ class StatisticsRepository implements StatisticsRepositoryInterface
         )->sum('total_amount');
 
         $totalReturns = $this->applyDateFilters(
-            SaleReturn::where('delegate_id', $delegateId)->whereNotIn('status', ['cancelled']),
+            SaleReturn::whereHas('order', fn ($q) => $q->where('delegate_id', $delegateId))
+                ->whereNotIn('status', ['cancelled']),
             $filters, 'date'
         )->sum('refund_amount');
 
@@ -47,7 +48,8 @@ class StatisticsRepository implements StatisticsRepositoryInterface
         )->count();
 
         $returnsCount = $this->applyDateFilters(
-            SaleReturn::where('delegate_id', $delegateId)->whereNotIn('status', ['cancelled']),
+            SaleReturn::whereHas('order', fn ($q) => $q->where('delegate_id', $delegateId))
+                ->whereNotIn('status', ['cancelled']),
             $filters, 'date'
         )->count();
 
