@@ -136,6 +136,50 @@ class CollectionController extends Controller
         return $this->successResponse($this->formatCollection($collection), 'تم جلب تفاصيل التحصيل بنجاح');
     }
 
+    /**
+     * My Collections
+     *
+     * Returns all collections made by the authenticated delegate with optional filters.
+     *
+     * @group Collections
+     *
+     * @queryParam customer_name string Filter by customer name (partial match). Example: أحمد
+     * @queryParam collection_number string Filter by collection number (partial match). Example: COL-20260501
+     *
+     * @response 200 scenario="Success" {
+     *   "status": true,
+     *   "message": "تم جلب التحصيلات بنجاح",
+     *   "data": [{"id": 1, "collection_number": "COL-20260501-0001", "total_amount": 500, "customer": {"id": 3, "name": "أحمد"}}],
+     *   "code": 200
+     * }
+     */
+    public function myCollections(Request $request): JsonResponse
+    {
+        $request->validate([
+            'customer_name'     => ['nullable', 'string', 'max:100'],
+            'collection_number' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $query = Collection::with(['customer', 'items.saleOrder'])
+            ->where('delegate_id', $request->user()->id);
+
+        if ($request->filled('customer_name')) {
+            $query->whereHas('customer', fn ($q) =>
+                $q->where('name', 'like', '%' . $request->customer_name . '%')
+            );
+        }
+
+        if ($request->filled('collection_number')) {
+            $query->where('collection_number', 'like', '%' . $request->collection_number . '%');
+        }
+
+        $collections = $query->latest()->get();
+
+        $data = $collections->map(fn ($c) => $this->formatCollection($c))->values();
+
+        return $this->successResponse($data, 'تم جلب التحصيلات بنجاح');
+    }
+
     private function formatCollection(Collection $c): array
     {
         return [
