@@ -60,12 +60,25 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (\Throwable $e, Request $request) {
             if ($request->is('api/*')) {
-                return response()->json([
+                $payload = [
                     'status'  => false,
                     'message' => 'حدث خطأ في الخادم، يرجى المحاولة لاحقاً',
                     'data'    => null,
                     'code'    => 500,
-                ], 500);
+                ];
+
+                if (config('app.debug')) {
+                    $payload['error']   = $e->getMessage();
+                    $payload['file']    = $e->getFile();
+                    $payload['line']    = $e->getLine();
+                    $payload['trace']   = collect($e->getTrace())->take(10)->map(fn ($t) => [
+                        'file'     => $t['file'] ?? null,
+                        'line'     => $t['line'] ?? null,
+                        'function' => ($t['class'] ?? '') . ($t['type'] ?? '') . ($t['function'] ?? ''),
+                    ])->values();
+                }
+
+                return response()->json($payload, 500);
             }
         });
     })->create();
