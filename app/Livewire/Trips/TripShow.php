@@ -32,6 +32,9 @@ class TripShow extends Component
     // Viewing a booking request detail
     public ?int $viewingBrId = null;
 
+    // Viewing a sale order popup
+    public ?int $viewingOrderId = null;
+
     public function mount(int $id): void
     {
         $this->tripId = $id;
@@ -107,6 +110,16 @@ class TripShow extends Component
     public function viewBooking(int $id): void
     {
         $this->viewingBrId = ($this->viewingBrId === $id) ? null : $id;
+    }
+
+    public function viewOrder(int $id): void
+    {
+        $this->viewingOrderId = $id;
+    }
+
+    public function closeOrderModal(): void
+    {
+        $this->viewingOrderId = null;
     }
 
     public function updateBookingStatus(int $id, string $status): void
@@ -300,14 +313,15 @@ class TripShow extends Component
     public function render()
     {
         $dispatches     = $this->trip->dispatches()->with(['branch', 'items.product.unit'])->latest()->get();
-        $saleOrders     = $this->trip->saleOrders()->with(['customer', 'items'])->latest()->get();
+        $saleOrders     = $this->trip->saleOrders()->with(['customer', 'items.product', 'items.unit', 'payments'])->latest()->get();
+        $viewingOrder   = $this->viewingOrderId ? $saleOrders->firstWhere('id', $this->viewingOrderId) : null;
         $collections    = $this->trip->collections()->with('customer')->latest()->get();
         $saleReturns    = $this->trip->saleReturns()->with('customer')->latest()->get();
         $bookingRequests = $this->trip->bookingRequests()->with(['delegate', 'items.product.unit', 'items.unit'])->latest()->get();
         $treasuries     = Treasury::where('is_active', true)->orderBy('name')->get(['id', 'name', 'balance']);
 
         return view('livewire.trips.trip-show', compact(
-            'dispatches', 'saleOrders', 'collections', 'saleReturns', 'bookingRequests', 'treasuries'
+            'dispatches', 'saleOrders', 'collections', 'saleReturns', 'bookingRequests', 'treasuries', 'viewingOrder'
         ));
     }
 }

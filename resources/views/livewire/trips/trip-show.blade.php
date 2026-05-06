@@ -504,7 +504,7 @@
                 </tr></thead>
                 <tbody class="divide-y divide-gray-50">
                 @foreach($saleOrders as $o)
-                <tr class="text-gray-700">
+                <tr class="text-gray-700 hover:bg-gray-50 cursor-pointer" wire:click="viewOrder({{ $o->id }})">
                     <td class="py-2.5 font-mono text-xs">{{ $o->order_number }}</td>
                     <td class="py-2.5">{{ $o->customer?->name }}</td>
                     <td class="py-2.5 text-gray-500">{{ $o->date?->format('Y-m-d') }}</td>
@@ -706,4 +706,98 @@
             العودة لقائمة الرحلات
         </a>
     </div>
+
+    {{-- Sale Order Popup Modal --}}
+    @if($viewingOrder)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" wire:click.self="closeOrderModal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" dir="rtl">
+            {{-- Header --}}
+            <div class="flex items-center justify-between p-5 border-b border-gray-100">
+                <div>
+                    <h2 class="text-base font-extrabold text-gray-800 font-mono">{{ $viewingOrder->order_number }}</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ $viewingOrder->date?->format('Y-m-d') }} · {{ $viewingOrder->customer?->name }}</p>
+                </div>
+                <button wire:click="closeOrderModal" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Summary --}}
+            <div class="grid grid-cols-3 gap-3 p-5 border-b border-gray-100">
+                <div class="text-center">
+                    <p class="text-xs text-gray-400 mb-1">الإجمالي</p>
+                    <p class="font-extrabold text-gray-800">{{ number_format($viewingOrder->total, 2) }} ج.م</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-400 mb-1">المحصّل</p>
+                    <p class="font-extrabold text-green-700">{{ number_format($viewingOrder->paid_amount, 2) }} ج.م</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-400 mb-1">المتبقي</p>
+                    <p class="font-extrabold {{ $viewingOrder->remaining_amount > 0 ? 'text-red-600' : 'text-gray-400' }}">{{ number_format($viewingOrder->remaining_amount, 2) }} ج.م</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 px-5 py-3 border-b border-gray-100 text-sm">
+                <div><span class="text-gray-400">طريقة الدفع:</span> <span class="font-semibold">{{ $viewingOrder->payment_method_label }}</span></div>
+                <div><span class="text-gray-400">الحالة:</span>
+                    <span class="font-semibold {{ $viewingOrder->status === 'paid' ? 'text-green-700' : ($viewingOrder->status === 'cancelled' ? 'text-red-600' : 'text-amber-600') }}">{{ $viewingOrder->status_label }}</span>
+                </div>
+                @if($viewingOrder->notes)
+                <div class="col-span-2"><span class="text-gray-400">ملاحظات:</span> {{ $viewingOrder->notes }}</div>
+                @endif
+            </div>
+
+            {{-- Items --}}
+            <div class="p-5">
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-3">الأصناف</h3>
+                <table class="w-full text-sm text-right">
+                    <thead><tr class="text-xs text-gray-400 border-b border-gray-100">
+                        <th class="pb-2 font-semibold">المنتج</th>
+                        <th class="pb-2 font-semibold">الوحدة</th>
+                        <th class="pb-2 font-semibold">الكمية</th>
+                        <th class="pb-2 font-semibold">سعر الوحدة</th>
+                        <th class="pb-2 font-semibold">الإجمالي</th>
+                    </tr></thead>
+                    <tbody class="divide-y divide-gray-50">
+                    @foreach($viewingOrder->items as $item)
+                    <tr class="text-gray-700">
+                        <td class="py-2">{{ $item->product?->name }}</td>
+                        <td class="py-2 text-gray-500">{{ $item->unit?->name }}</td>
+                        <td class="py-2">{{ $item->quantity }}</td>
+                        <td class="py-2">{{ number_format($item->unit_price, 2) }}</td>
+                        <td class="py-2 font-semibold">{{ number_format($item->total, 2) }} ج.م</td>
+                    </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Payments --}}
+            @if($viewingOrder->payments->isNotEmpty())
+            <div class="px-5 pb-5">
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-3">سجل الدفعات</h3>
+                <div class="space-y-2">
+                @foreach($viewingOrder->payments as $pay)
+                <div class="flex justify-between items-center bg-green-50 border border-green-100 rounded-xl px-4 py-2 text-sm">
+                    <div>
+                        <span class="font-semibold text-green-800">{{ number_format($pay->amount, 2) }} ج.م</span>
+                        @if($pay->notes) <span class="text-gray-400 text-xs mr-2">— {{ $pay->notes }}</span> @endif
+                    </div>
+                    <span class="text-gray-400 text-xs">{{ $pay->payment_date }}</span>
+                </div>
+                @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- Footer --}}
+            <div class="px-5 pb-5 flex justify-end">
+                <a href="{{ route('sale-orders.show', $viewingOrder->id) }}" class="text-sm text-primary-700 hover:underline font-semibold">
+                    عرض الفاتورة كاملة ←
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
