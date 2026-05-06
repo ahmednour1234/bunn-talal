@@ -497,17 +497,21 @@
                     <th class="pb-2 font-semibold">رقم الفاتورة</th>
                     <th class="pb-2 font-semibold">العميل</th>
                     <th class="pb-2 font-semibold">التاريخ</th>
+                    <th class="pb-2 font-semibold">طريقة الدفع</th>
                     <th class="pb-2 font-semibold">الحالة</th>
                     <th class="pb-2 font-semibold">الإجمالي</th>
+                    <th class="pb-2 font-semibold">المحصّل</th>
                 </tr></thead>
                 <tbody class="divide-y divide-gray-50">
                 @foreach($saleOrders as $o)
                 <tr class="text-gray-700">
                     <td class="py-2.5 font-mono text-xs">{{ $o->order_number }}</td>
                     <td class="py-2.5">{{ $o->customer?->name }}</td>
-                    <td class="py-2.5 text-gray-500">{{ $o->order_date?->format('Y-m-d') }}</td>
-                    <td class="py-2.5">{{ $o->status }}</td>
-                    <td class="py-2.5 font-semibold">{{ number_format($o->final_amount, 0) }} ج.م</td>
+                    <td class="py-2.5 text-gray-500">{{ $o->date?->format('Y-m-d') }}</td>
+                    <td class="py-2.5">{{ $o->payment_method_label }}</td>
+                    <td class="py-2.5">{{ $o->status_label }}</td>
+                    <td class="py-2.5 font-semibold">{{ number_format($o->total, 2) }} ج.م</td>
+                    <td class="py-2.5 font-semibold text-green-700">{{ number_format($o->paid_amount, 2) }} ج.م</td>
                 </tr>
                 @endforeach
                 </tbody>
