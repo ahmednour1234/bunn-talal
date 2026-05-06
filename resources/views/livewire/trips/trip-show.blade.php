@@ -539,7 +539,7 @@
                     <td class="py-2.5 font-mono text-xs">{{ $c->collection_number }}</td>
                     <td class="py-2.5">{{ $c->customer?->name }}</td>
                     <td class="py-2.5 text-gray-500">{{ $c->collection_date?->format('Y-m-d') }}</td>
-                    <td class="py-2.5 font-semibold text-green-700">{{ number_format($c->amount, 0) }} ج.م</td>
+                    <td class="py-2.5 font-semibold text-green-700">{{ number_format($c->total_amount, 2) }} ج.م</td>
                 </tr>
                 @endforeach
                 </tbody>
