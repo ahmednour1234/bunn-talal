@@ -171,7 +171,7 @@ class SaleOrderService
         });
     }
 
-    protected function processPayment(SaleOrder $order, float $amount, ?int $treasuryId, int $adminId): void
+    protected function processPayment(SaleOrder $order, float $amount, ?int $treasuryId, ?int $adminId): void
     {
         if ($amount <= 0) return;
 
