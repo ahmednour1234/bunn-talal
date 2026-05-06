@@ -219,4 +219,17 @@
             </button>
         </div>
     @endif
+
+    {{-- Confirm Cancellation requested by delegate --}}
+    @if(auth('admin')->user()?->hasPermission('sale-orders.edit') && $order->status === 'cancellation_pending')
+        <div class="bg-orange-50 border border-orange-300 rounded-2xl p-4">
+            <p class="text-sm text-orange-800 font-semibold mb-1">⚠ طلب إلغاء من المندوب</p>
+            <p class="text-sm text-orange-700 mb-3">طلب المندوب إلغاء هذه الفاتورة. عند التأكيد سيتم استعادة المخزون وإلغاء العهدة على المندوب.</p>
+            <button type="button" wire:click="confirmCancellation" wire:confirm="تأكيد إلغاء الفاتورة وإلغاء العهدة على المندوب؟"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium">
+                <x-icon name="check-circle" class="w-4 h-4" />
+                تأكيد الإلغاء
+            </button>
+        </div>
+    @endif
 </div>

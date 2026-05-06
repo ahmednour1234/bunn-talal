@@ -71,6 +71,22 @@ class SaleOrderShow extends Component
         }
     }
 
+    public function confirmCancellation(SaleOrderService $service)
+    {
+        $admin = auth('admin')->user();
+        if (!$admin->hasPermission('sale-orders.edit')) {
+            session()->flash('error', 'ليس لديك صلاحية');
+            return;
+        }
+
+        try {
+            $service->confirmCancellation($this->orderId);
+            session()->flash('success', 'تم تأكيد إلغاء الفاتورة وإلغاء العهدة على المندوب');
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+        }
+    }
+
     public function render(SaleOrderService $service)
     {
         $order = $service->getById($this->orderId);

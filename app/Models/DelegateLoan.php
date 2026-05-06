@@ -10,6 +10,7 @@ class DelegateLoan extends Model
         'delegate_id',
         'treasury_id',
         'admin_id',
+        'sale_order_id',
         'amount',
         'paid_amount',
         'due_date',
@@ -42,6 +43,11 @@ class DelegateLoan extends Model
     public function admin()
     {
         return $this->belongsTo(Admin::class);
+    }
+
+    public function saleOrder()
+    {
+        return $this->belongsTo(SaleOrder::class);
     }
 
     public function getRemainingAttribute(): float

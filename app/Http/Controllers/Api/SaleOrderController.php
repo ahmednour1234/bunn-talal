@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\SaleOrderResource;
+use App\Models\DelegateLoan;
 use App\Models\SaleOrder;
 use App\Models\Trip;
 use App\Services\SaleOrderService;
@@ -143,6 +144,19 @@ class SaleOrderController extends Controller
 
         $order = $this->saleOrderService->createOrder($orderData, $validated['items'], $initialPayment);
 
+        // Add collected cash to delegate's عهدة
+        $collectedAmount = (float) $order->paid_amount;
+        if ($collectedAmount > 0) {
+            DelegateLoan::create([
+                'delegate_id'   => $delegate->id,
+                'sale_order_id' => $order->id,
+                'amount'        => $collectedAmount,
+                'paid_amount'   => 0,
+                'is_paid'       => false,
+                'note'          => 'تحصيل فاتورة #' . $order->order_number,
+            ]);
+        }
+
         // Sync trip totals
         $trip->syncTotals();
 
@@ -213,6 +227,16 @@ class SaleOrderController extends Controller
             'notes'    => $validated['notes'] ?? null,
         ]);
 
+        // Add collected payment to delegate's عهدة
+        DelegateLoan::create([
+            'delegate_id'   => $request->user()->id,
+            'sale_order_id' => $order->id,
+            'amount'        => (float) $validated['amount'],
+            'paid_amount'   => 0,
+            'is_paid'       => false,
+            'note'          => 'تحصيل دفعة على فاتورة #' . $order->order_number,
+        ]);
+
         return $this->successResponse(SaleOrderResource::make($order)->resolve(), 'تم تسجيل الدفعة بنجاح');
     }
 
@@ -235,8 +259,17 @@ class SaleOrderController extends Controller
             return $this->forbiddenResponse('هذه الفاتورة لا تخصك');
         }
 
-        $order = $this->saleOrderService->cancelOrder($orderId);
+        if (in_array($order->status, ['cancelled', 'cancellation_pending'])) {
+            return $this->errorResponse('الفاتورة ملغية أو بانتظار الإلغاء بالفعل');
+        }
 
-        return $this->successResponse(null, 'تم إلغاء فاتورة البيع بنجاح');
+        // Cannot request cancellation after 24 hours
+        if ($order->created_at->diffInHours(now()) >= 24) {
+            return $this->errorResponse('لا يمكن طلب إلغاء الفاتورة بعد مرور 24 ساعة على إنشائها');
+        }
+
+        $order->update(['status' => 'cancellation_pending']);
+
+        return $this->successResponse(null, 'تم إرسال طلب الإلغاء، بانتظار تأكيد المسؤول');
     }
 }

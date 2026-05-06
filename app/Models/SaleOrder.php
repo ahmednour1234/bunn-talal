@@ -83,11 +83,12 @@ class SaleOrder extends Model
     public static function statusLabels(): array
     {
         return [
-            'draft'       => 'مسودة',
-            'confirmed'   => 'مؤكد',
-            'partial_paid' => 'مدفوع جزئياً',
-            'paid'        => 'مدفوع',
-            'cancelled'   => 'ملغي',
+            'draft'                => 'مسودة',
+            'confirmed'            => 'مؤكد',
+            'partial_paid'         => 'مدفوع جزئياً',
+            'paid'                 => 'مدفوع',
+            'cancelled'            => 'ملغي',
+            'cancellation_pending' => 'بانتظار الإلغاء',
         ];
     }
 

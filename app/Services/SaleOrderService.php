@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Customer;
+use App\Models\DelegateLoan;
 use App\Models\SaleOrder;
 use App\Models\Treasury;
 use App\Repositories\Contracts\SaleOrderRepositoryInterface;
@@ -262,4 +263,62 @@ class SaleOrderService
             return $order;
         });
     }
+
+    public function confirmCancellation(int $id): SaleOrder
+    {
+        return DB::transaction(function () use ($id) {
+            $order = $this->orderRepository->getById($id);
+
+            if ($order->status !== 'cancellation_pending') {
+                throw new \Exception('الطلب ليس في حالة انتظار الإلغاء');
+            }
+
+            // Restore stock
+            foreach ($order->items as $item) {
+                $stockRow = DB::table('branch_product')
+                    ->where('branch_id', $order->branch_id)
+                    ->where('product_id', $item->product_id)
+                    ->first();
+
+                if ($stockRow) {
+                    DB::table('branch_product')
+                        ->where('id', $stockRow->id)
+                        ->update([
+                            'quantity'   => ((float) $stockRow->quantity) + ((float) $item->quantity),
+                            'updated_at' => now(),
+                        ]);
+                }
+            }
+
+            // Restore treasury (refund paid amount)
+            foreach ($order->payments as $payment) {
+                if ($payment->treasury_id) {
+                    Treasury::where('id', $payment->treasury_id)->decrement('balance', $payment->amount);
+                }
+            }
+
+            // Reset customer balance
+            $remainingOwed = (float) $order->total - (float) $order->paid_amount;
+            Customer::where('id', $order->customer_id)->decrement('balance', $remainingOwed);
+
+            $order->update(['status' => 'cancelled']);
+
+            // Reverse delegate loans linked to this order (mark as paid = no longer owed)
+            if ($order->delegate_id) {
+                DelegateLoan::where('sale_order_id', $order->id)
+                    ->where('is_paid', false)
+                    ->each(function (DelegateLoan $loan) {
+                        $loan->update([
+                            'paid_amount' => $loan->amount,
+                            'is_paid'     => true,
+                            'paid_at'     => now()->toDateString(),
+                            'note'        => $loan->note . ' (مُلغاة)',
+                        ]);
+                    });
+            }
+
+            return $order;
+        });
+    }
 }
+
