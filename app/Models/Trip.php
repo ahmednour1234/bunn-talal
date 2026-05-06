@@ -177,7 +177,12 @@ class Trip extends Model
     {
         $this->total_dispatched_value = $this->dispatches()->sum('total_cost');
         $this->total_invoiced         = $this->saleOrders()->whereNotIn('status', ['cancelled'])->sum('total');
-        $this->total_collected        = $this->collections()->where('status', 'completed')->sum('total_amount');
+
+        // المحصّل = مجموع ما دُفع على الفواتير مباشرة + مجموع التحصيلات المكتملة
+        $paidOnOrders     = $this->saleOrders()->whereNotIn('status', ['cancelled'])->sum('paid_amount');
+        $collectedAmounts = $this->collections()->where('status', 'completed')->sum('total_amount');
+        $this->total_collected = $paidOnOrders + $collectedAmounts;
+
         $this->total_returned_value   = $this->saleReturns()->whereNotIn('status', ['cancelled'])->sum('refund_amount');
         $this->save();
     }
