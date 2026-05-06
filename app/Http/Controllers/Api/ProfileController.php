@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\ProfileResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,28 +37,6 @@ class ProfileController extends Controller
     {
         $delegate = $request->user()->load(['areas:id,name', 'branches:id,name', 'categories:id,name,image']);
 
-        $data = [
-            'id'                   => $delegate->id,
-            'name'                 => $delegate->name,
-            'email'                => $delegate->email,
-            'phone'                => $delegate->phone,
-            'national_id'          => $delegate->national_id,
-            'national_id_image'    => $delegate->national_id_image ? asset('storage/' . $delegate->national_id_image) : null,
-            'credit_sales_limit'   => $delegate->credit_sales_limit,
-            'cash_custody'         => $delegate->cash_custody,
-            'total_collected'      => $delegate->total_collected,
-            'total_due'            => $delegate->total_due,
-            'sales_commission_rate' => $delegate->sales_commission_rate,
-            'is_active'            => $delegate->is_active,
-            'areas'                => $delegate->areas->map(fn($a) => ['id' => $a->id, 'name' => $a->name])->values(),
-            'branches'             => $delegate->branches->map(fn($b) => ['id' => $b->id, 'name' => $b->name])->values(),
-            'categories'           => $delegate->categories->map(fn($c) => [
-                'id'    => $c->id,
-                'name'  => $c->name,
-                'image' => $c->image ? asset('storage/' . $c->image) : null,
-            ])->values(),
-        ];
-
-        return $this->successResponse($data, 'تم جلب بيانات الحساب بنجاح');
+        return $this->successResponse(ProfileResource::make($delegate)->resolve(), 'تم جلب بيانات الحساب بنجاح');
     }
 }

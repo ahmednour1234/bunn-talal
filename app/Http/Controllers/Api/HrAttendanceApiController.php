@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\HrAttendanceResource;
 use App\Repositories\Contracts\HrAttendanceRepositoryInterface;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -51,7 +52,7 @@ class HrAttendanceApiController extends Controller
         $records = $this->attendanceRepo->forDelegate($delegate->id, $filters);
 
         return $this->successResponse([
-            'data' => $records->getCollection()->map(fn($a) => $this->formatAttendance($a)),
+            'data' => HrAttendanceResource::collection($records->getCollection())->resolve(),
             'meta' => [
                 'current_page' => $records->currentPage(),
                 'last_page'    => $records->lastPage(),
@@ -116,20 +117,6 @@ class HrAttendanceApiController extends Controller
             return $this->forbiddenResponse('غير مصرح');
         }
 
-        return $this->successResponse($this->formatAttendance($record), 'تم جلب تفاصيل سجل الحضور بنجاح');
-    }
-
-    private function formatAttendance($record): array
-    {
-        return [
-            'id'           => $record->id,
-            'date'         => $record->date,
-            'check_in'     => $record->check_in,
-            'check_out'    => $record->check_out,
-            'status'       => $record->status,
-            'status_label' => $record->status_label,
-            'notes'        => $record->notes,
-            'created_at'   => $record->created_at?->toISOString(),
-        ];
+        return $this->successResponse(HrAttendanceResource::make($record)->resolve(), 'تم جلب تفاصيل سجل الحضور بنجاح');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\AccountResource;
 use App\Models\Account;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -27,13 +28,8 @@ class AccountController extends Controller
             ->where('is_active', true)
             ->select('id', 'name', 'account_number')
             ->orderBy('name')
-            ->get()
-            ->map(fn($a) => [
-                'id'             => $a->id,
-                'name'           => $a->name,
-                'account_number' => $a->account_number,
-            ]);
+            ->get();
 
-        return $this->successResponse($accounts, 'تم جلب الحسابات بنجاح');
+        return $this->successResponse(AccountResource::collection($accounts)->resolve(), 'تم جلب الحسابات بنجاح');
     }
 }

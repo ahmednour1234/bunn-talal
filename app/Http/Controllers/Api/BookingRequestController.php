@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\BookingRequestResource;
 use App\Models\Trip;
 use App\Models\TripBookingRequest;
 use App\Traits\ApiResponse;
@@ -40,10 +41,9 @@ class BookingRequestController extends Controller
             ->where('delegate_id', $request->user()->id)
             ->with(['items.product:id,name,image', 'items.unit:id,name,symbol'])
             ->latest()
-            ->get()
-            ->map(fn($r) => $this->formatRequest($r));
+            ->get();
 
-        return $this->successResponse($requests, 'تم جلب طلبات الحجز بنجاح');
+        return $this->successResponse(BookingRequestResource::collection($requests)->resolve(), 'تم جلب طلبات الحجز بنجاح');
     }
 
     /**
@@ -121,7 +121,7 @@ class BookingRequestController extends Controller
 
         $bookingRequest->load(['items.product:id,name', 'items.unit:id,name,symbol']);
 
-        return $this->successResponse($this->formatRequest($bookingRequest), 'تم إنشاء طلب الحجز بنجاح', 201);
+        return $this->successResponse(BookingRequestResource::make($bookingRequest)->resolve(), 'تم إنشاء طلب الحجز بنجاح', 201);
     }
 
     /**
@@ -151,7 +151,7 @@ class BookingRequestController extends Controller
             return $this->forbiddenResponse('هذا الطلب لا يخصك');
         }
 
-        return $this->successResponse($this->formatRequest($bookingRequest, detailed: true), 'تم جلب تفاصيل طلب الحجز بنجاح');
+        return $this->successResponse(BookingRequestResource::make($bookingRequest)->resolve(), 'تم جلب تفاصيل طلب الحجز بنجاح');
     }
 
     /**
@@ -181,40 +181,5 @@ class BookingRequestController extends Controller
         $bookingRequest->update(['status' => 'cancelled']);
 
         return $this->successResponse(null, 'تم إلغاء طلب الحجز بنجاح');
-    }
-
-    private function formatRequest(TripBookingRequest $r, bool $detailed = false): array
-    {
-        $data = [
-            'id'               => $r->id,
-            'trip_id'          => $r->trip_id,
-            'customer_name'    => $r->customer_name,
-            'customer_phone'   => $r->customer_phone,
-            'customer_address' => $r->customer_address,
-            'notes'            => $r->notes,
-            'status'           => $r->status,
-            'status_label'     => $r->statusLabel(),
-            'created_at'       => $r->created_at,
-            'items'            => $r->items->map(fn($item) => [
-                'id'         => $item->id,
-                'product'    => $item->product ? ['id' => $item->product->id, 'name' => $item->product->name] : null,
-                'unit'       => $item->unit ? ['id' => $item->unit->id, 'name' => $item->unit->name] : null,
-                'quantity'   => $item->quantity,
-                'unit_price' => $item->unit_price,
-                'subtotal'   => $item->subtotal,
-                'notes'      => $item->notes,
-            ])->values(),
-        ];
-
-        if ($detailed && $r->convertedOrder) {
-            $data['converted_order'] = [
-                'id'           => $r->convertedOrder->id,
-                'order_number' => $r->convertedOrder->order_number,
-                'status'       => $r->convertedOrder->status,
-                'total'        => $r->convertedOrder->total,
-            ];
-        }
-
-        return $data;
     }
 }

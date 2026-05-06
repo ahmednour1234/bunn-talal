@@ -54,6 +54,7 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::get('/delegate/categories/{category}/products',  [ProductController::class, 'index']);
     Route::get('/delegate/trip/products',                   [ProductController::class, 'tripProducts']);
     Route::get('/delegate/trips/products',                  [ProductController::class, 'tripProducts']);
+    Route::get('/delegate/trips/{trip}/products',           [ProductController::class, 'tripProducts']);
     Route::get('/delegate/customers',       [CustomerController::class, 'index']);
     Route::post('/delegate/customers',      [CustomerController::class, 'store']);
 

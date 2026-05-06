@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\SaleReturnResource;
 use App\Models\SaleOrder;
 use App\Models\SaleReturn;
 use App\Models\Trip;
@@ -47,10 +48,9 @@ class SaleReturnController extends Controller
                 'items.unit:id,name,symbol',
             ])
             ->latest()
-            ->get()
-            ->map(fn($r) => $this->formatReturn($r));
+            ->get();
 
-        return $this->successResponse($returns, 'تم جلب المرتجعات بنجاح');
+        return $this->successResponse(SaleReturnResource::collection($returns)->resolve(), 'تم جلب المرتجعات بنجاح');
     }
 
     /**
@@ -126,7 +126,7 @@ class SaleReturnController extends Controller
         // Sync trip totals
         $trip->syncTotals();
 
-        return $this->successResponse($this->formatReturn($return, detailed: true), 'تم إنشاء المرتجع بنجاح', 201);
+        return $this->successResponse(SaleReturnResource::make($return)->resolve(), 'تم إنشاء المرتجع بنجاح', 201);
     }
 
     /**
@@ -158,37 +158,6 @@ class SaleReturnController extends Controller
             return $this->forbiddenResponse('هذا المرتجع لا يخصك');
         }
 
-        return $this->successResponse($this->formatReturn($return, detailed: true), 'تم جلب تفاصيل المرتجع بنجاح');
-    }
-
-    private function formatReturn(SaleReturn $return, bool $detailed = false): array
-    {
-        $data = [
-            'id'            => $return->id,
-            'return_number' => $return->return_number,
-            'status'        => $return->status,
-            'status_label'  => $return->status_label,
-            'date'          => $return->date,
-            'subtotal'      => $return->subtotal,
-            'refund_amount' => $return->refund_amount,
-            'customer'      => $return->customer ? ['id' => $return->customer->id, 'name' => $return->customer->name] : null,
-            'notes'         => $return->notes,
-            'trip_id'       => $return->trip_id,
-        ];
-
-        if ($detailed) {
-            $data['order'] = $return->order ? ['id' => $return->order->id, 'order_number' => $return->order->order_number] : null;
-            $data['items'] = $return->items->map(fn($item) => [
-                'id'            => $item->id,
-                'product'       => $item->product ? ['id' => $item->product->id, 'name' => $item->product->name] : null,
-                'unit'          => $item->unit ? ['id' => $item->unit->id, 'name' => $item->unit->name] : null,
-                'quantity'      => $item->quantity,
-                'unit_price'    => $item->unit_price,
-                'refund_amount' => $item->refund_amount,
-                'reason'        => $item->reason,
-            ])->values();
-        }
-
-        return $data;
+        return $this->successResponse(SaleReturnResource::make($return)->resolve(), 'تم جلب تفاصيل المرتجع بنجاح');
     }
 }

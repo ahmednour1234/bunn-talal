@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\DelegateLoanResource;
 use App\Models\DelegateLoan;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -39,19 +40,7 @@ class DelegateLoanController extends Controller
 
         $loans = DelegateLoan::where('delegate_id', $delegate->id)
             ->latest()
-            ->get()
-            ->map(fn($loan) => [
-                'id'          => $loan->id,
-                'amount'      => $loan->amount,
-                'paid_amount' => $loan->paid_amount,
-                'remaining'   => $loan->remaining,
-                'due_date'    => $loan->due_date,
-                'is_paid'     => $loan->is_paid,
-                'is_overdue'  => $loan->is_overdue,
-                'paid_at'     => $loan->paid_at,
-                'note'        => $loan->note,
-                'created_at'  => $loan->created_at,
-            ]);
+            ->get();
 
         $summary = [
             'total_amount'     => $loans->sum('amount'),
@@ -62,7 +51,7 @@ class DelegateLoanController extends Controller
 
         return $this->successResponse([
             'summary' => $summary,
-            'loans'   => $loans->values(),
+            'loans'   => DelegateLoanResource::collection($loans)->resolve(),
         ], 'تم جلب سجلات العهدة بنجاح');
     }
 }

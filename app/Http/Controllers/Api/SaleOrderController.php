@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\SaleOrderResource;
 use App\Models\SaleOrder;
 use App\Models\Trip;
 use App\Services\SaleOrderService;
@@ -41,12 +42,11 @@ class SaleOrderController extends Controller
 
         $orders = SaleOrder::where('trip_id', $tripId)
             ->where('delegate_id', $request->user()->id)
-            ->with(['customer:id,name,phone', 'items'])
+            ->with(['customer:id,name,phone'])
             ->latest()
-            ->get()
-            ->map(fn($o) => $this->formatOrder($o));
+            ->get();
 
-        return $this->successResponse($orders, 'تم جلب أوامر البيع بنجاح');
+        return $this->successResponse(SaleOrderResource::collection($orders)->resolve(), 'تم جلب أوامر البيع بنجاح');
     }
 
     /**
@@ -146,7 +146,7 @@ class SaleOrderController extends Controller
         // Sync trip totals
         $trip->syncTotals();
 
-        return $this->successResponse($this->formatOrder($order, detailed: true), 'تم إنشاء فاتورة البيع بنجاح', 201);
+        return $this->successResponse(SaleOrderResource::make($order)->resolve(), 'تم إنشاء فاتورة البيع بنجاح', 201);
     }
 
     /**
@@ -177,7 +177,7 @@ class SaleOrderController extends Controller
             return $this->forbiddenResponse('هذه الفاتورة لا تخصك');
         }
 
-        return $this->successResponse($this->formatOrder($order, detailed: true), 'تم جلب تفاصيل الفاتورة بنجاح');
+        return $this->successResponse(SaleOrderResource::make($order)->resolve(), 'تم جلب تفاصيل الفاتورة بنجاح');
     }
 
     /**
@@ -213,7 +213,7 @@ class SaleOrderController extends Controller
             'notes'    => $validated['notes'] ?? null,
         ]);
 
-        return $this->successResponse($this->formatOrder($order, detailed: true), 'تم تسجيل الدفعة بنجاح');
+        return $this->successResponse(SaleOrderResource::make($order)->resolve(), 'تم تسجيل الدفعة بنجاح');
     }
 
     /**
@@ -238,53 +238,5 @@ class SaleOrderController extends Controller
         $order = $this->saleOrderService->cancelOrder($orderId);
 
         return $this->successResponse(null, 'تم إلغاء فاتورة البيع بنجاح');
-    }
-
-    private function formatOrder(SaleOrder $order, bool $detailed = false): array
-    {
-        $data = [
-            'id'               => $order->id,
-            'order_number'     => $order->order_number,
-            'status'           => $order->status,
-            'status_label'     => $order->status_label,
-            'payment_method'   => $order->payment_method,
-            'payment_method_label' => $order->payment_method_label,
-            'date'             => $order->date,
-            'due_date'         => $order->due_date,
-            'subtotal'         => $order->subtotal,
-            'discount_amount'  => $order->discount_amount,
-            'discount_type'    => $order->discount_type,
-            'tax_amount'       => $order->tax_amount,
-            'total'            => $order->total,
-            'paid_amount'      => $order->paid_amount,
-            'remaining_amount' => $order->remaining_amount,
-            'customer'         => $order->customer ? ['id' => $order->customer->id, 'name' => $order->customer->name, 'phone' => $order->customer->phone] : null,
-            'notes'            => $order->notes,
-            'trip_id'          => $order->trip_id,
-        ];
-
-        if ($detailed) {
-            $data['items'] = $order->items->map(fn($item) => [
-                'id'            => $item->id,
-                'product'       => $item->product ? ['id' => $item->product->id, 'name' => $item->product->name] : null,
-                'unit'          => $item->unit ? ['id' => $item->unit->id, 'name' => $item->unit->name] : null,
-                'quantity'      => $item->quantity,
-                'unit_price'    => $item->unit_price,
-                'discount'      => $item->discount,
-                'discount_type' => $item->discount_type,
-                'tax_amount'    => $item->tax_amount,
-                'total'         => $item->total,
-            ])->values();
-
-            $data['payments'] = $order->payments->map(fn($p) => [
-                'id'             => $p->id,
-                'amount'         => $p->amount,
-                'payment_method' => $p->payment_method,
-                'payment_date'   => $p->payment_date,
-                'notes'          => $p->notes,
-            ])->values();
-        }
-
-        return $data;
     }
 }

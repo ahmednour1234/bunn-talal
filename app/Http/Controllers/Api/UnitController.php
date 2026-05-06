@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\UnitResource;
 use App\Models\Unit;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -36,18 +37,8 @@ class UnitController extends Controller
             ->select('id', 'name', 'symbol', 'type', 'base_unit_id', 'conversion_factor')
             ->orderBy('type')
             ->orderBy('name')
-            ->get()
-            ->map(fn($u) => [
-                'id'                => $u->id,
-                'name'              => $u->name,
-                'symbol'            => $u->symbol,
-                'type'              => $u->type,
-                'type_label'        => $u->type_label,
-                'is_base_unit'      => $u->isBaseUnit(),
-                'base_unit_id'      => $u->base_unit_id,
-                'conversion_factor' => $u->conversion_factor,
-            ]);
+            ->get();
 
-        return $this->successResponse($units, 'تم جلب وحدات القياس بنجاح');
+        return $this->successResponse(UnitResource::collection($units)->resolve(), 'تم جلب وحدات القياس بنجاح');
     }
 }

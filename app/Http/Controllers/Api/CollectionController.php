@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\CollectionResource;
 use App\Models\Collection;
 use App\Models\Trip;
 use App\Services\CollectionService;
@@ -41,9 +42,7 @@ class CollectionController extends Controller
 
         $collections = $this->collectionService->getByTrip($tripId, $request->user()->id);
 
-        $data = $collections->map(fn($c) => $this->formatCollection($c));
-
-        return $this->successResponse($data, 'تم جلب التحصيلات بنجاح');
+        return $this->successResponse(CollectionResource::collection($collections)->resolve(), 'تم جلب التحصيلات بنجاح');
     }
 
     /**
@@ -107,7 +106,7 @@ class CollectionController extends Controller
         // Sync trip totals
         $trip->syncTotals();
 
-        return $this->successResponse($this->formatCollection($collection), 'تم تسجيل التحصيل بنجاح', 201);
+        return $this->successResponse(CollectionResource::make($collection)->resolve(), 'تم تسجيل التحصيل بنجاح', 201);
     }
 
     /**
@@ -133,7 +132,7 @@ class CollectionController extends Controller
             return $this->forbiddenResponse('هذا التحصيل لا يخصك');
         }
 
-        return $this->successResponse($this->formatCollection($collection), 'تم جلب تفاصيل التحصيل بنجاح');
+        return $this->successResponse(CollectionResource::make($collection)->resolve(), 'تم جلب تفاصيل التحصيل بنجاح');
     }
 
     /**
@@ -175,34 +174,6 @@ class CollectionController extends Controller
 
         $collections = $query->latest()->get();
 
-        $data = $collections->map(fn ($c) => $this->formatCollection($c))->values();
-
-        return $this->successResponse($data, 'تم جلب التحصيلات بنجاح');
-    }
-
-    private function formatCollection(Collection $c): array
-    {
-        return [
-            'id'                => $c->id,
-            'collection_number' => $c->collection_number,
-            'status'            => $c->status,
-            'status_label'      => $c->status_label,
-            'collection_date'   => $c->collection_date,
-            'total_amount'      => $c->total_amount,
-            'notes'             => $c->notes,
-            'trip_id'           => $c->trip_id,
-            'customer'          => $c->customer ? ['id' => $c->customer->id, 'name' => $c->customer->name, 'phone' => $c->customer->phone] : null,
-            'items'             => $c->items->map(fn($item) => [
-                'id'          => $item->id,
-                'amount'      => $item->amount,
-                'notes'       => $item->notes,
-                'sale_order'  => $item->saleOrder ? [
-                    'id'           => $item->saleOrder->id,
-                    'order_number' => $item->saleOrder->order_number,
-                    'total'        => $item->saleOrder->total,
-                    'paid_amount'  => $item->saleOrder->paid_amount,
-                ] : null,
-            ])->values(),
-        ];
+        return $this->successResponse(CollectionResource::collection($collections)->resolve(), 'تم جلب التحصيلات بنجاح');
     }
 }

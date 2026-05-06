@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\CustomerResource;
 use App\Models\Area;
 use App\Models\Customer;
 use App\Traits\ApiResponse;
@@ -59,24 +60,9 @@ class CustomerController extends Controller
 
         $customers = $query
             ->select('id', 'name', 'phone', 'email', 'area_id', 'address', 'latitude', 'longitude', 'classification', 'balance')
-            ->get()
-            ->map(function ($customer) {
-                return [
-                    'id'                   => $customer->id,
-                    'name'                 => $customer->name,
-                    'phone'                => $customer->phone,
-                    'email'                => $customer->email,
-                    'address'              => $customer->address,
-                    'latitude'             => $customer->latitude,
-                    'longitude'            => $customer->longitude,
-                    'classification'       => $customer->classification,
-                    'classification_label' => $customer->classification_label,
-                    'balance'              => $customer->balance,
-                    'area'                 => $customer->area ? ['id' => $customer->area->id, 'name' => $customer->area->name] : null,
-                ];
-            });
+            ->get();
 
-        return $this->successResponse($customers, 'تم جلب العملاء بنجاح');
+        return $this->successResponse(CustomerResource::collection($customers)->resolve(), 'تم جلب العملاء بنجاح');
     }
 
     /**
@@ -123,16 +109,10 @@ class CustomerController extends Controller
             'classification'  => 'regular',
         ]);
 
-        return $this->successResponse([
-            'id'       => $customer->id,
-            'name'     => $customer->name,
-            'phone'    => $customer->phone,
-            'email'    => $customer->email,
-            'area_id'  => $customer->area_id,
-            'address'  => $customer->address,
-            'latitude' => $customer->latitude,
-            'longitude'=> $customer->longitude,
-            'is_active'=> $customer->is_active,
-        ], 'تم إضافة العميل بنجاح وهو بانتظار تفعيل الإدارة', 201);
+        return $this->successResponse(
+            CustomerResource::make($customer)->resolve(),
+            'تم إضافة العميل بنجاح وهو بانتظار تفعيل الإدارة',
+            201
+        );
     }
 }

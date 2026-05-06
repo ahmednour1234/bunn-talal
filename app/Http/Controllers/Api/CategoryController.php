@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\CategoryResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,15 +27,8 @@ class CategoryController extends Controller
             ->categories()
             ->where('categories.is_active', true)
             ->select('categories.id', 'categories.name', 'categories.image')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'id'    => $category->id,
-                    'name'  => $category->name,
-                    'image' => $category->image ? asset('storage/' . $category->image) : null,
-                ];
-            });
+            ->get();
 
-        return $this->successResponse($categories, 'تم جلب الفئات بنجاح');
+        return $this->successResponse(CategoryResource::collection($categories)->resolve(), 'تم جلب الفئات بنجاح');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\HrSalaryResource;
 use App\Models\HrSalary;
 use App\Repositories\Contracts\HrSalaryRepositoryInterface;
 use App\Traits\ApiResponse;
@@ -54,7 +55,7 @@ class HrSalaryApiController extends Controller
         $salaries = $this->salaryRepo->forDelegate($delegate->id, $filters);
 
         return $this->successResponse([
-            'data' => $salaries->getCollection()->map(fn($s) => $this->formatSalary($s)),
+            'data' => HrSalaryResource::collection($salaries->getCollection())->resolve(),
             'meta' => [
                 'current_page' => $salaries->currentPage(),
                 'last_page'    => $salaries->lastPage(),
@@ -93,24 +94,6 @@ class HrSalaryApiController extends Controller
             return $this->forbiddenResponse('غير مصرح');
         }
 
-        return $this->successResponse($this->formatSalary($salary), 'تم جلب تفاصيل الراتب بنجاح');
-    }
-
-    private function formatSalary(HrSalary $salary): array
-    {
-        return [
-            'id'            => $salary->id,
-            'month'         => $salary->month,
-            'month_label'   => $salary->month_label,
-            'year'          => $salary->year,
-            'basic_salary'  => $salary->basic_salary,
-            'commissions'   => $salary->commissions,
-            'bonuses'       => $salary->bonuses,
-            'deductions'    => $salary->deductions,
-            'net_salary'    => $salary->net_salary,
-            'status'        => $salary->status,
-            'paid_at'       => $salary->paid_at?->toDateString(),
-            'created_at'    => $salary->created_at?->toISOString(),
-        ];
+        return $this->successResponse(HrSalaryResource::make($salary)->resolve(), 'تم جلب تفاصيل الراتب بنجاح');
     }
 }

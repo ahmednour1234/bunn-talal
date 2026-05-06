@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\AreaResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,12 +27,8 @@ class AreaController extends Controller
             ->areas()
             ->where('is_active', true)
             ->select('areas.id', 'areas.name')
-            ->get()
-            ->map(fn($area) => [
-                'id'   => $area->id,
-                'name' => $area->name,
-            ]);
+            ->get();
 
-        return $this->successResponse($areas, 'تم جلب المناطق بنجاح');
+        return $this->successResponse(AreaResource::collection($areas)->resolve(), 'تم جلب المناطق بنجاح');
     }
 }

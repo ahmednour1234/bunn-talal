@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\TripResource;
 use App\Services\TripService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -32,23 +33,7 @@ class TripController extends Controller
         $delegate = $request->user();
         $trips = $this->tripService->getByDelegate($delegate->id);
 
-        $data = $trips->map(fn($trip) => [
-            'id'                    => $trip->id,
-            'trip_number'           => $trip->trip_number,
-            'status'                => $trip->status,
-            'status_label'          => $trip->statusLabel(),
-            'start_date'            => $trip->start_date,
-            'expected_return_date'  => $trip->expected_return_date,
-            'actual_return_date'    => $trip->actual_return_date,
-            'branch'                => $trip->branch ? ['id' => $trip->branch->id, 'name' => $trip->branch->name] : null,
-            'total_dispatched_value' => $trip->total_dispatched_value,
-            'total_invoiced'        => $trip->total_invoiced,
-            'total_collected'       => $trip->total_collected,
-            'total_returned_value'  => $trip->total_returned_value,
-            'cash_custody_amount'   => $trip->cash_custody_amount,
-        ]);
-
-        return $this->successResponse($data, 'تم جلب الرحلات بنجاح');
+        return $this->successResponse(TripResource::collection($trips)->resolve(), 'تم جلب الرحلات بنجاح');
     }
 
     /**
@@ -87,7 +72,7 @@ class TripController extends Controller
 
         $trip = $this->tripService->create(array_merge($validated, ['delegate_id' => $delegate->id]));
 
-        return $this->successResponse($this->formatTrip($trip), 'تم إنشاء الرحلة بنجاح', 201);
+        return $this->successResponse(TripResource::make($trip)->resolve(), 'تم إنشاء الرحلة بنجاح', 201);
     }
 
     /**
@@ -114,7 +99,7 @@ class TripController extends Controller
             return $this->forbiddenResponse('هذه الرحلة لا تخصك');
         }
 
-        return $this->successResponse($this->formatTrip($trip, detailed: true), 'تم جلب تفاصيل الرحلة بنجاح');
+        return $this->successResponse(TripResource::make($trip)->resolve(), 'تم جلب تفاصيل الرحلة بنجاح');
     }
 
     /**
@@ -139,7 +124,7 @@ class TripController extends Controller
 
         $trip = $this->tripService->start($trip);
 
-        return $this->successResponse($this->formatTrip($trip), 'تم تشغيل الرحلة بنجاح');
+        return $this->successResponse(TripResource::make($trip)->resolve(), 'تم تشغيل الرحلة بنجاح');
     }
 
     /**
@@ -164,41 +149,6 @@ class TripController extends Controller
 
         $trip = $this->tripService->end($trip);
 
-        return $this->successResponse($this->formatTrip($trip), 'تم إنهاء الرحلة بنجاح');
-    }
-
-    private function formatTrip($trip, bool $detailed = false): array
-    {
-        $data = [
-            'id'                     => $trip->id,
-            'trip_number'            => $trip->trip_number,
-            'status'                 => $trip->status,
-            'status_label'           => $trip->statusLabel(),
-            'start_date'             => $trip->start_date,
-            'expected_return_date'   => $trip->expected_return_date,
-            'actual_return_date'     => $trip->actual_return_date,
-            'notes'                  => $trip->notes,
-            'branch'                 => $trip->branch ? ['id' => $trip->branch->id, 'name' => $trip->branch->name] : null,
-            'total_dispatched_value' => $trip->total_dispatched_value,
-            'total_invoiced'         => $trip->total_invoiced,
-            'total_collected'        => $trip->total_collected,
-            'total_returned_value'   => $trip->total_returned_value,
-            'outstanding'            => $trip->outstanding,
-            'cash_custody_amount'    => $trip->cash_custody_amount,
-            'cash_custody_note'      => $trip->cash_custody_note,
-        ];
-
-        if ($detailed) {
-            $data['settlement'] = [
-                'status'          => $trip->settlement_status,
-                'cash_expected'   => $trip->settlement_cash_expected,
-                'cash_actual'     => $trip->settlement_cash_actual,
-                'cash_deficit'    => $trip->settlement_cash_deficit,
-                'product_deficit' => $trip->settlement_product_deficit,
-                'notes'           => $trip->settlement_notes,
-            ];
-        }
-
-        return $data;
+        return $this->successResponse(TripResource::make($trip)->resolve(), 'تم إنهاء الرحلة بنجاح');
     }
 }

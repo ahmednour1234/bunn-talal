@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\HrLeaveResource;
 use App\Repositories\Contracts\HrLeaveRepositoryInterface;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -53,7 +54,7 @@ class HrLeaveApiController extends Controller
         $leaves = $this->leaveRepo->forDelegate($delegate->id, $filters);
 
         return $this->successResponse([
-            'data' => $leaves->getCollection()->map(fn($l) => $this->formatLeave($l)),
+            'data' => HrLeaveResource::collection($leaves->getCollection())->resolve(),
             'meta' => [
                 'current_page' => $leaves->currentPage(),
                 'last_page'    => $leaves->lastPage(),
@@ -87,7 +88,7 @@ class HrLeaveApiController extends Controller
             return $this->forbiddenResponse('غير مصرح');
         }
 
-        return $this->successResponse($this->formatLeave($leave), 'تم جلب تفاصيل الإجازة بنجاح');
+        return $this->successResponse(HrLeaveResource::make($leave)->resolve(), 'تم جلب تفاصيل الإجازة بنجاح');
     }
 
     /**
@@ -123,24 +124,6 @@ class HrLeaveApiController extends Controller
 
         $leave = $this->leaveRepo->create($validated);
 
-        return $this->successResponse($this->formatLeave($leave), 'تم تقديم طلب الإجازة بنجاح', 201);
-    }
-
-    private function formatLeave($leave): array
-    {
-        return [
-            'id'               => $leave->id,
-            'type'             => $leave->type,
-            'type_label'       => $leave->type_label,
-            'start_date'       => $leave->start_date?->toDateString(),
-            'end_date'         => $leave->end_date?->toDateString(),
-            'days'             => $leave->days,
-            'reason'           => $leave->reason,
-            'status'           => $leave->status,
-            'status_label'     => $leave->status_label,
-            'approved_at'      => $leave->approved_at?->toISOString(),
-            'rejection_reason' => $leave->rejection_reason,
-            'created_at'       => $leave->created_at?->toISOString(),
-        ];
+        return $this->successResponse(HrLeaveResource::make($leave)->resolve(), 'تم تقديم طلب الإجازة بنجاح', 201);
     }
 }

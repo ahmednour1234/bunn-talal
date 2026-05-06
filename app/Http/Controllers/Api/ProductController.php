@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\ProductResource;
 use App\Models\Category;
 use App\Models\InventoryDispatch;
 use App\Models\Trip;
@@ -59,119 +60,11 @@ class ProductController extends Controller
             ])
             ->select('id', 'name', 'image', 'category_id', 'unit_id', 'tax_id', 'selling_price', 'discount', 'discount_type')
             ->get()
-            ->map(function ($product) {
-                $unit              = $product->unit;
-                $availableUnits    = [];
-                // Total stock in product's base unit across delegate's branches
-                $stockInBaseUnit   = $product->branches->sum('pivot.quantity');
-
-                if ($unit) {
-                    // Build the full unit family, product's own unit FIRST
-                    if ($unit->isBaseUnit()) {
-                        $familyUnits = collect([$unit])->merge($unit->derivedUnits);
-                    } else {
-                        $base        = $unit->baseUnit;
-                        $allUnits    = $base
-                            ? collect([$base])->merge($base->derivedUnits)
-                            : collect([$unit]);
-                        // Put the product's own unit first, then the rest
-                        $familyUnits = collect([$unit])->merge(
-                            $allUnits->filter(fn($u) => $u->id !== $unit->id)->values()
-                        );
-                    }
-
-                    $productFactor = (float) $unit->conversion_factor;
-                    $baseUnit      = $unit->isBaseUnit() ? $unit : ($unit->baseUnit ?? $unit);
-
-                    $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor, $stockInBaseUnit, $baseUnit) {
-                        $factor           = (float) $u->conversion_factor / $productFactor;
-                        $sellPrice        = round((float) $product->selling_price * $factor, 2);
-                        $stockInFamilyBase = $stockInBaseUnit * $productFactor;
-
-                        // Stock converted to this unit
-                        $stockInThisUnit = $u->conversion_factor > 0
-                            ? $stockInFamilyBase / $u->conversion_factor
-                            : 0;
-
-                        // Remainder in the family base unit (e.g. kg→50, remainder 700g)
-                        $remainderInBase = $u->conversion_factor > 0
-                            ? fmod($stockInFamilyBase, $u->conversion_factor)
-                            : 0;
-
-                        // Discount
-                        $discountAmount = 0;
-                        if ($product->discount > 0) {
-                            if ($product->discount_type === 'percentage') {
-                                $discountAmount = round($sellPrice * $product->discount / 100, 2);
-                            } else {
-                                $discountAmount = round((float) $product->discount * $factor, 2);
-                            }
-                        }
-                        $netPrice = round(max(0, $sellPrice - $discountAmount), 2);
-
-                        // Tax
-                        $taxAmount = 0;
-                        if ($product->tax) {
-                            $taxAmount = $product->tax->type === 'percentage'
-                                ? round($netPrice * $product->tax->rate / 100, 2)
-                                : round((float) $product->tax->rate * $factor, 2);
-                        }
-
-                        $discountRate = $product->discount_type === 'percentage'
-                            ? (float) $product->discount
-                            : ($sellPrice > 0 ? round($discountAmount / $sellPrice * 100, 2) : 0);
-
-                        return [
-                            'id'                   => $u->id,
-                            'name'                 => $u->name,
-                            'symbol'               => $u->symbol,
-                            'price'                => $sellPrice,
-                            'discount_type'        => $product->discount_type,
-                            'discount_rate'        => $discountRate,
-                            'discount_amount'      => $discountAmount,
-                            'price_after_discount' => $netPrice,
-                            'tax_name'             => $product->tax?->name,
-                            'tax_rate'             => $product->tax?->rate,
-                            'tax_type'             => $product->tax?->type,
-                            'tax_amount'           => $taxAmount,
-                            'price_with_tax'       => round($netPrice + $taxAmount, 2),
-                            'available_quantity'   => (float) $stockInThisUnit,
-                            'remainder_quantity'   => (float) $remainderInBase,
-                            'remainder_unit'       => $u->id !== $baseUnit->id
-                                ? ['id' => $baseUnit->id, 'name' => $baseUnit->name, 'symbol' => $baseUnit->symbol]
-                                : null,
-                        ];
-                    })->values()->toArray();
-                }
-
-                return [
-                    'id'                 => $product->id,
-                    'name'               => $product->name,
-                    'image'              => $product->image ? asset('storage/' . $product->image) : null,
-                    'available_quantity' => (float) $stockInBaseUnit,
-                    'selling_price'      => $product->selling_price,
-                    'discount'           => $product->discount,
-                    'discount_type'      => $product->discount_type,
-                    'discount_amount'    => $product->net_price !== null ? round((float)$product->selling_price - (float)$product->net_price, 2) : 0,
-                    'net_price'          => $product->net_price,
-                    'tax_amount'         => $product->tax && $product->net_price
-                        ? ($product->tax->type === 'percentage'
-                            ? round((float)$product->net_price * $product->tax->rate / 100, 2)
-                            : round((float)$product->tax->rate, 2))
-                        : 0,
-                    'final_price'        => $product->final_price,
-                    'unit'               => $unit ? ['id' => $unit->id, 'name' => $unit->name, 'symbol' => $unit->symbol] : null,
-                    'tax'                => $product->tax ? [
-                        'id'   => $product->tax->id,
-                        'name' => $product->tax->name,
-                        'rate' => $product->tax->rate,
-                        'type' => $product->tax->type,
-                    ] : null,
-                    'available_units'    => $availableUnits,
-                ];
+            ->each(function ($product) {
+                $product->available_stock = (float) $product->branches->sum('pivot.quantity');
             });
 
-        return $this->successResponse($products, 'تم جلب المنتجات بنجاح');
+        return $this->successResponse(ProductResource::collection($products)->resolve(), 'تم جلب المنتجات بنجاح');
     }
 
     /**
@@ -193,18 +86,25 @@ class ProductController extends Controller
      * }
      * @response 404 scenario="No active trip" {"status": false, "message": "لا توجد رحلة نشطة حالياً", "data": null, "code": 404}
      */
-    public function tripProducts(Request $request): JsonResponse
+    public function tripProducts(Request $request, Trip $trip = null): JsonResponse
     {
         $delegate = $request->user();
 
-        // Find the delegate's current active trip automatically
-        $trip = Trip::where('delegate_id', $delegate->id)
-            ->whereIn('status', ['active', 'in_transit'])
-            ->latest()
-            ->first();
+        if ($trip && $trip->exists) {
+            // Trip was provided via route model binding — verify ownership
+            if ($trip->delegate_id !== $delegate->id) {
+                return $this->forbiddenResponse('ليس لديك صلاحية للوصول إلى هذه الرحلة');
+            }
+        } else {
+            // Find the delegate's current active trip automatically
+            $trip = Trip::where('delegate_id', $delegate->id)
+                ->whereIn('status', ['active', 'in_transit'])
+                ->latest()
+                ->first();
 
-        if (!$trip) {
-            return $this->notFoundResponse('لا توجد رحلة نشطة حالياً');
+            if (!$trip) {
+                return $this->notFoundResponse('لا توجد رحلة نشطة حالياً');
+            }
         }
 
         // Collect remaining quantities per product from dispatches of this trip
@@ -245,113 +145,11 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $request->string('search') . '%');
         }
 
-        $products = $query->get()->map(function ($product) use ($quantities) {
-            $unit            = $product->unit;
-            $stockInBaseUnit = $quantities[$product->id] ?? 0;
-            $availableUnits  = [];
+        $products = $query->get()
+            ->each(function ($product) use ($quantities) {
+                $product->available_stock = (float) ($quantities[$product->id] ?? 0);
+            });
 
-            if ($unit) {
-                if ($unit->isBaseUnit()) {
-                    $familyUnits = collect([$unit])->merge($unit->derivedUnits);
-                } else {
-                    $base     = $unit->baseUnit;
-                    $allUnits = $base
-                        ? collect([$base])->merge($base->derivedUnits)
-                        : collect([$unit]);
-                    // Put the product's own unit first, then the rest
-                    $familyUnits = collect([$unit])->merge(
-                        $allUnits->filter(fn($u) => $u->id !== $unit->id)->values()
-                    );
-                }
-
-                $productFactor  = (float) $unit->conversion_factor;
-                $baseUnit       = $unit->isBaseUnit() ? $unit : ($unit->baseUnit ?? $unit);
-
-                $availableUnits = $familyUnits->map(function ($u) use ($product, $productFactor, $stockInBaseUnit, $baseUnit) {
-                    $factor            = (float) $u->conversion_factor / $productFactor;
-                    $sellPrice         = round((float) $product->selling_price * $factor, 2);
-                    $stockInFamilyBase = $stockInBaseUnit * $productFactor;
-
-                    $stockInThisUnit = $u->conversion_factor > 0
-                        ? $stockInFamilyBase / $u->conversion_factor
-                        : 0;
-
-                    $remainderInBase = $u->conversion_factor > 0
-                        ? fmod($stockInFamilyBase, $u->conversion_factor)
-                        : 0;
-
-                    $discountAmount = 0;
-                    if ($product->discount > 0) {
-                        if ($product->discount_type === 'percentage') {
-                            $discountAmount = round($sellPrice * $product->discount / 100, 2);
-                        } else {
-                            $discountAmount = round((float) $product->discount * $factor, 2);
-                        }
-                    }
-                    $netPrice  = round(max(0, $sellPrice - $discountAmount), 2);
-
-                    $taxAmount = 0;
-                    if ($product->tax) {
-                        $taxAmount = $product->tax->type === 'percentage'
-                            ? round($netPrice * $product->tax->rate / 100, 2)
-                            : round((float) $product->tax->rate * $factor, 2);
-                    }
-
-                    $discountRate = $product->discount_type === 'percentage'
-                        ? (float) $product->discount
-                        : ($sellPrice > 0 ? round($discountAmount / $sellPrice * 100, 2) : 0);
-
-                    return [
-                        'id'                   => $u->id,
-                        'name'                 => $u->name,
-                        'symbol'               => $u->symbol,
-                        'price'                => $sellPrice,
-                        'discount_type'        => $product->discount_type,
-                        'discount_rate'        => $discountRate,
-                        'discount_amount'      => $discountAmount,
-                        'price_after_discount' => $netPrice,
-                        'tax_name'             => $product->tax?->name,
-                        'tax_rate'             => $product->tax?->rate,
-                        'tax_type'             => $product->tax?->type,
-                        'tax_amount'           => $taxAmount,
-                        'price_with_tax'       => round($netPrice + $taxAmount, 2),
-                        'available_quantity'   => (float) $stockInThisUnit,
-                        'remainder_quantity'   => (float) $remainderInBase,
-                        'remainder_unit'       => $u->id !== $baseUnit->id
-                            ? ['id' => $baseUnit->id, 'name' => $baseUnit->name, 'symbol' => $baseUnit->symbol]
-                            : null,
-                    ];
-                })->values()->toArray();
-            }
-
-            return [
-                'id'              => $product->id,
-                'name'            => $product->name,
-                'image'           => $product->image ? asset('storage/' . $product->image) : null,
-                'category'        => $product->category ? ['id' => $product->category->id, 'name' => $product->category->name] : null,
-                'selling_price'   => $product->selling_price,
-                'discount'        => $product->discount,
-                'discount_type'   => $product->discount_type,
-                'discount_amount' => $product->net_price !== null ? round((float)$product->selling_price - (float)$product->net_price, 2) : 0,
-                'net_price'       => $product->net_price,
-                'tax_amount'      => $product->tax && $product->net_price
-                    ? ($product->tax->type === 'percentage'
-                        ? round((float)$product->net_price * $product->tax->rate / 100, 2)
-                        : round((float)$product->tax->rate, 2))
-                    : 0,
-                'final_price'     => $product->final_price,
-                'unit'            => $unit ? ['id' => $unit->id, 'name' => $unit->name, 'symbol' => $unit->symbol] : null,
-                'tax'             => $product->tax ? [
-                    'id'   => $product->tax->id,
-                    'name' => $product->tax->name,
-                    'rate' => $product->tax->rate,
-                    'type' => $product->tax->type,
-                ] : null,
-                'available_quantity' => (float) $stockInBaseUnit,
-                'available_units' => $availableUnits,
-            ];
-        });
-
-        return $this->successResponse($products, 'تم جلب منتجات الرحلة بنجاح');
+        return $this->successResponse(ProductResource::collection($products)->resolve(), 'تم جلب منتجات الرحلة بنجاح');
     }
 }

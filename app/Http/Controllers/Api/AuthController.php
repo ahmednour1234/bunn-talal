@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\DelegateResource;
 use App\Repositories\Contracts\DelegateRepositoryInterface;
 use App\Services\DelegateService;
 use App\Traits\ApiResponse;
@@ -67,12 +68,7 @@ class AuthController extends Controller
 
         return $this->successResponse([
             'token'    => $token,
-            'delegate' => [
-                'id'    => $delegate->id,
-                'name'  => $delegate->name,
-                'email' => $delegate->email,
-                'phone' => $delegate->phone,
-            ],
+            'delegate' => DelegateResource::make($delegate)->resolve(),
         ], 'تم تسجيل الدخول بنجاح');
     }
 

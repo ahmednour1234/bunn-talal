@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\DispatchResource;
 use App\Models\InventoryDispatch;
 use App\Models\Trip;
 use App\Traits\ApiResponse;
@@ -38,12 +39,10 @@ class DispatchController extends Controller
 
         $dispatches = InventoryDispatch::where('trip_id', $tripId)
             ->where('delegate_id', $request->user()->id)
-            ->with(['items.product:id,name,image'])
             ->latest()
-            ->get()
-            ->map(fn($d) => $this->formatDispatch($d));
+            ->get();
 
-        return $this->successResponse($dispatches, 'تم جلب أوامر الصرف بنجاح');
+        return $this->successResponse(DispatchResource::collection($dispatches)->resolve(), 'تم جلب أوامر الصرف بنجاح');
     }
 
     /**
@@ -72,36 +71,6 @@ class DispatchController extends Controller
             return $this->forbiddenResponse('هذا أمر الصرف لا يخصك');
         }
 
-        return $this->successResponse($this->formatDispatch($dispatch, detailed: true), 'تم جلب تفاصيل أمر الصرف بنجاح');
-    }
-
-    private function formatDispatch(InventoryDispatch $d, bool $detailed = false): array
-    {
-        $data = [
-            'id'             => $d->id,
-            'status'         => $d->status,
-            'status_label'   => $d->status_label,
-            'date'           => $d->date,
-            'total_cost'     => $d->total_cost,
-            'expected_sales' => $d->expected_sales,
-            'actual_sales'   => $d->actual_sales,
-            'notes'          => $d->notes,
-            'trip_id'        => $d->trip_id,
-        ];
-
-        if ($detailed) {
-            $data['branch'] = $d->branch ? ['id' => $d->branch->id, 'name' => $d->branch->name] : null;
-            $data['items']  = $d->items->map(fn($item) => [
-                'id'                => $item->id,
-                'product'           => $item->product ? ['id' => $item->product->id, 'name' => $item->product->name] : null,
-                'quantity'          => $item->quantity,
-                'returned_quantity' => $item->returned_quantity,
-                'sold_quantity'     => $item->sold_quantity,
-                'cost_price'        => $item->cost_price,
-                'selling_price'     => $item->selling_price,
-            ])->values();
-        }
-
-        return $data;
+        return $this->successResponse(DispatchResource::make($dispatch)->resolve(), 'تم جلب تفاصيل أمر الصرف بنجاح');
     }
 }
