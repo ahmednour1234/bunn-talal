@@ -32,6 +32,9 @@ class TripShow extends Component
     // Viewing a booking request detail
     public ?int $viewingBrId = null;
 
+    // Viewing a dispatch detail
+    public ?int $viewingDispatchId = null;
+
     // Viewing a sale order popup
     public ?int $viewingOrderId = null;
 
@@ -110,6 +113,11 @@ class TripShow extends Component
     public function viewBooking(int $id): void
     {
         $this->viewingBrId = ($this->viewingBrId === $id) ? null : $id;
+    }
+
+    public function viewDispatch(int $id): void
+    {
+        $this->viewingDispatchId = ($this->viewingDispatchId === $id) ? null : $id;
     }
 
     public function viewOrder(int $id): void

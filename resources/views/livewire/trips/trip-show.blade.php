@@ -465,9 +465,14 @@
                     <td class="py-2.5 font-semibold">{{ number_format($d->expected_sales ?? $d->total_value ?? 0, 0) }} ج.م</td>
                     <td class="py-2.5 text-center">
                         <div class="flex items-center justify-center gap-1.5">
+                            <button wire:click="viewDispatch({{ $d->id }})"
+                                class="text-xs font-semibold px-2 py-1 rounded border transition-colors
+                                       {{ $viewingDispatchId === $d->id ? 'bg-primary-100 border-primary-300 text-primary-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100' }}">
+                                {{ $viewingDispatchId === $d->id ? 'إخفاء' : 'عرض' }}
+                            </button>
                             <a href="{{ route('inventory-dispatches.show', $d->id) }}" wire:navigate
                                 class="text-xs font-semibold px-2 py-1 rounded border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors">
-                                عرض
+                                فتح
                             </a>
                             @if($d->status === 'pending')
                             <button wire:click="confirmDispatch({{ $d->id }})"
@@ -479,6 +484,64 @@
                         </div>
                     </td>
                 </tr>
+                {{-- Dispatch items detail panel --}}
+                @if($viewingDispatchId === $d->id)
+                <tr>
+                    <td colspan="6" class="bg-gray-50 px-4 py-4 border-b border-gray-100">
+                        @if($d->items->isEmpty())
+                        <p class="text-xs text-gray-400 italic text-center py-2">لا توجد أصناف في هذا الأمر</p>
+                        @else
+                        <table class="w-full text-xs bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            <thead>
+                                <tr class="bg-primary-50 text-primary-700 font-semibold">
+                                    <th class="px-3 py-2 text-right">المنتج</th>
+                                    <th class="px-3 py-2 text-center">الوحدة</th>
+                                    <th class="px-3 py-2 text-center">الكمية المصروفة</th>
+                                    <th class="px-3 py-2 text-center">المرتجع</th>
+                                    <th class="px-3 py-2 text-center">معه الآن</th>
+                                    <th class="px-3 py-2 text-right">سعر البيع</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($d->items as $ditem)
+                                @php
+                                    $unitSymbol = $ditem->product?->unit?->symbol ?? '';
+                                    $remaining  = $ditem->quantity - ($ditem->returned_quantity ?? 0);
+                                @endphp
+                                <tr class="hover:bg-primary-50/30 transition-colors">
+                                    <td class="px-3 py-2 font-semibold text-gray-800">{{ $ditem->product?->name ?? '—' }}</td>
+                                    <td class="px-3 py-2 text-center">
+                                        <span class="inline-block bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-md">{{ $unitSymbol ?: '—' }}</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-center">
+                                        <span class="inline-flex px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700">{{ $ditem->quantity }} {{ $unitSymbol }}</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-center">
+                                        <span class="inline-flex px-2 py-0.5 rounded-full font-bold bg-orange-100 text-orange-700">{{ $ditem->returned_quantity ?? 0 }} {{ $unitSymbol }}</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-center">
+                                        <span class="inline-flex px-2 py-0.5 rounded-full font-bold {{ $remaining > 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700' }}">
+                                            {{ $remaining }} {{ $unitSymbol }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-2 text-green-700 font-semibold" dir="ltr">{{ number_format($ditem->selling_price, 2) }} ج.م</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-gray-50 font-bold text-gray-600 border-t border-gray-200">
+                                    <td colspan="2" class="px-3 py-2">الإجمالي</td>
+                                    <td class="px-3 py-2 text-center text-blue-700">{{ $d->items->sum('quantity') }}</td>
+                                    <td class="px-3 py-2 text-center text-orange-700">{{ $d->items->sum('returned_quantity') }}</td>
+                                    <td class="px-3 py-2 text-center text-amber-700">{{ $d->items->sum(fn($i) => $i->quantity - ($i->returned_quantity ?? 0)) }}</td>
+                                    <td class="px-3 py-2 text-green-700 text-right" dir="ltr">{{ number_format($d->items->sum(fn($i) => $i->quantity * $i->selling_price), 2) }} ج.م</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        @endif
+                    </td>
+                </tr>
+                @endif
                 @endforeach
                 </tbody>
             </table>
