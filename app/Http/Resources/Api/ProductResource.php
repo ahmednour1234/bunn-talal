@@ -47,9 +47,15 @@ class ProductResource extends JsonResource
                 'rate' => $this->tax->rate,
                 'type' => $this->tax->type,
             ] : null,
-            'available_quantity' => round($stockInBaseUnit, 2),
+            'available_quantity' => $this->fmtQty($stockInBaseUnit),
             'available_units'    => $availableUnits,
         ];
+    }
+
+    protected function fmtQty(float $value): float
+    {
+        // Round to 4 decimal places then strip trailing zeros
+        return (float) number_format($value, 4, '.', '');
     }
 
     protected function buildAvailableUnits($unit, float $stockInBaseUnit): array
@@ -122,8 +128,8 @@ class ProductResource extends JsonResource
                 'tax_type'             => $product->tax?->type,
                 'tax_amount'           => $taxAmount,
                 'price_with_tax'       => round($netPrice + $taxAmount, 2),
-                'available_quantity'   => round((float) $stockInThisUnit, 2),
-                'remainder_quantity'   => round((float) $remainderInBase, 2),
+                'available_quantity'   => $this->fmtQty($stockInThisUnit),
+                'remainder_quantity'   => $this->fmtQty($remainderInBase),
                 'remainder_unit'       => $u->id !== $baseUnit->id
                     ? ['id' => $baseUnit->id, 'name' => $baseUnit->name, 'symbol' => $baseUnit->symbol]
                     : null,
