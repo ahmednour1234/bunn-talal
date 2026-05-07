@@ -324,10 +324,16 @@
                     foreach($dispatches as $d) {
                         foreach($d->items as $item) {
                             $pid = $item->product_id;
+                            $productFactor  = (float) ($item->product?->unit?->conversion_factor ?? 1);
+                            $dispatchFactor = (float) ($item->unit?->conversion_factor ?? $productFactor);
+                            $qtyInProductUnit = $productFactor > 0
+                                ? $item->quantity * $dispatchFactor / $productFactor
+                                : (float) $item->quantity;
+
                             if ($dispatchedProducts->has($pid)) {
                                 $existing = $dispatchedProducts->get($pid);
-                                $existing['dispatched_qty'] += $item->quantity;
-                                $existing['dispatched_value'] += $item->quantity * $item->selling_price;
+                                $existing['dispatched_qty']   += $qtyInProductUnit;
+                                $existing['dispatched_value'] += $qtyInProductUnit * $item->selling_price;
                                 $dispatchedProducts->put($pid, $existing);
                             } else {
                                 $dispatchedProducts->put($pid, [
@@ -335,8 +341,8 @@
                                     'unit'             => $item->product?->unit?->name ?? '—',
                                     'unit_symbol'      => $item->product?->unit?->symbol ?? '',
                                     'selling_price'    => (float) $item->selling_price,
-                                    'dispatched_qty'   => (float) $item->quantity,
-                                    'dispatched_value' => (float) ($item->quantity * $item->selling_price),
+                                    'dispatched_qty'   => $qtyInProductUnit,
+                                    'dispatched_value' => $qtyInProductUnit * $item->selling_price,
                                     'sold_qty'         => 0,
                                 ]);
                             }
