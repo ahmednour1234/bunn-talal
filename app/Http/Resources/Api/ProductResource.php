@@ -47,7 +47,7 @@ class ProductResource extends JsonResource
                 'rate' => $this->tax->rate,
                 'type' => $this->tax->type,
             ] : null,
-            'available_quantity' => $stockInBaseUnit,
+            'available_quantity' => round($stockInBaseUnit, 2),
             'available_units'    => $availableUnits,
         ];
     }
@@ -122,8 +122,8 @@ class ProductResource extends JsonResource
                 'tax_type'             => $product->tax?->type,
                 'tax_amount'           => $taxAmount,
                 'price_with_tax'       => round($netPrice + $taxAmount, 2),
-                'available_quantity'   => (float) $stockInThisUnit,
-                'remainder_quantity'   => (float) $remainderInBase,
+                'available_quantity'   => round((float) $stockInThisUnit, 2),
+                'remainder_quantity'   => round((float) $remainderInBase, 2),
                 'remainder_unit'       => $u->id !== $baseUnit->id
                     ? ['id' => $baseUnit->id, 'name' => $baseUnit->name, 'symbol' => $baseUnit->symbol]
                     : null,
