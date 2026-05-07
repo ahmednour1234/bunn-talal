@@ -47,7 +47,12 @@ class ProductResource extends JsonResource
                 'rate' => $this->tax->rate,
                 'type' => $this->tax->type,
             ] : null,
-            'available_quantity' => round($stockInBaseUnit, 2),
+            'available_quantity' => round(
+                ($unit && (float) $unit->conversion_factor > 0)
+                    ? $stockInBaseUnit / (float) $unit->conversion_factor
+                    : $stockInBaseUnit,
+                2
+            ),
             'available_units'    => $availableUnits,
         ];
     }
