@@ -387,11 +387,11 @@
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-4 py-2.5 font-semibold text-gray-800">{{ $prod['name'] }}</td>
-                                <td class="px-3 py-2.5 text-center text-gray-600">{{ number_format($prod['dispatched_qty'], 0) }}</td>
-                                <td class="px-3 py-2.5 text-center text-primary-600 font-semibold">{{ number_format($prod['sold_qty'], 0) }}</td>
+                                <td class="px-3 py-2.5 text-center text-gray-600">{{ number_format($prod['dispatched_qty'], 2) }}</td>
+                                <td class="px-3 py-2.5 text-center text-primary-600 font-semibold">{{ number_format($prod['sold_qty'], 2) }}</td>
                                 <td class="px-3 py-2.5 text-center">
                                     <span class="inline-block font-extrabold text-sm px-2.5 py-1 rounded-lg {{ $currentQty > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-green-50 text-green-700 border border-green-200' }}">
-                                        {{ number_format($currentQty, 0) }}
+                                        {{ number_format($currentQty, 2) }}
                                     </span>
                                 </td>
                                 <td class="px-3 py-2.5 text-center">
@@ -407,10 +407,10 @@
                         <tfoot>
                             <tr class="bg-gray-50 border-t border-gray-100">
                                 <td class="px-4 py-2.5 text-xs font-bold text-gray-500">الإجمالي</td>
-                                <td class="px-3 py-2.5 text-center text-xs font-bold text-gray-600">{{ number_format($dispatchedProducts->sum('dispatched_qty'), 0) }}</td>
-                                <td class="px-3 py-2.5 text-center text-xs font-bold text-primary-600">{{ number_format($dispatchedProducts->sum('sold_qty'), 0) }}</td>
+                                <td class="px-3 py-2.5 text-center text-xs font-bold text-gray-600">{{ number_format($dispatchedProducts->sum('dispatched_qty'), 2) }}</td>
+                                <td class="px-3 py-2.5 text-center text-xs font-bold text-primary-600">{{ number_format($dispatchedProducts->sum('sold_qty'), 2) }}</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-extrabold text-amber-700">
-                                    {{ number_format($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - $p['sold_qty'])), 0) }}
+                                    {{ number_format($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - $p['sold_qty'])), 2) }}
                                 </td>
                                 <td colspan="2"></td>
                                 <td class="px-3 py-2.5 text-center text-xs font-extrabold text-amber-700">
