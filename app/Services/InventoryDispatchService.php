@@ -58,9 +58,10 @@ class InventoryDispatchService
 
             foreach ($items as $item) {
                 $dispatch->items()->create([
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'cost_price' => $item['cost_price'],
+                    'product_id'    => $item['product_id'],
+                    'unit_id'       => $item['unit_id'] ?? null,
+                    'quantity'      => $item['quantity'],
+                    'cost_price'    => $item['cost_price'],
                     'selling_price' => $item['selling_price'],
                 ]);
 

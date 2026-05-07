@@ -9,6 +9,7 @@ class InventoryDispatchItem extends Model
     protected $fillable = [
         'inventory_dispatch_id',
         'product_id',
+        'unit_id',
         'quantity',
         'cost_price',
         'selling_price',
@@ -26,6 +27,11 @@ class InventoryDispatchItem extends Model
     public function dispatch()
     {
         return $this->belongsTo(InventoryDispatch::class, 'inventory_dispatch_id');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     public function product()

@@ -110,23 +110,26 @@ class ProductController extends Controller
         // Collect remaining quantities per product from dispatches of this trip
         $dispatches = InventoryDispatch::where('trip_id', $trip->id)
             ->where('delegate_id', $delegate->id)
-            ->with('items')
+            ->with('items.unit')
             ->get();
 
-        // remaining = dispatched - returned (in dispatch unit, which is product's base unit)
-        $quantities = [];
+        // Store raw (remaining, dispatch_unit_factor) per product to convert later
+        $rawQuantities = []; // [product_id => [['qty' => float, 'factor' => float|null]]]
         foreach ($dispatches as $dispatch) {
             foreach ($dispatch->items as $item) {
-                $remaining = $item->quantity - $item->returned_quantity;
-                $quantities[$item->product_id] = ($quantities[$item->product_id] ?? 0) + $remaining;
+                $remaining = (float) $item->quantity - (float) ($item->returned_quantity ?? 0);
+                $rawQuantities[$item->product_id][] = [
+                    'qty'    => $remaining,
+                    'factor' => $item->unit ? (float) $item->unit->conversion_factor : null,
+                ];
             }
         }
 
-        if (empty($quantities)) {
+        if (empty($rawQuantities)) {
             return $this->successResponse([], 'لا توجد منتجات في هذه الرحلة');
         }
 
-        $productIds = array_keys($quantities);
+        $productIds = array_keys($rawQuantities);
 
         $query = \App\Models\Product::whereIn('id', $productIds)
             ->where('is_active', true)
@@ -146,8 +149,19 @@ class ProductController extends Controller
         }
 
         $products = $query->get()
-            ->each(function ($product) use ($quantities) {
-                $product->available_stock = (float) ($quantities[$product->id] ?? 0);
+            ->each(function ($product) use ($rawQuantities) {
+                $productFactor = $product->unit ? (float) $product->unit->conversion_factor : 1.0;
+                $total = 0.0;
+                foreach ($rawQuantities[$product->id] ?? [] as $entry) {
+                    // If dispatch unit is known and differs from product unit, convert
+                    $dispatchFactor = $entry['factor'] ?? $productFactor;
+                    if ($productFactor > 0) {
+                        $total += $entry['qty'] * $dispatchFactor / $productFactor;
+                    } else {
+                        $total += $entry['qty'];
+                    }
+                }
+                $product->available_stock = $total;
             });
 
         return $this->successResponse(ProductResource::collection($products)->resolve(), 'تم جلب منتجات الرحلة بنجاح');
