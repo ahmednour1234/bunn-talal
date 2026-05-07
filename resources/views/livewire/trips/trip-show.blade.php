@@ -505,7 +505,7 @@
                             <tbody class="divide-y divide-gray-100">
                                 @foreach($d->items as $ditem)
                                 @php
-                                    $unitSymbol = $ditem->product?->unit?->symbol ?? '';
+                                    $unitSymbol = $ditem->unit?->symbol ?? $ditem->product?->unit?->symbol ?? '';
                                     $remaining  = $ditem->quantity - ($ditem->returned_quantity ?? 0);
                                 @endphp
                                 <tr class="hover:bg-primary-50/30 transition-colors">

@@ -48,6 +48,6 @@ class InventoryDispatchRepository extends BaseRepository implements InventoryDis
 
     public function getById(int $id)
     {
-        return $this->model->with(['branch', 'delegate', 'admin', 'items.product.unit', 'trip.settler'])->findOrFail($id);
+        return $this->model->with(['branch', 'delegate', 'admin', 'items.product.unit', 'items.unit', 'trip.settler'])->findOrFail($id);
     }
 }

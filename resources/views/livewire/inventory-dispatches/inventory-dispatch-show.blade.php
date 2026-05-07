@@ -119,7 +119,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @foreach($dispatch->items as $item)
-                    @php $unitSymbol = $item->product->unit?->symbol ?? ''; $remaining = $item->quantity - ($item->returned_quantity ?? 0); @endphp
+                    @php $unitSymbol = $item->unit?->symbol ?? $item->product->unit?->symbol ?? ''; $remaining = $item->quantity - ($item->returned_quantity ?? 0); @endphp
                         <tr class="hover:bg-primary-50/50">
                             <td class="px-6 py-4 font-medium text-gray-800">{{ $item->product->name }}</td>
                             <td class="px-6 py-4 text-gray-500 text-xs">{{ $unitSymbol }}</td>

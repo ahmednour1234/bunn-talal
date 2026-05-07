@@ -320,7 +320,7 @@ class TripShow extends Component
 
     public function render()
     {
-        $dispatches     = $this->trip->dispatches()->with(['branch', 'items.product.unit'])->latest()->get();
+        $dispatches     = $this->trip->dispatches()->with(['branch', 'items.product.unit', 'items.unit'])->latest()->get();
         $saleOrders     = $this->trip->saleOrders()->with(['customer', 'items.product', 'items.unit', 'payments'])->latest()->get();
         $viewingOrder   = $this->viewingOrderId ? $saleOrders->firstWhere('id', $this->viewingOrderId) : null;
         $collections    = $this->trip->collections()->with('customer')->latest()->get();
