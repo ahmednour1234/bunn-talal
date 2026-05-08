@@ -96,7 +96,8 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     // ── Sale Returns ──────────────────────────────────────────────────────
     Route::get('/delegate/returns',                       [SaleReturnController::class, 'index']); // all delegate returns
     Route::get('/delegate/trips/{trip}/returns',          [SaleReturnController::class, 'index']); // filtered by trip
-    Route::post('/delegate/trips/{trip}/returns',         [SaleReturnController::class, 'store']);
+    Route::post('/delegate/returns',                      [SaleReturnController::class, 'store']); // create without trip
+    Route::post('/delegate/trips/{trip}/returns',         [SaleReturnController::class, 'store']); // create with trip
     Route::get('/delegate/returns/{return}',              [SaleReturnController::class, 'show']);
 
     // ── HR - Leaves ───────────────────────────────────────────────────────

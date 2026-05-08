@@ -77,24 +77,34 @@ class SaleReturnController extends Controller
      * }
      * @response 400 scenario="Invalid trip status" {"status": false, "message": "لا يمكن إنشاء مرتجع لهذه الرحلة في وضعها الحالي", "data": null, "code": 400}
      */
-    public function store(StoreSaleReturnRequest $request, $tripId): JsonResponse
+    public function store(StoreSaleReturnRequest $request, $tripId = null): JsonResponse
     {
-        $trip = Trip::findOrFail($tripId);
-
-        if ($trip->delegate_id !== $request->user()->id) {
-            return $this->forbiddenResponse('هذه الرحلة لا تخصك');
-        }
-
-        if (!in_array($trip->status, ['active', 'in_transit', 'returning'])) {
-            return $this->errorResponse('لا يمكن إنشاء مرتجع لهذه الرحلة في وضعها الحالي');
-        }
-
+        $delegate = $request->user();
         $validated = $request->validated();
 
         // Verify the order belongs to this delegate
         $order = SaleOrder::findOrFail($validated['sale_order_id']);
-        if ($order->delegate_id !== $request->user()->id) {
+        if ($order->delegate_id !== $delegate->id) {
             return $this->forbiddenResponse('هذه الفاتورة لا تخصك');
+        }
+
+        // Resolve trip — from URL param, order's trip, or delegate's active trip
+        if ($tripId !== null) {
+            $trip = Trip::findOrFail($tripId);
+            if ($trip->delegate_id !== $delegate->id) {
+                return $this->forbiddenResponse('هذه الرحلة لا تخصك');
+            }
+        } elseif ($order->trip_id) {
+            $trip = Trip::findOrFail($order->trip_id);
+        } else {
+            $trip = Trip::where('delegate_id', $delegate->id)
+                ->whereIn('status', ['active', 'in_transit', 'returning'])
+                ->orderByDesc('id')
+                ->first();
+        }
+
+        if (!$trip || !in_array($trip->status, ['active', 'in_transit', 'returning'])) {
+            return $this->errorResponse('لا يمكن إنشاء مرتجع — لا توجد رحلة نشطة أو الرحلة في وضع لا يسمح بالإرجاع');
         }
 
         $returnData = [
