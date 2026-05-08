@@ -25,6 +25,11 @@ class SaleReturnService
         return $this->returnRepository->getDelegateTripReturns($tripId);
     }
 
+    public function getDelegateReturns(int $delegateId, ?int $tripId = null): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->returnRepository->getDelegateReturns($delegateId, $tripId);
+    }
+
     public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $customerId, ?int $branchId = null)
     {
         return $this->returnRepository->paginateWithFilters($perPage, $search, $status, $customerId, $branchId);

@@ -33,15 +33,19 @@ class SaleReturnController extends Controller
      *   "code": 200
      * }
      */
-    public function index(Request $request, $tripId): JsonResponse
+    public function index(Request $request, $tripId = null): JsonResponse
     {
-        $trip = Trip::findOrFail($tripId);
+        $delegate = $request->user();
 
-        if ($trip->delegate_id !== $request->user()->id) {
-            return $this->forbiddenResponse('هذه الرحلة لا تخصك');
+        if ($tripId !== null) {
+            $trip = Trip::findOrFail($tripId);
+
+            if ($trip->delegate_id !== $delegate->id) {
+                return $this->forbiddenResponse('هذه الرحلة لا تخصك');
+            }
         }
 
-        $returns = $this->saleReturnService->getDelegateTripReturns($trip->id);
+        $returns = $this->saleReturnService->getDelegateReturns($delegate->id, $tripId ? (int) $tripId : null);
 
         return $this->successResponse(SaleReturnResource::collection($returns)->resolve(), 'تم جلب المرتجعات بنجاح');
     }

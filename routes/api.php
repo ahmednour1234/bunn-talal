@@ -94,9 +94,10 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::get('/delegate/collections/{collection}',  [CollectionController::class, 'show']);
 
     // ── Sale Returns ──────────────────────────────────────────────────────
-    Route::get('/delegate/trips/{trip}/returns',  [SaleReturnController::class, 'index']);
-    Route::post('/delegate/trips/{trip}/returns', [SaleReturnController::class, 'store']);
-    Route::get('/delegate/returns/{return}',      [SaleReturnController::class, 'show']);
+    Route::get('/delegate/returns',                       [SaleReturnController::class, 'index']); // all delegate returns
+    Route::get('/delegate/trips/{trip}/returns',          [SaleReturnController::class, 'index']); // filtered by trip
+    Route::post('/delegate/trips/{trip}/returns',         [SaleReturnController::class, 'store']);
+    Route::get('/delegate/returns/{return}',              [SaleReturnController::class, 'show']);
 
     // ── HR - Leaves ───────────────────────────────────────────────────────
     Route::get('/delegate/hr/leaves',            [HrLeaveApiController::class, 'index']);

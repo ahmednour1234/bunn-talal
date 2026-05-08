@@ -51,4 +51,21 @@ class SaleReturnRepository extends BaseRepository implements SaleReturnRepositor
             ->latest()
             ->get();
     }
+
+    public function getDelegateReturns(int $delegateId, ?int $tripId): \Illuminate\Database\Eloquent\Collection
+    {
+        $query = $this->model
+            ->whereHas('order', fn($q) => $q->where('delegate_id', $delegateId))
+            ->with([
+                'customer:id,name,phone',
+                'items.product:id,name',
+                'items.unit:id,name,symbol',
+            ]);
+
+        if ($tripId !== null) {
+            $query->where('trip_id', $tripId);
+        }
+
+        return $query->latest()->get();
+    }
 }
