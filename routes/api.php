@@ -79,11 +79,12 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::get('/delegate/dispatches/{dispatch}',   [DispatchController::class, 'show']);
 
     // ── Sale Orders ───────────────────────────────────────────────────────
-    Route::get('/delegate/trips/{trip}/orders',  [SaleOrderController::class, 'index']);
-    Route::post('/delegate/trips/{trip}/orders', [SaleOrderController::class, 'store']);
-    Route::get('/delegate/orders/{order}',                    [SaleOrderController::class, 'show']);
-    Route::post('/delegate/orders/{order}/payments',          [SaleOrderController::class, 'addPayment']);
-    Route::patch('/delegate/orders/{order}/cancel',           [SaleOrderController::class, 'cancel']);
+    Route::get('/delegate/trips/{trip}/orders',           [SaleOrderController::class, 'index']);
+    Route::post('/delegate/trips/{trip}/orders',          [SaleOrderController::class, 'store']);
+    Route::post('/delegate/orders',                       [SaleOrderController::class, 'store']); // auto-resolve trip
+    Route::get('/delegate/orders/{order}',                [SaleOrderController::class, 'show']);
+    Route::post('/delegate/orders/{order}/payments',      [SaleOrderController::class, 'addPayment']);
+    Route::patch('/delegate/orders/{order}/cancel',       [SaleOrderController::class, 'cancel']);
 
     // ── Collections (تحصيلات) ────────────────────────────────────────────
     Route::get('/delegate/collections',                   [CollectionController::class, 'myCollections']);

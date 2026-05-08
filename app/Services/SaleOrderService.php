@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\DelegateLoan;
 use App\Models\SaleOrder;
 use App\Models\Treasury;
+use App\Models\Trip;
 use App\Repositories\Contracts\SaleOrderRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -13,6 +14,34 @@ class SaleOrderService
 {
     public function __construct(protected SaleOrderRepositoryInterface $orderRepository)
     {
+    }
+
+    public function getDelegateOrdersForTrip(int $tripId, int $delegateId): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->orderRepository->getDelegateOrdersForTrip($tripId, $delegateId);
+    }
+
+    /**
+     * Find the delegate's active trip, or create one if none exists.
+     */
+    public function resolveOrCreateActiveTrip(int $delegateId, ?int $branchId = null): Trip
+    {
+        $trip = Trip::where('delegate_id', $delegateId)
+            ->whereIn('status', ['active', 'in_transit'])
+            ->latest()
+            ->first();
+
+        if (!$trip) {
+            $trip = Trip::create([
+                'delegate_id' => $delegateId,
+                'branch_id'   => $branchId,
+                'admin_id'    => null,
+                'status'      => 'active',
+                'start_date'  => now()->toDateString(),
+            ]);
+        }
+
+        return $trip;
     }
 
     public function getById(int $id)

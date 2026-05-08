@@ -49,4 +49,14 @@ class SaleOrderRepository extends BaseRepository implements SaleOrderRepositoryI
 
         return $query->latest()->paginate($perPage);
     }
+
+    public function getDelegateOrdersForTrip(int $tripId, int $delegateId): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->model
+            ->where('trip_id', $tripId)
+            ->where('delegate_id', $delegateId)
+            ->with(['customer:id,name,phone'])
+            ->latest()
+            ->get();
+    }
 }

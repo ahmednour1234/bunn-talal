@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StoreSaleOrderRequest;
 use App\Http\Resources\Api\SaleOrderResource;
 use App\Models\DelegateLoan;
 use App\Models\SaleOrder;
@@ -85,37 +86,29 @@ class SaleOrderController extends Controller
      * }
      * @response 400 scenario="Trip not active" {"status": false, "message": "لا يمكن إنشاء فاتورة بيع لرحلة غير نشطة", "data": null, "code": 400}
      */
-    public function store(Request $request, $tripId): JsonResponse
+    public function store(StoreSaleOrderRequest $request, $tripId = null): JsonResponse
     {
-        $trip = Trip::findOrFail($tripId);
-
-        if ($trip->delegate_id !== $request->user()->id) {
-            return $this->forbiddenResponse('هذه الرحلة لا تخصك');
-        }
-
-        if (!in_array($trip->status, ['active', 'in_transit'])) {
-            return $this->errorResponse('لا يمكن إنشاء فاتورة بيع لرحلة غير نشطة');
-        }
-
-        $validated = $request->validate([
-            'customer_id'          => ['required', 'integer', 'exists:customers,id'],
-            'payment_method'       => ['required', 'string', 'in:cash,credit,partial'],
-            'discount_amount'      => ['nullable', 'numeric', 'min:0'],
-            'discount_type'        => ['nullable', 'string', 'in:fixed,percentage'],
-            'due_date'             => ['nullable', 'date'],
-            'notes'                => ['nullable', 'string'],
-            'paid_amount'          => ['nullable', 'numeric', 'min:0'],  // for partial method
-            'items'                => ['required', 'array', 'min:1'],
-            'items.*.product_id'   => ['required', 'integer', 'exists:products,id'],
-            'items.*.unit_id'      => ['nullable', 'integer', 'exists:units,id'],
-            'items.*.quantity'     => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_price'   => ['required', 'numeric', 'min:0'],
-            'items.*.discount'     => ['nullable', 'numeric', 'min:0'],
-            'items.*.discount_type' => ['nullable', 'string', 'in:fixed,percentage'],
-            'items.*.tax_amount'   => ['nullable', 'numeric', 'min:0'],
-        ]);
-
         $delegate = $request->user();
+
+        if ($tripId !== null) {
+            $trip = Trip::findOrFail($tripId);
+
+            if ($trip->delegate_id !== $delegate->id) {
+                return $this->forbiddenResponse('هذه الرحلة لا تخصك');
+            }
+
+            if (!in_array($trip->status, ['active', 'in_transit'])) {
+                return $this->errorResponse('لا يمكن إنشاء فاتورة بيع لرحلة غير نشطة');
+            }
+        } else {
+            // Auto-resolve: find delegate's active trip or create one
+            $trip = $this->saleOrderService->resolveOrCreateActiveTrip(
+                $delegate->id,
+                $delegate->branch_id ?? null
+            );
+        }
+
+        $validated = $request->validated();
 
         // Build order data with delegate context
         $orderData = [
