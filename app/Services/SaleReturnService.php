@@ -91,9 +91,12 @@ class SaleReturnService
             $subtotal = 0;
 
             foreach ($items as &$item) {
-                $lineTotal = (float) $item['quantity'] * (float) $item['unit_price'];
-                $subtotal += $lineTotal;
-                $item['refund_amount'] = round($lineTotal, 2);
+                // Use pre-calculated refund_amount (proportional with discount+tax) if provided,
+                // otherwise fall back to simple qty * unit_price
+                if (!isset($item['refund_amount']) || $item['refund_amount'] === null) {
+                    $item['refund_amount'] = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+                }
+                $subtotal += (float) $item['refund_amount'];
             }
 
             $return = $this->returnRepository->create(array_merge($data, [

@@ -118,7 +118,43 @@ class SaleReturnController extends Controller
             'notes'         => $validated['notes'] ?? null,
         ];
 
-        $return = $this->saleReturnService->createReturn($returnData, $validated['items']);
+        // Load order items keyed by sale_order_item_id and product_id for price/discount/tax lookup
+        $orderItems = $order->items->keyBy('id');
+        $orderItemsByProduct = $order->items->keyBy('product_id');
+
+        $items = collect($validated['items'])->map(function (array $item) use ($orderItems, $orderItemsByProduct) {
+            // Resolve the original order item
+            if (!empty($item['sale_order_item_id']) && isset($orderItems[$item['sale_order_item_id']])) {
+                $origItem = $orderItems[$item['sale_order_item_id']];
+            } else {
+                $origItem = $orderItemsByProduct[$item['product_id']] ?? null;
+            }
+
+            if ($origItem) {
+                $item['unit_price']    = (float) $origItem->unit_price;
+                $item['discount']      = (float) $origItem->discount;
+                $item['discount_type'] = $origItem->discount_type;
+                $item['tax_amount']    = (float) $origItem->tax_amount;
+
+                // Calculate proportional refund:
+                // refund = (returned_qty / original_qty) * original_item_total
+                $origQty = (float) $origItem->quantity;
+                $retQty  = (float) $item['quantity'];
+                $ratio   = $origQty > 0 ? min(1, $retQty / $origQty) : 0;
+
+                $item['refund_amount'] = round((float) $origItem->total * $ratio, 2);
+            } else {
+                $item['unit_price']    = 0;
+                $item['discount']      = 0;
+                $item['discount_type'] = 'fixed';
+                $item['tax_amount']    = 0;
+                $item['refund_amount'] = 0;
+            }
+
+            return $item;
+        })->all();
+
+        $return = $this->saleReturnService->createReturn($returnData, $items);
 
         // Sync trip totals
         $trip->syncTotals();

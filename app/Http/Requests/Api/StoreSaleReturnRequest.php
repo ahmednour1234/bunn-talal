@@ -20,7 +20,6 @@ class StoreSaleReturnRequest extends FormRequest
             'items.*.product_id'         => ['required', 'integer', 'exists:products,id'],
             'items.*.unit_id'            => ['nullable', 'integer', 'exists:units,id'],
             'items.*.quantity'           => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_price'         => ['required', 'numeric', 'min:0'],
             'items.*.reason'             => ['nullable', 'string'],
             'items.*.sale_order_item_id' => ['nullable', 'integer', 'exists:sale_order_items,id'],
         ];
@@ -36,7 +35,6 @@ class StoreSaleReturnRequest extends FormRequest
             'items.*.product_id.exists'   => 'أحد المنتجات غير موجود',
             'items.*.quantity.required'   => 'الكمية مطلوبة لكل صنف',
             'items.*.quantity.min'        => 'الكمية يجب أن تكون أكبر من صفر',
-            'items.*.unit_price.required' => 'السعر مطلوب لكل صنف',
         ];
     }
 }
