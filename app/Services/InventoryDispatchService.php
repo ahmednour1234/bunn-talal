@@ -73,6 +73,19 @@ class InventoryDispatchService
                     ->where('branch_id', $data['branch_id'])
                     ->where('product_id', $item['product_id'])
                     ->decrement('quantity', $item['quantity']);
+
+                // Add to delegate stock
+                if (!empty($data['delegate_id'])) {
+                    DB::table('delegate_product')->updateOrInsert(
+                        ['delegate_id' => $data['delegate_id'], 'product_id' => $item['product_id']],
+                        [
+                            'quantity'   => DB::raw('COALESCE(quantity, 0) + ' . (float) $item['quantity']),
+                            'unit_id'    => $item['unit_id'] ?? null,
+                            'updated_at' => now(),
+                            'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
+                        ]
+                    );
+                }
             }
 
             $dispatch->update([
@@ -111,6 +124,14 @@ class InventoryDispatchService
                             'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
                         ]
                     );
+
+                    // Deduct from delegate stock
+                    if ($dispatch->delegate_id) {
+                        DB::table('delegate_product')
+                            ->where('delegate_id', $dispatch->delegate_id)
+                            ->where('product_id', $dispatchItem->product_id)
+                            ->decrement('quantity', (float) $returnedQty);
+                    }
                 }
             }
 

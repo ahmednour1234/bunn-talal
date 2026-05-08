@@ -217,45 +217,30 @@ class TripShow extends Component
                 'settlement_rejection_reason' => null,
             ]);
 
-            // Reload trip with dispatches to return stock
-            $trip = Trip::with(['dispatches.items', 'saleOrders.items'])->find($this->tripId);
+            $trip = Trip::find($this->tripId);
             $branchId = $trip->branch_id;
 
-            // Build product received map from settlement data (expected_remaining = what should come back)
-            $rows = [];
-            foreach ($trip->dispatches as $dispatch) {
-                foreach ($dispatch->items as $item) {
-                    $pid = $item->product_id;
-                    if (!isset($rows[$pid])) {
-                        $rows[$pid] = ['dispatched' => 0, 'sold' => 0, 'already_returned' => 0];
-                    }
-                    $rows[$pid]['dispatched']       += (float)$item->quantity;
-                    $rows[$pid]['already_returned'] += (float)($item->returned_quantity ?? 0);
-                }
-            }
-            foreach ($trip->saleOrders as $order) {
-                if ($order->status === 'cancelled') continue;
-                foreach ($order->items as $item) {
-                    if (isset($rows[$item->product_id])) {
-                        $rows[$item->product_id]['sold'] += (float)$item->quantity;
-                    }
-                }
+            // Move all remaining delegate stock back to branch
+            $delegateStocks = DB::table('delegate_product')
+                ->where('delegate_id', $trip->delegate_id)
+                ->where('quantity', '>', 0)
+                ->get();
+
+            foreach ($delegateStocks as $stock) {
+                DB::table('branch_product')->updateOrInsert(
+                    ['branch_id' => $branchId, 'product_id' => $stock->product_id],
+                    [
+                        'quantity'   => DB::raw("COALESCE(quantity, 0) + {$stock->quantity}"),
+                        'updated_at' => now(),
+                        'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
+                    ]
+                );
             }
 
-            // Return remaining stock to branch
-            foreach ($rows as $pid => $row) {
-                $expectedRemaining = max(0, $row['dispatched'] - $row['sold'] - $row['already_returned']);
-                if ($expectedRemaining > 0 && $branchId) {
-                    DB::table('branch_product')->updateOrInsert(
-                        ['branch_id' => $branchId, 'product_id' => $pid],
-                        [
-                            'quantity'   => DB::raw("COALESCE(quantity, 0) + {$expectedRemaining}"),
-                            'updated_at' => now(),
-                            'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
-                        ]
-                    );
-                }
-            }
+            // Zero out delegate stock for this delegate
+            DB::table('delegate_product')
+                ->where('delegate_id', $trip->delegate_id)
+                ->update(['quantity' => 0, 'updated_at' => now()]);
 
             // Mark all linked dispatches as settled
             $trip->dispatches()->update(['status' => 'settled']);

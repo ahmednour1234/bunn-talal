@@ -178,17 +178,24 @@ class SaleOrderService
                     'total'         => $item['total'],
                 ]);
 
-                // Decrement stock from branch
-                $stockRow = DB::table('branch_product')
-                    ->where('branch_id', $data['branch_id'])
-                    ->where('product_id', $item['product_id'])
-                    ->first();
+                // Decrement stock from delegate (delegate sale) or branch (direct branch sale)
+                if (!empty($data['delegate_id'])) {
+                    DB::table('delegate_product')
+                        ->where('delegate_id', $data['delegate_id'])
+                        ->where('product_id', $item['product_id'])
+                        ->decrement('quantity', (float) $item['quantity']);
+                } else {
+                    $stockRow = DB::table('branch_product')
+                        ->where('branch_id', $data['branch_id'])
+                        ->where('product_id', $item['product_id'])
+                        ->first();
 
-                if ($stockRow) {
-                    $newQty = max(0, ((float) $stockRow->quantity) - ((float) $item['quantity']));
-                    DB::table('branch_product')
-                        ->where('id', $stockRow->id)
-                        ->update(['quantity' => $newQty, 'updated_at' => now()]);
+                    if ($stockRow) {
+                        $newQty = max(0, ((float) $stockRow->quantity) - ((float) $item['quantity']));
+                        DB::table('branch_product')
+                            ->where('id', $stockRow->id)
+                            ->update(['quantity' => $newQty, 'updated_at' => now()]);
+                    }
                 }
             }
 
@@ -264,20 +271,27 @@ class SaleOrderService
                 throw new \Exception('الطلب ملغي بالفعل');
             }
 
-            // Restore stock
+            // Restore stock to delegate or branch
             foreach ($order->items as $item) {
-                $stockRow = DB::table('branch_product')
-                    ->where('branch_id', $order->branch_id)
-                    ->where('product_id', $item->product_id)
-                    ->first();
+                if ($order->delegate_id) {
+                    DB::table('delegate_product')
+                        ->where('delegate_id', $order->delegate_id)
+                        ->where('product_id', $item->product_id)
+                        ->increment('quantity', (float) $item->quantity);
+                } else {
+                    $stockRow = DB::table('branch_product')
+                        ->where('branch_id', $order->branch_id)
+                        ->where('product_id', $item->product_id)
+                        ->first();
 
-                if ($stockRow) {
-                    DB::table('branch_product')
-                        ->where('id', $stockRow->id)
-                        ->update([
-                            'quantity'   => ((float) $stockRow->quantity) + ((float) $item->quantity),
-                            'updated_at' => now(),
-                        ]);
+                    if ($stockRow) {
+                        DB::table('branch_product')
+                            ->where('id', $stockRow->id)
+                            ->update([
+                                'quantity'   => ((float) $stockRow->quantity) + ((float) $item->quantity),
+                                'updated_at' => now(),
+                            ]);
+                    }
                 }
             }
 
@@ -307,20 +321,27 @@ class SaleOrderService
                 throw new \Exception('الطلب ليس في حالة انتظار الإلغاء');
             }
 
-            // Restore stock
+            // Restore stock to delegate or branch
             foreach ($order->items as $item) {
-                $stockRow = DB::table('branch_product')
-                    ->where('branch_id', $order->branch_id)
-                    ->where('product_id', $item->product_id)
-                    ->first();
+                if ($order->delegate_id) {
+                    DB::table('delegate_product')
+                        ->where('delegate_id', $order->delegate_id)
+                        ->where('product_id', $item->product_id)
+                        ->increment('quantity', (float) $item->quantity);
+                } else {
+                    $stockRow = DB::table('branch_product')
+                        ->where('branch_id', $order->branch_id)
+                        ->where('product_id', $item->product_id)
+                        ->first();
 
-                if ($stockRow) {
-                    DB::table('branch_product')
-                        ->where('id', $stockRow->id)
-                        ->update([
-                            'quantity'   => ((float) $stockRow->quantity) + ((float) $item->quantity),
-                            'updated_at' => now(),
-                        ]);
+                    if ($stockRow) {
+                        DB::table('branch_product')
+                            ->where('id', $stockRow->id)
+                            ->update([
+                                'quantity'   => ((float) $stockRow->quantity) + ((float) $item->quantity),
+                                'updated_at' => now(),
+                            ]);
+                    }
                 }
             }
 

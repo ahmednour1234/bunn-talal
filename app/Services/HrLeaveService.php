@@ -3,10 +3,24 @@
 namespace App\Services;
 
 use App\Models\HrLeave;
+use App\Repositories\Contracts\HrLeaveRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 
 class HrLeaveService
 {
+    public function __construct(protected HrLeaveRepositoryInterface $leaveRepository)
+    {
+    }
+
+    public function forDelegate(int $delegateId, array $filters = [])
+    {
+        return $this->leaveRepository->forDelegate($delegateId, $filters);
+    }
+
+    public function createLeave(array $data): HrLeave
+    {
+        return $this->leaveRepository->create($data);
+    }
     public function all(array $filters = [])
     {
         $q = HrLeave::with(['delegate', 'approvedBy'])
