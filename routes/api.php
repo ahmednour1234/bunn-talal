@@ -79,7 +79,8 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::get('/delegate/dispatches/{dispatch}',   [DispatchController::class, 'show']);
 
     // ── Sale Orders ───────────────────────────────────────────────────────
-    Route::get('/delegate/trips/{trip}/orders',           [SaleOrderController::class, 'index']);
+    Route::get('/delegate/orders',                        [SaleOrderController::class, 'index']);  // all delegate orders
+    Route::get('/delegate/trips/{trip}/orders',           [SaleOrderController::class, 'index']);  // filtered by trip
     Route::post('/delegate/trips/{trip}/orders',          [SaleOrderController::class, 'store']);
     Route::post('/delegate/orders',                       [SaleOrderController::class, 'store']); // auto-resolve trip
     Route::get('/delegate/orders/{order}',                [SaleOrderController::class, 'show']);

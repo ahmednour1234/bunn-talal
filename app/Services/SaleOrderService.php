@@ -21,6 +21,11 @@ class SaleOrderService
         return $this->orderRepository->getDelegateOrdersForTrip($tripId, $delegateId);
     }
 
+    public function getDelegateOrders(int $delegateId, ?int $tripId = null): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->orderRepository->getDelegateOrders($delegateId, $tripId);
+    }
+
     /**
      * Find the delegate's active trip, or create one if none exists.
      */

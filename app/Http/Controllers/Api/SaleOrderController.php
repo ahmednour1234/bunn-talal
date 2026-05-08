@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\AddPaymentRequest;
 use App\Http\Requests\Api\StoreSaleOrderRequest;
 use App\Http\Resources\Api\SaleOrderResource;
 use App\Models\DelegateLoan;
@@ -34,19 +35,19 @@ class SaleOrderController extends Controller
      *   "code": 200
      * }
      */
-    public function index(Request $request, $tripId): JsonResponse
+    public function index(Request $request, $tripId = null): JsonResponse
     {
-        $trip = Trip::findOrFail($tripId);
+        $delegate = $request->user();
 
-        if ($trip->delegate_id !== $request->user()->id) {
-            return $this->forbiddenResponse('هذه الرحلة لا تخصك');
+        if ($tripId !== null) {
+            $trip = Trip::findOrFail($tripId);
+
+            if ($trip->delegate_id !== $delegate->id) {
+                return $this->forbiddenResponse('هذه الرحلة لا تخصك');
+            }
         }
 
-        $orders = SaleOrder::where('trip_id', $tripId)
-            ->where('delegate_id', $request->user()->id)
-            ->with(['customer:id,name,phone'])
-            ->latest()
-            ->get();
+        $orders = $this->saleOrderService->getDelegateOrders($delegate->id, $tripId ? (int) $tripId : null);
 
         return $this->successResponse(SaleOrderResource::collection($orders)->resolve(), 'تم جلب أوامر البيع بنجاح');
     }
@@ -173,12 +174,7 @@ class SaleOrderController extends Controller
      */
     public function show(Request $request, int $orderId): JsonResponse
     {
-        $order = SaleOrder::with([
-            'customer:id,name,phone,email',
-            'items.product:id,name,image',
-            'items.unit:id,name,symbol',
-            'payments',
-        ])->findOrFail($orderId);
+        $order = $this->saleOrderService->getById($orderId);
 
         if ($order->delegate_id !== $request->user()->id) {
             return $this->forbiddenResponse('هذه الفاتورة لا تخصك');
@@ -201,7 +197,7 @@ class SaleOrderController extends Controller
      *
      * @response 200 scenario="Success" {"status": true, "message": "تم تسجيل الدفعة بنجاح", "data": {"id": 1, "paid_amount": 350}, "code": 200}
      */
-    public function addPayment(Request $request, int $orderId): JsonResponse
+    public function addPayment(AddPaymentRequest $request, int $orderId): JsonResponse
     {
         $order = SaleOrder::findOrFail($orderId);
 
@@ -209,10 +205,7 @@ class SaleOrderController extends Controller
             return $this->forbiddenResponse('هذه الفاتورة لا تخصك');
         }
 
-        $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'min:0.01'],
-            'notes'  => ['nullable', 'string'],
-        ]);
+        $validated = $request->validated();
 
         $order = $this->saleOrderService->addPayment($orderId, [
             'amount'   => $validated['amount'],

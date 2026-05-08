@@ -12,6 +12,16 @@ class SaleOrderRepository extends BaseRepository implements SaleOrderRepositoryI
         parent::__construct($model);
     }
 
+    public function getById(int $id)
+    {
+        return $this->model->with([
+            'customer:id,name,phone,email',
+            'items.product:id,name,image',
+            'items.unit:id,name,symbol',
+            'payments',
+        ])->findOrFail($id);
+    }
+
     public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $customerId, ?int $branchId, ?int $delegateId, ?string $dateFrom, ?string $dateTo)
     {
         $query = $this->model->with(['customer', 'branch', 'delegate', 'admin', 'treasury']);
@@ -58,5 +68,18 @@ class SaleOrderRepository extends BaseRepository implements SaleOrderRepositoryI
             ->with(['customer:id,name,phone'])
             ->latest()
             ->get();
+    }
+
+    public function getDelegateOrders(int $delegateId, ?int $tripId): \Illuminate\Database\Eloquent\Collection
+    {
+        $query = $this->model
+            ->where('delegate_id', $delegateId)
+            ->with(['customer:id,name,phone']);
+
+        if ($tripId !== null) {
+            $query->where('trip_id', $tripId);
+        }
+
+        return $query->latest()->get();
     }
 }

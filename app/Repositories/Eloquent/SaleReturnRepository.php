@@ -38,4 +38,17 @@ class SaleReturnRepository extends BaseRepository implements SaleReturnRepositor
 
         return $query->latest()->paginate($perPage);
     }
+
+    public function getDelegateTripReturns(int $tripId): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->model
+            ->where('trip_id', $tripId)
+            ->with([
+                'customer:id,name,phone',
+                'items.product:id,name',
+                'items.unit:id,name,symbol',
+            ])
+            ->latest()
+            ->get();
+    }
 }

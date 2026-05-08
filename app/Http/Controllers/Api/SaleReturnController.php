@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StoreSaleReturnRequest;
 use App\Http\Resources\Api\SaleReturnResource;
 use App\Models\SaleOrder;
-use App\Models\SaleReturn;
 use App\Models\Trip;
 use App\Services\SaleReturnService;
 use App\Traits\ApiResponse;
@@ -41,14 +41,7 @@ class SaleReturnController extends Controller
             return $this->forbiddenResponse('هذه الرحلة لا تخصك');
         }
 
-        $returns = SaleReturn::where('trip_id', $tripId)
-            ->with([
-                'customer:id,name,phone',
-                'items.product:id,name',
-                'items.unit:id,name,symbol',
-            ])
-            ->latest()
-            ->get();
+        $returns = $this->saleReturnService->getDelegateTripReturns($trip->id);
 
         return $this->successResponse(SaleReturnResource::collection($returns)->resolve(), 'تم جلب المرتجعات بنجاح');
     }
@@ -80,7 +73,7 @@ class SaleReturnController extends Controller
      * }
      * @response 400 scenario="Invalid trip status" {"status": false, "message": "لا يمكن إنشاء مرتجع لهذه الرحلة في وضعها الحالي", "data": null, "code": 400}
      */
-    public function store(Request $request, $tripId): JsonResponse
+    public function store(StoreSaleReturnRequest $request, $tripId): JsonResponse
     {
         $trip = Trip::findOrFail($tripId);
 
@@ -92,17 +85,7 @@ class SaleReturnController extends Controller
             return $this->errorResponse('لا يمكن إنشاء مرتجع لهذه الرحلة في وضعها الحالي');
         }
 
-        $validated = $request->validate([
-            'sale_order_id'        => ['required', 'integer', 'exists:sale_orders,id'],
-            'notes'                => ['nullable', 'string'],
-            'items'                => ['required', 'array', 'min:1'],
-            'items.*.product_id'   => ['required', 'integer', 'exists:products,id'],
-            'items.*.unit_id'      => ['nullable', 'integer', 'exists:units,id'],
-            'items.*.quantity'     => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_price'   => ['required', 'numeric', 'min:0'],
-            'items.*.reason'       => ['nullable', 'string'],
-            'items.*.sale_order_item_id' => ['nullable', 'integer', 'exists:sale_order_items,id'],
-        ]);
+        $validated = $request->validated();
 
         // Verify the order belongs to this delegate
         $order = SaleOrder::findOrFail($validated['sale_order_id']);
@@ -146,12 +129,7 @@ class SaleReturnController extends Controller
      */
     public function show(Request $request, int $returnId): JsonResponse
     {
-        $return = SaleReturn::with([
-            'customer:id,name,phone',
-            'order:id,order_number,total,paid_amount',
-            'items.product:id,name',
-            'items.unit:id,name,symbol',
-        ])->findOrFail($returnId);
+        $return = $this->saleReturnService->getById($returnId);
 
         // Verify the return's sale order belongs to this delegate
         if ($return->order && $return->order->delegate_id !== $request->user()->id) {
@@ -161,3 +139,4 @@ class SaleReturnController extends Controller
         return $this->successResponse(SaleReturnResource::make($return)->resolve(), 'تم جلب تفاصيل المرتجع بنجاح');
     }
 }
+
