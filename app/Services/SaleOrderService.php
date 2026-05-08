@@ -128,6 +128,25 @@ class SaleOrderService
     public function createOrder(array $data, array $items, ?float $initialPayment = null): SaleOrder
     {
         return DB::transaction(function () use ($data, $items, $initialPayment) {
+            // Validate delegate stock before proceeding
+            if (!empty($data['delegate_id'])) {
+                foreach ($items as $item) {
+                    $stock = DB::table('delegate_product')
+                        ->where('delegate_id', $data['delegate_id'])
+                        ->where('product_id', $item['product_id'])
+                        ->value('quantity');
+
+                    $available = (float) ($stock ?? 0);
+                    $requested = (float) $item['quantity'];
+
+                    if ($available < $requested) {
+                        $product = \App\Models\Product::find($item['product_id']);
+                        $name = $product?->name ?? "المنتج #{$item['product_id']}";
+                        throw new \Exception("الكمية المطلوبة ({$requested}) من \"{$name}\" تتجاوز مخزون المندوب المتاح ({$available})");
+                    }
+                }
+            }
+
             $subtotal = 0;
             $totalTax = 0;
 

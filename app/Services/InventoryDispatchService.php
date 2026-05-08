@@ -29,6 +29,23 @@ class InventoryDispatchService
             $totalCost = 0;
             $expectedSales = 0;
 
+            // Validate branch stock before proceeding
+            foreach ($items as $item) {
+                $stock = DB::table('branch_product')
+                    ->where('branch_id', $data['branch_id'])
+                    ->where('product_id', $item['product_id'])
+                    ->value('quantity');
+
+                $available = (float) ($stock ?? 0);
+                $requested = (float) $item['quantity'];
+
+                if ($available < $requested) {
+                    $product = \App\Models\Product::find($item['product_id']);
+                    $name = $product?->name ?? "المنتج #{$item['product_id']}";
+                    throw new \Exception("الكمية المطلوبة ({$requested}) من \"{$name}\" تتجاوز مخزون الفرع المتاح ({$available})");
+                }
+            }
+
             // Auto-link or auto-create trip for this delegate
             if (!empty($data['delegate_id']) && empty($data['trip_id'])) {
                 $trip = Trip::where('delegate_id', $data['delegate_id'])
