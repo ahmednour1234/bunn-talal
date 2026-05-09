@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StoreBookingRequestRequest;
 use App\Http\Resources\Api\BookingRequestResource;
-use App\Models\Trip;
-use App\Models\TripBookingRequest;
+use App\Services\BookingRequestService;
 use App\Traits\ApiResponse;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,14 +15,16 @@ class BookingRequestController extends Controller
 {
     use ApiResponse;
 
+    public function __construct(private readonly BookingRequestService $service) {}
+
     /**
      * List Booking Requests
      *
-     * Returns booking requests for a specific trip.
+     * Returns booking requests for the delegate, optionally filtered by trip.
      *
      * @group Booking Requests
      *
-     * @urlParam trip integer required The trip ID. Example: 1
+     * @urlParam trip integer optional The trip ID. Example: 1
      *
      * @response 200 scenario="Success" {
      *   "status": true, "message": "تم جلب طلبات الحجز بنجاح",
@@ -29,34 +32,29 @@ class BookingRequestController extends Controller
      *   "code": 200
      * }
      */
-    public function index(Request $request, $tripId): JsonResponse
+    public function index(Request $request, ?int $tripId = null): JsonResponse
     {
-        $trip = Trip::findOrFail($tripId);
+        $requests = $this->service->getDelegateRequests($request->user()->id, $tripId);
 
-        if ($trip->delegate_id !== $request->user()->id) {
-            return $this->forbiddenResponse('هذه الرحلة لا تخصك');
-        }
-
-        $requests = TripBookingRequest::where('trip_id', $tripId)
-            ->where('delegate_id', $request->user()->id)
-            ->with(['items.product:id,name,image', 'items.unit:id,name,symbol'])
-            ->latest()
-            ->get();
-
-        return $this->successResponse(BookingRequestResource::collection($requests)->resolve(), 'تم جلب طلبات الحجز بنجاح');
+        return $this->successResponse(
+            BookingRequestResource::collection($requests)->resolve(),
+            'تم جلب طلبات الحجز بنجاح'
+        );
     }
 
     /**
      * Create Booking Request
      *
-     * Creates a booking request (potential future sale) during an active trip.
-     * Status flow: `pending` → `confirmed` → `converted` (to sale order) or `cancelled`.
+     * Creates a booking request (potential future sale).
+     * Trip is optional — auto-resolved from the delegate's active trip if not provided.
+     * Unit price is auto-filled from the product's selling price.
+     * Customer name is optional.
      *
      * @group Booking Requests
      *
-     * @urlParam trip integer required The trip ID. Example: 1
+     * @urlParam trip integer optional The trip ID. Example: 1
      *
-     * @bodyParam customer_name string required Customer name. Example: عميل جديد
+     * @bodyParam customer_name string nullable Customer name. Example: عميل جديد
      * @bodyParam customer_phone string nullable Customer phone. Example: 0501234567
      * @bodyParam customer_address string nullable Customer address. Example: شارع الجامعة
      * @bodyParam notes string nullable Notes. Example: يريد تسليم مساء
@@ -64,64 +62,29 @@ class BookingRequestController extends Controller
      * @bodyParam items[].product_id integer required Product ID. Example: 5
      * @bodyParam items[].quantity number required Quantity. Example: 2
      * @bodyParam items[].unit_id integer nullable Unit ID. Example: 1
-     * @bodyParam items[].unit_price number required Unit price. Example: 100
      * @bodyParam items[].notes string nullable Per-item notes.
      *
      * @response 201 scenario="Created" {
      *   "status": true, "message": "تم إنشاء طلب الحجز بنجاح",
-     *   "data": {"id": 1, "customer_name": "عميل جديد", "status": "pending"},
+     *   "data": {"id": 1, "status": "pending"},
      *   "code": 201
      * }
-     * @response 400 scenario="Trip not active" {"status": false, "message": "لا يمكن إنشاء طلب حجز لرحلة غير نشطة", "data": null, "code": 400}
      */
-    public function store(Request $request, $tripId): JsonResponse
+    public function store(StoreBookingRequestRequest $request, ?int $tripId = null): JsonResponse
     {
-        $trip = Trip::findOrFail($tripId);
+        $data = $request->validated();
 
-        if ($trip->delegate_id !== $request->user()->id) {
-            return $this->forbiddenResponse('هذه الرحلة لا تخصك');
+        if ($tripId) {
+            $data['trip_id'] = $tripId;
         }
 
-        if (!in_array($trip->status, ['active', 'in_transit'])) {
-            return $this->errorResponse('لا يمكن إنشاء طلب حجز لرحلة غير نشطة');
-        }
+        $booking = $this->service->create($data, $request->user()->id);
 
-        $validated = $request->validate([
-            'customer_name'    => ['required', 'string', 'max:255'],
-            'customer_phone'   => ['nullable', 'string', 'max:20'],
-            'customer_address' => ['nullable', 'string'],
-            'notes'            => ['nullable', 'string'],
-            'items'            => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
-            'items.*.quantity'   => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_id'    => ['nullable', 'integer', 'exists:units,id'],
-            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
-            'items.*.notes'      => ['nullable', 'string'],
-        ]);
-
-        $bookingRequest = TripBookingRequest::create([
-            'trip_id'          => $tripId,
-            'delegate_id'      => $request->user()->id,
-            'customer_name'    => $validated['customer_name'],
-            'customer_phone'   => $validated['customer_phone'] ?? null,
-            'customer_address' => $validated['customer_address'] ?? null,
-            'notes'            => $validated['notes'] ?? null,
-            'status'           => 'pending',
-        ]);
-
-        foreach ($validated['items'] as $item) {
-            $bookingRequest->items()->create([
-                'product_id' => $item['product_id'],
-                'quantity'   => $item['quantity'],
-                'unit_id'    => $item['unit_id'] ?? null,
-                'unit_price' => $item['unit_price'],
-                'notes'      => $item['notes'] ?? null,
-            ]);
-        }
-
-        $bookingRequest->load(['items.product:id,name', 'items.unit:id,name,symbol']);
-
-        return $this->successResponse(BookingRequestResource::make($bookingRequest)->resolve(), 'تم إنشاء طلب الحجز بنجاح', 201);
+        return $this->successResponse(
+            BookingRequestResource::make($booking)->resolve(),
+            'تم إنشاء طلب الحجز بنجاح',
+            201
+        );
     }
 
     /**
@@ -138,20 +101,24 @@ class BookingRequestController extends Controller
      *   "data": {"id": 1, "status": "pending", "items": []},
      *   "code": 200
      * }
+     * @response 404 scenario="Not Found" {"status": false, "message": "طلب الحجز غير موجود", "data": null, "code": 404}
      */
     public function show(Request $request, int $requestId): JsonResponse
     {
-        $bookingRequest = TripBookingRequest::with([
-            'items.product:id,name,image',
-            'items.unit:id,name,symbol',
-            'convertedOrder:id,order_number,status,total',
-        ])->findOrFail($requestId);
+        try {
+            $booking = $this->service->getById($requestId);
+        } catch (ModelNotFoundException) {
+            return $this->notFoundResponse('طلب الحجز غير موجود');
+        }
 
-        if ($bookingRequest->delegate_id !== $request->user()->id) {
+        if ($booking->delegate_id !== $request->user()->id) {
             return $this->forbiddenResponse('هذا الطلب لا يخصك');
         }
 
-        return $this->successResponse(BookingRequestResource::make($bookingRequest)->resolve(), 'تم جلب تفاصيل طلب الحجز بنجاح');
+        return $this->successResponse(
+            BookingRequestResource::make($booking)->resolve(),
+            'تم جلب تفاصيل طلب الحجز بنجاح'
+        );
     }
 
     /**
@@ -168,17 +135,16 @@ class BookingRequestController extends Controller
      */
     public function cancel(Request $request, int $requestId): JsonResponse
     {
-        $bookingRequest = TripBookingRequest::findOrFail($requestId);
-
-        if ($bookingRequest->delegate_id !== $request->user()->id) {
-            return $this->forbiddenResponse('هذا الطلب لا يخصك');
+        try {
+            $this->service->cancel($requestId, $request->user()->id);
+        } catch (ModelNotFoundException) {
+            return $this->notFoundResponse('طلب الحجز غير موجود');
+        } catch (\RuntimeException $e) {
+            if ($e->getMessage() === 'forbidden') {
+                return $this->forbiddenResponse('هذا الطلب لا يخصك');
+            }
+            return $this->errorResponse($e->getMessage());
         }
-
-        if ($bookingRequest->status !== 'pending') {
-            return $this->errorResponse('لا يمكن إلغاء هذا الطلب في وضعه الحالي');
-        }
-
-        $bookingRequest->update(['status' => 'cancelled']);
 
         return $this->successResponse(null, 'تم إلغاء طلب الحجز بنجاح');
     }

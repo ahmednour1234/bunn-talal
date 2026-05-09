@@ -59,11 +59,13 @@ use App\Repositories\Contracts\HrAttendanceRepositoryInterface;
 use App\Repositories\Contracts\HrSalaryRepositoryInterface;
 use App\Repositories\Contracts\StatisticsRepositoryInterface;
 use App\Repositories\Contracts\CollectionRepositoryInterface;
+use App\Repositories\Contracts\BookingRequestRepositoryInterface;
 use App\Repositories\Eloquent\HrLeaveRepository;
 use App\Repositories\Eloquent\HrAttendanceRepository;
 use App\Repositories\Eloquent\HrSalaryRepository;
 use App\Repositories\Eloquent\StatisticsRepository;
 use App\Repositories\Eloquent\CollectionRepository;
+use App\Repositories\Eloquent\BookingRequestRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -101,6 +103,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(HrSalaryRepositoryInterface::class, HrSalaryRepository::class);
         $this->app->bind(StatisticsRepositoryInterface::class, StatisticsRepository::class);
         $this->app->bind(CollectionRepositoryInterface::class, CollectionRepository::class);
+        $this->app->bind(BookingRequestRepositoryInterface::class, BookingRequestRepository::class);
     }
 
     public function boot(): void

@@ -11,6 +11,13 @@ class BookingRequestResource extends JsonResource
         return [
             'id'               => $this->id,
             'trip_id'          => $this->trip_id,
+            'trip'             => $this->whenLoaded('trip', fn () =>
+                $this->trip ? [
+                    'id'          => $this->trip->id,
+                    'trip_number' => $this->trip->trip_number,
+                    'status'      => $this->trip->status,
+                ] : null
+            ),
             'customer_name'    => $this->customer_name,
             'customer_phone'   => $this->customer_phone,
             'customer_address' => $this->customer_address,

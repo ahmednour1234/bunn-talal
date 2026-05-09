@@ -68,9 +68,11 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::patch('/delegate/trips/{trip}/start', [TripController::class, 'start']);
     Route::patch('/delegate/trips/{trip}/end',   [TripController::class, 'end']);
 
-    // ── Booking Requests (within a trip) ─────────────────────────────────
-    Route::get('/delegate/trips/{trip}/booking-requests',  [BookingRequestController::class, 'index']);
-    Route::post('/delegate/trips/{trip}/booking-requests', [BookingRequestController::class, 'store']);
+    // ── Booking Requests ──────────────────────────────────────────────────
+    Route::get('/delegate/booking-requests',               [BookingRequestController::class, 'index']);       // all delegate requests
+    Route::get('/delegate/trips/{trip}/booking-requests',  [BookingRequestController::class, 'index']);       // filtered by trip
+    Route::post('/delegate/booking-requests',              [BookingRequestController::class, 'store']);       // create without trip
+    Route::post('/delegate/trips/{trip}/booking-requests', [BookingRequestController::class, 'store']);       // create with trip
     Route::get('/delegate/booking-requests/{bookingRequest}',          [BookingRequestController::class, 'show']);
     Route::patch('/delegate/booking-requests/{bookingRequest}/cancel', [BookingRequestController::class, 'cancel']);
 
