@@ -88,10 +88,11 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::patch('/delegate/orders/{order}/cancel',       [SaleOrderController::class, 'cancel']);
 
     // ── Collections (تحصيلات) ────────────────────────────────────────────
-    Route::get('/delegate/collections',                   [CollectionController::class, 'myCollections']);
-    Route::get('/delegate/trips/{trip}/collections',  [CollectionController::class, 'index']);
-    Route::post('/delegate/trips/{trip}/collections', [CollectionController::class, 'store']);
-    Route::get('/delegate/collections/{collection}',  [CollectionController::class, 'show']);
+    Route::get('/delegate/collections',                   [CollectionController::class, 'index']);
+    Route::get('/delegate/trips/{trip}/collections',      [CollectionController::class, 'index']);
+    Route::post('/delegate/collections',                  [CollectionController::class, 'store']);
+    Route::post('/delegate/trips/{trip}/collections',     [CollectionController::class, 'store']);
+    Route::get('/delegate/collections/{collection}',      [CollectionController::class, 'show']);
 
     // ── Sale Returns ──────────────────────────────────────────────────────
     Route::get('/delegate/returns',                       [SaleReturnController::class, 'index']); // all delegate returns
