@@ -185,10 +185,7 @@ class SaleReturnController extends Controller
             return $this->notFoundResponse('المرتجع غير موجود');
         }
 
-        // Verify the return's sale order belongs to this delegate
-        if ($return->order && $return->order->delegate_id !== $request->user()->id) {
-            return $this->forbiddenResponse('هذا المرتجع لا يخصك');
-        }
+
 
         return $this->successResponse(SaleReturnResource::make($return)->resolve(), 'تم جلب تفاصيل المرتجع بنجاح');
     }
