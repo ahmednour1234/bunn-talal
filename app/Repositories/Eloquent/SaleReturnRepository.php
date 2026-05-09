@@ -12,6 +12,18 @@ class SaleReturnRepository extends BaseRepository implements SaleReturnRepositor
         parent::__construct($model);
     }
 
+    public function getById(int $id)
+    {
+        return $this->model
+            ->with([
+                'customer:id,name,phone',
+                'order:id,order_number',
+                'items.product:id,name',
+                'items.unit:id,name,symbol',
+            ])
+            ->findOrFail($id);
+    }
+
     public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $customerId, ?int $branchId)
     {
         $query = $this->model->with(['order', 'customer', 'branch', 'admin']);
@@ -45,6 +57,7 @@ class SaleReturnRepository extends BaseRepository implements SaleReturnRepositor
             ->where('trip_id', $tripId)
             ->with([
                 'customer:id,name,phone',
+                'order:id,order_number',
                 'items.product:id,name',
                 'items.unit:id,name,symbol',
             ])
@@ -58,6 +71,7 @@ class SaleReturnRepository extends BaseRepository implements SaleReturnRepositor
             ->whereHas('order', fn($q) => $q->where('delegate_id', $delegateId))
             ->with([
                 'customer:id,name,phone',
+                'order:id,order_number',
                 'items.product:id,name',
                 'items.unit:id,name,symbol',
             ]);
