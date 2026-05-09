@@ -80,7 +80,11 @@ class HrLeaveApiController extends Controller
      */
     public function show(Request $request, int $leaveId): JsonResponse
     {
-        $leave = $this->hrLeaveService->getById($leaveId);
+        try {
+            $leave = $this->hrLeaveService->getById($leaveId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return $this->notFoundResponse('الإجازة غير موجودة');
+        }
 
         if ($leave->delegate_id !== $request->user()->id) {
             return $this->forbiddenResponse('غير مصرح');

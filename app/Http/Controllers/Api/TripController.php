@@ -93,7 +93,11 @@ class TripController extends Controller
      */
     public function show(Request $request, $tripId): JsonResponse
     {
-        $trip = $this->tripService->getById($tripId);
+        try {
+            $trip = $this->tripService->getById($tripId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return $this->notFoundResponse('الرحلة غير موجودة');
+        }
 
         if ($trip->delegate_id !== $request->user()->id) {
             return $this->forbiddenResponse('هذه الرحلة لا تخصك');
@@ -116,7 +120,11 @@ class TripController extends Controller
      */
     public function start(Request $request, $tripId): JsonResponse
     {
-        $trip = $this->tripService->getById($tripId);
+        try {
+            $trip = $this->tripService->getById($tripId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return $this->notFoundResponse('الرحلة غير موجودة');
+        }
 
         if ($trip->delegate_id !== $request->user()->id) {
             return $this->forbiddenResponse('هذه الرحلة لا تخصك');
@@ -141,7 +149,11 @@ class TripController extends Controller
      */
     public function end(Request $request, $tripId): JsonResponse
     {
-        $trip = $this->tripService->getById($tripId);
+        try {
+            $trip = $this->tripService->getById($tripId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return $this->notFoundResponse('الرحلة غير موجودة');
+        }
 
         if ($trip->delegate_id !== $request->user()->id) {
             return $this->forbiddenResponse('هذه الرحلة لا تخصك');

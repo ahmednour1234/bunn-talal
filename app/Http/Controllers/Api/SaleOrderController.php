@@ -174,7 +174,11 @@ class SaleOrderController extends Controller
      */
     public function show(Request $request, int $orderId): JsonResponse
     {
-        $order = $this->saleOrderService->getById($orderId);
+        try {
+            $order = $this->saleOrderService->getById($orderId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return $this->notFoundResponse('الفاتورة غير موجودة');
+        }
 
         if ($order->delegate_id !== $request->user()->id) {
             return $this->forbiddenResponse('هذه الفاتورة لا تخصك');

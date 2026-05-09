@@ -179,7 +179,11 @@ class SaleReturnController extends Controller
      */
     public function show(Request $request, int $returnId): JsonResponse
     {
-        $return = $this->saleReturnService->getById($returnId);
+        try {
+            $return = $this->saleReturnService->getById($returnId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return $this->notFoundResponse('المرتجع غير موجود');
+        }
 
         // Verify the return's sale order belongs to this delegate
         if ($return->order && $return->order->delegate_id !== $request->user()->id) {
