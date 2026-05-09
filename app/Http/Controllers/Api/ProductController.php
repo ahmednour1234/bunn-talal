@@ -166,4 +166,44 @@ class ProductController extends Controller
 
         return $this->successResponse(ProductResource::collection($products)->resolve(), 'تم جلب منتجات الرحلة بنجاح');
     }
+
+    /**
+     * List All Products
+     *
+     * Returns all active products (no stock filter). For display / catalogue purposes.
+     *
+     * @group Reference Data
+     *
+     * @queryParam category_id integer optional Filter by category ID. Example: 2
+     * @queryParam search string optional Search by product name. Example: بن
+     *
+     * @response 200 scenario="Success" {
+     *   "status": true, "message": "تم جلب المنتجات بنجاح",
+     *   "data": [{"id": 1, "name": "منتج A", "selling_price": 100}],
+     *   "code": 200
+     * }
+     */
+    public function allProducts(Request $request): JsonResponse
+    {
+        $query = \App\Models\Product::where('is_active', true)
+            ->with([
+                'unit.derivedUnits',
+                'unit.baseUnit.derivedUnits',
+                'tax:id,name,rate,type',
+                'category:id,name',
+            ]);
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->integer('category_id'));
+        }
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->string('search') . '%');
+        }
+
+        $products = $query->orderBy('name')->get()
+            ->each(fn ($p) => $p->available_stock = 0);
+
+        return $this->successResponse(ProductResource::collection($products)->resolve(), 'تم جلب المنتجات بنجاح');
+    }
 }

@@ -31,4 +31,23 @@ class CategoryController extends Controller
 
         return $this->successResponse(CategoryResource::collection($categories)->resolve(), 'تم جلب الفئات بنجاح');
     }
+
+    /**
+     * List All Categories
+     *
+     * Returns all active categories regardless of delegate assignment. For display purposes.
+     *
+     * @group Reference Data
+     *
+     * @response 200 {"status": true, "message": "تم جلب الفئات بنجاح", "data": [{"id": 1, "name": "أجهزة", "image": null}], "code": 200}
+     */
+    public function allCategories(): JsonResponse
+    {
+        $categories = \App\Models\Category::where('is_active', true)
+            ->select('id', 'name', 'image')
+            ->orderBy('name')
+            ->get();
+
+        return $this->successResponse(CategoryResource::collection($categories)->resolve(), 'تم جلب الفئات بنجاح');
+    }
 }

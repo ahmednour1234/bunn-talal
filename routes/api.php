@@ -51,6 +51,8 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::get('/delegate/payment-methods', [PaymentMethodController::class, 'index']);
     Route::get('/delegate/areas',           [AreaController::class, 'index']);
     Route::get('/delegate/categories',                      [CategoryController::class, 'index']);
+    Route::get('/delegate/all-categories',                  [CategoryController::class, 'allCategories']);  // all — no assignment filter
+    Route::get('/delegate/all-products',                    [ProductController::class, 'allProducts']);     // all — no stock filter
     Route::get('/delegate/categories/{category}/products',  [ProductController::class, 'index']);
     Route::get('/delegate/trip/products',                   [ProductController::class, 'tripProducts']);
     Route::get('/delegate/trips/products',                  [ProductController::class, 'tripProducts']); // ?category_id=&search= | must be before {trip}
