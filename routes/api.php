@@ -79,8 +79,9 @@ Route::middleware(['auth:sanctum', 'delegate.active'])->group(function () {
     Route::patch('/delegate/booking-requests/{bookingRequest}/cancel', [BookingRequestController::class, 'cancel']);
 
     // ── Inventory Dispatches — View Only ─────────────────────────────────
-    Route::get('/delegate/trips/{trip}/dispatches', [DispatchController::class, 'index']);
-    Route::get('/delegate/dispatches/{dispatch}',   [DispatchController::class, 'show']);
+    Route::get('/delegate/dispatches',               [DispatchController::class, 'allDispatches']); // all delegate dispatches
+    Route::get('/delegate/trips/{trip}/dispatches',  [DispatchController::class, 'index']);
+    Route::get('/delegate/dispatches/{dispatch}',    [DispatchController::class, 'show']);
 
     // ── Sale Orders ───────────────────────────────────────────────────────
     Route::get('/delegate/orders',                        [SaleOrderController::class, 'index']);  // all delegate orders

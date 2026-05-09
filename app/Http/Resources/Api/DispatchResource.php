@@ -18,6 +18,9 @@ class DispatchResource extends JsonResource
             'actual_sales'   => $this->actual_sales,
             'notes'          => $this->notes,
             'trip_id'        => $this->trip_id,
+            'trip'           => $this->whenLoaded('trip', fn () =>
+                $this->trip ? ['id' => $this->trip->id, 'trip_number' => $this->trip->trip_number, 'status' => $this->trip->status] : null
+            ),
             'branch'         => $this->whenLoaded('branch', fn () =>
                 $this->branch ? ['id' => $this->branch->id, 'name' => $this->branch->name] : null
             ),

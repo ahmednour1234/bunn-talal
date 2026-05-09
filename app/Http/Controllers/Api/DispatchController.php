@@ -29,6 +29,29 @@ class DispatchController extends Controller
      *   "code": 200
      * }
      */
+    /**
+     * List All Dispatches
+     *
+     * Returns all inventory dispatches that were sent to the delegate, across all trips.
+     *
+     * @group Inventory Dispatches
+     *
+     * @response 200 scenario="Success" {
+     *   "status": true, "message": "تم جلب أوامر الصرف بنجاح",
+     *   "data": [{"id": 1, "status": "dispatched", "total_cost": 5000}],
+     *   "code": 200
+     * }
+     */
+    public function allDispatches(Request $request): JsonResponse
+    {
+        $dispatches = InventoryDispatch::where('delegate_id', $request->user()->id)
+            ->with(['trip:id,trip_number,status', 'branch:id,name'])
+            ->latest()
+            ->get();
+
+        return $this->successResponse(DispatchResource::collection($dispatches)->resolve(), 'تم جلب أوامر الصرف بنجاح');
+    }
+
     public function index(Request $request, $tripId): JsonResponse
     {
         $trip = Trip::findOrFail($tripId);
@@ -39,6 +62,7 @@ class DispatchController extends Controller
 
         $dispatches = InventoryDispatch::where('trip_id', $tripId)
             ->where('delegate_id', $request->user()->id)
+            ->with(['branch:id,name'])
             ->latest()
             ->get();
 
