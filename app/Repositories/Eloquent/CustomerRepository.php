@@ -20,4 +20,19 @@ class CustomerRepository extends BaseRepository implements CustomerRepositoryInt
               ->orWhere('email', 'like', "%{$search}%");
         });
     }
+
+    public function getTrashed()
+    {
+        return $this->model->onlyTrashed()->latest('deleted_at')->paginate(10);
+    }
+
+    public function restore(int $id): bool
+    {
+        return (bool) $this->model->onlyTrashed()->findOrFail($id)->restore();
+    }
+
+    public function forceDelete(int $id): bool
+    {
+        return (bool) $this->model->onlyTrashed()->findOrFail($id)->forceDelete();
+    }
 }

@@ -23,4 +23,9 @@ class CustomerController extends Controller
     {
         return view('pages.customers.show', compact('id'));
     }
+
+    public function trash()
+    {
+        return view('pages.customers.trash');
+    }
 }

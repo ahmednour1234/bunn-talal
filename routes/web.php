@@ -125,6 +125,9 @@ Route::middleware('auth:admin')->group(function () {
     });
 
     // Customers
+    Route::middleware('permission:customers.delete')->group(function () {
+        Route::get('/customers/trash', [CustomerController::class, 'trash'])->name('customers.trash');
+    });
     Route::middleware('permission:customers.create')->group(function () {
         Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
     });

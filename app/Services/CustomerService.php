@@ -46,4 +46,19 @@ class CustomerService
         $customer->update(['is_active' => !$customer->is_active]);
         return $customer;
     }
+
+    public function getTrashedCustomers()
+    {
+        return $this->customerRepository->getTrashed();
+    }
+
+    public function restoreCustomer(int $id): bool
+    {
+        return $this->customerRepository->restore($id);
+    }
+
+    public function forceDeleteCustomer(int $id): bool
+    {
+        return $this->customerRepository->forceDelete($id);
+    }
 }
