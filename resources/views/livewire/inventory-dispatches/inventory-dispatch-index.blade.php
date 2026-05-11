@@ -52,9 +52,9 @@
         @forelse($dispatches as $dispatch)
             <tr class="hover:bg-primary-50/50 transition-colors">
                 <td class="px-6 py-4 text-gray-500">{{ $dispatch->id }}</td>
-                <td class="px-6 py-4 font-medium text-gray-800">{{ $dispatch->branch->name }}</td>
-                <td class="px-6 py-4 text-gray-600">{{ $dispatch->delegate->name }}</td>
-                <td class="px-6 py-4 text-gray-600">{{ $dispatch->admin->name }}</td>
+                <td class="px-6 py-4 font-medium text-gray-800">{{ $dispatch->branch?->name ?? '—' }}</td>
+                <td class="px-6 py-4 text-gray-600">{{ $dispatch->delegate?->name ?? '—' }}</td>
+                <td class="px-6 py-4 text-gray-600">{{ $dispatch->admin?->name ?? '—' }}</td>
                 <td class="px-6 py-4 text-gray-500 text-xs">{{ $dispatch->date->format('Y/m/d') }}</td>
                 <td class="px-6 py-4 text-gray-600" dir="ltr">{{ number_format($dispatch->total_cost, 2) }}</td>
                 <td class="px-6 py-4 text-gray-600" dir="ltr">{{ number_format($dispatch->expected_sales, 2) }}</td>
