@@ -66,6 +66,7 @@ use App\Repositories\Eloquent\HrSalaryRepository;
 use App\Repositories\Eloquent\StatisticsRepository;
 use App\Repositories\Eloquent\CollectionRepository;
 use App\Repositories\Eloquent\BookingRequestRepository;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -109,6 +110,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Use Tailwind CSS for Laravel's built-in pagination links.
+        Paginator::useTailwind();
+
         if (isset($_SERVER['HTTP_HOST'])) {
             // Detect HTTPS from multiple signals. On shared hosting the SSL
             // is often terminated by a proxy/CDN that may not forward HTTPS

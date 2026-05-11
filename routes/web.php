@@ -137,6 +137,10 @@ Route::middleware('auth:admin')->group(function () {
     });
     Route::middleware('permission:customers.edit')->group(function () {
         Route::get('/customers/{id}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+        Route::post('/customers/{id}/toggle-active', [CustomerController::class, 'toggleActive'])->name('customers.toggle-active');
+    });
+    Route::middleware('permission:customers.delete')->group(function () {
+        Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
     });
 
     // Delegates
