@@ -59,7 +59,9 @@ class CustomerController extends Controller
         }
 
         $customers = $query
-            ->select('id', 'name', 'phone', 'email', 'area_id', 'address', 'latitude', 'longitude', 'classification', 'balance')
+            ->select('id', 'name', 'phone', 'email', 'area_id', 'address', 'latitude', 'longitude', 'classification', 'balance', 'opening_balance', 'credit_limit')
+            ->withSum('saleOrders as total_invoiced', 'total')
+            ->withSum('collections as total_paid', 'total_amount')
             ->get();
 
         return $this->successResponse(CustomerResource::collection($customers)->resolve(), 'تم جلب العملاء بنجاح');

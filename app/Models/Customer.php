@@ -51,6 +51,11 @@ class Customer extends Model
         return $this->hasMany(SaleReturn::class);
     }
 
+    public function collections()
+    {
+        return $this->hasMany(Collection::class);
+    }
+
     public static function classificationLabels(): array
     {
         return [
