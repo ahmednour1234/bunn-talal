@@ -18,7 +18,7 @@ class CollectionResource extends JsonResource
             'notes'             => $this->notes,
             'trip_id'           => $this->trip_id,
             'customer'          => $this->customer
-                ? ['id' => $this->customer->id, 'name' => $this->customer->name, 'phone' => $this->customer->phone]
+                ? ['id' => $this->customer->id, 'name' => $this->customer->name, 'phone' => $this->customer->phone, 'debt' => (float) $this->customer->balance]
                 : null,
             'items'             => CollectionItemResource::collection($this->items)->resolve(),
         ];

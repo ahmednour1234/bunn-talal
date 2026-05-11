@@ -25,7 +25,7 @@ class SaleOrderResource extends JsonResource
             'paid_amount'          => $this->paid_amount,
             'remaining_amount'     => $this->remaining_amount,
             'customer'             => $this->customer
-                ? ['id' => $this->customer->id, 'name' => $this->customer->name, 'phone' => $this->customer->phone]
+                ? ['id' => $this->customer->id, 'name' => $this->customer->name, 'phone' => $this->customer->phone, 'debt' => (float) $this->customer->balance]
                 : null,
             'notes'                => $this->notes,
             'trip_id'              => $this->trip_id,

@@ -18,7 +18,10 @@ class CustomerResource extends JsonResource
             'longitude'            => $this->longitude,
             'classification'       => $this->classification,
             'classification_label' => $this->classification_label,
-            'balance'              => $this->balance,
+            'credit_limit'         => (float) $this->credit_limit,
+            'opening_balance'      => (float) $this->opening_balance,
+            'balance'              => (float) $this->balance,
+            'debt'                 => (float) $this->balance,   // مديونية العميل
             'area'                 => $this->area
                 ? ['id' => $this->area->id, 'name' => $this->area->name]
                 : null,
