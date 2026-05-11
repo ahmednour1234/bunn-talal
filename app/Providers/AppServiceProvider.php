@@ -66,6 +66,7 @@ use App\Repositories\Eloquent\HrSalaryRepository;
 use App\Repositories\Eloquent\StatisticsRepository;
 use App\Repositories\Eloquent\CollectionRepository;
 use App\Repositories\Eloquent\BookingRequestRepository;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -108,6 +109,16 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        // Strip /public from APP_URL so Livewire AJAX and asset URLs work
+        // correctly when the server document root is the project root.
+        $appUrl = rtrim(config('app.url'), '/');
+        if (str_ends_with($appUrl, '/public')) {
+            URL::forceRootUrl(substr($appUrl, 0, -7));
+        }
+
+        // Force HTTPS when behind a proxy/shared hosting
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }
