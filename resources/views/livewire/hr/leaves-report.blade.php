@@ -23,6 +23,13 @@
         </div>
     </div>
 
+    {{-- Flash messages --}}
+    @if(session('success'))
+        <div class="px-4 py-3 rounded-xl bg-green-50 text-green-700 text-sm font-medium border border-green-100 no-print">
+            {{ session('success') }}
+        </div>
+    @endif
+
     {{-- Filters --}}
     <div class="bg-white rounded-3xl shadow-[0_8px_24px_rgba(15,23,42,0.05)] p-5 md:p-6 no-print">        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <div>
