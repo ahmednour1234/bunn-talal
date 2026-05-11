@@ -50,8 +50,12 @@ class CustomerIndex extends Component
             return;
         }
 
-        $customerService->deleteCustomer($id);
-        session()->flash('success', 'تم حذف العميل بنجاح');
+        try {
+            $customerService->deleteCustomer($id);
+            session()->flash('success', 'تم حذف العميل بنجاح');
+        } catch (\Exception $e) {
+            session()->flash('error', 'لا يمكن حذف هذا العميل لوجود سجلات مرتبطة به');
+        }
     }
 
     public function render()
