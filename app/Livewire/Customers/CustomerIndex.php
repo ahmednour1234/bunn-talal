@@ -15,6 +15,13 @@ class CustomerIndex extends Component
     public string $classificationFilter = '';
     public string $areaFilter = '';
 
+    protected CustomerService $customerService;
+
+    public function boot(CustomerService $customerService): void
+    {
+        $this->customerService = $customerService;
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -30,7 +37,7 @@ class CustomerIndex extends Component
         $this->resetPage();
     }
 
-    public function toggleActive(int $id, CustomerService $customerService)
+    public function toggleActive(int $id)
     {
         $admin = auth('admin')->user();
         if (!$admin->hasPermission('customers.edit')) {
@@ -38,11 +45,11 @@ class CustomerIndex extends Component
             return;
         }
 
-        $customer = $customerService->toggleActive($id);
+        $customer = $this->customerService->toggleActive($id);
         session()->flash('success', $customer->is_active ? 'تم تفعيل العميل' : 'تم تعطيل العميل');
     }
 
-    public function delete(int $id, CustomerService $customerService)
+    public function delete(int $id)
     {
         $admin = auth('admin')->user();
         if (!$admin->hasPermission('customers.delete')) {
@@ -51,7 +58,7 @@ class CustomerIndex extends Component
         }
 
         try {
-            $customerService->deleteCustomer($id);
+            $this->customerService->deleteCustomer($id);
             session()->flash('success', 'تم حذف العميل بنجاح');
         } catch (\Exception $e) {
             session()->flash('error', 'لا يمكن حذف هذا العميل لوجود سجلات مرتبطة به');

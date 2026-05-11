@@ -88,7 +88,7 @@
             </thead>
             <tbody>
                 @forelse($customers as $i => $customer)
-                <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-stone-50/40' }} hover:bg-stone-50 transition-colors border-b border-gray-50">
+                <tr wire:key="customer-{{ $customer->id }}" class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-stone-50/40' }} hover:bg-stone-50 transition-colors border-b border-gray-50">
                     <td class="px-4 py-3 text-xs text-gray-400 font-mono text-center">{{ $i + 1 }}</td>
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-2 justify-end">
@@ -129,7 +129,8 @@
                                 </a>
                             @endif
                             @if(auth('admin')->user()?->hasPermission('customers.edit'))
-                                <button wire:click="toggleActive({{ $customer->id }})"
+                                <button
+                                    x-on:click="$wire.toggleActive({{ $customer->id }})"
                                     class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200 flex items-center justify-center transition-colors flex-shrink-0"
                                     title="{{ $customer->is_active ? 'تعطيل' : 'تفعيل' }}">
                                     @if($customer->is_active)
