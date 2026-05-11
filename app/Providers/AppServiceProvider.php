@@ -109,16 +109,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Strip /public from APP_URL so Livewire AJAX and asset URLs work
-        // correctly when the server document root is the project root.
-        $appUrl = rtrim(config('app.url'), '/');
-        if (str_ends_with($appUrl, '/public')) {
-            URL::forceRootUrl(substr($appUrl, 0, -7));
-        }
+        // Force the root URL from the actual HTTP request host so Livewire's
+        // JavaScript URL and /livewire/update endpoint are always correct,
+        // regardless of what APP_URL is set to in .env (shared hosting fix).
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $scheme = (
+                (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
+                (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+            ) ? 'https' : 'http';
 
-        // Force HTTPS when behind a proxy/shared hosting
-        if (config('app.env') === 'production') {
-            URL::forceScheme('https');
+            URL::forceRootUrl($scheme . '://' . $_SERVER['HTTP_HOST']);
+            URL::forceScheme($scheme);
         }
     }
 }
