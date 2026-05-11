@@ -24,15 +24,15 @@
         <div class="flex flex-wrap gap-3">
             <div class="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[120px]">
                 <span class="text-[11px] text-gray-400">الفرع</span>
-                <span class="font-bold text-primary-700 text-sm">{{ $dispatch->branch->name }}</span>
+                <span class="font-bold text-primary-700 text-sm">{{ $dispatch->branch?->name ?? '—' }}</span>
             </div>
             <div class="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[140px]">
                 <span class="text-[11px] text-gray-400">المندوب</span>
-                <span class="font-bold text-primary-700 text-sm">{{ $dispatch->delegate->name }}</span>
+                <span class="font-bold text-primary-700 text-sm">{{ $dispatch->delegate?->name ?? '—' }}</span>
             </div>
             <div class="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[120px]">
                 <span class="text-[11px] text-gray-400">المسؤول</span>
-                <span class="font-bold text-gray-700 text-sm">{{ $dispatch->admin->name }}</span>
+                <span class="font-bold text-gray-700 text-sm">{{ $dispatch->admin?->name ?? '—' }}</span>
             </div>
             <div class="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[110px]">
                 <span class="text-[11px] text-gray-400">التاريخ</span>
