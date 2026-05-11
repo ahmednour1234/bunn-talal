@@ -61,7 +61,7 @@
         @forelse($leaves as $leave)
         <tr class="hover:bg-primary-50/50 transition-colors">
             <td class="px-6 py-4 text-gray-500 text-sm">{{ $leave->id }}</td>
-            <td class="px-6 py-4 font-semibold text-gray-800">{{ $leave->delegate->name }}</td>
+            <td class="px-6 py-4 font-semibold text-gray-800">{{ $leave->delegate?->name ?? '—' }}</td>
             <td class="px-6 py-4">
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">{{ $leave->type_label }}</span>
             </td>

@@ -27,6 +27,28 @@ class LeavesReport extends Component
         $this->dateTo   = now()->format('Y-m-d');
     }
 
+    public function approve(int $id): void
+    {
+        $leave = HrLeave::findOrFail($id);
+        $leave->update([
+            'status'      => 'approved',
+            'approved_by' => auth('admin')->id(),
+            'approved_at' => now(),
+        ]);
+        session()->flash('success', 'تمت الموافقة على الإجازة');
+    }
+
+    public function reject(int $id): void
+    {
+        $leave = HrLeave::findOrFail($id);
+        $leave->update([
+            'status'      => 'rejected',
+            'approved_by' => auth('admin')->id(),
+            'approved_at' => now(),
+        ]);
+        session()->flash('success', 'تم رفض الإجازة');
+    }
+
     public function render()
     {
         $q = HrLeave::with('delegate')

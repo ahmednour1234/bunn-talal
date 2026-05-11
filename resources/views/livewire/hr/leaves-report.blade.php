@@ -24,8 +24,7 @@
     </div>
 
     {{-- Filters --}}
-    <div class="bg-white rounded-3xl shadow-[0_8px_24px_rgba(15,23,42,0.05)] p-5 md:p-6 no-print">
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+    <div class="bg-white rounded-3xl shadow-[0_8px_24px_rgba(15,23,42,0.05)] p-5 md:p-6 no-print">        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <div>
                 <label class="text-xs font-semibold text-gray-500 mb-1 block">المندوب</label>
                 <select wire:model.live="delegateFilter" class="w-full px-3 py-2.5 border border-gray-100 rounded-xl bg-white text-sm">
@@ -129,6 +128,7 @@
                         <th class="px-4 py-3 text-right font-semibold">الأيام</th>
                         <th class="px-4 py-3 text-right font-semibold">الحالة</th>
                         <th class="px-4 py-3 text-right font-semibold">السبب</th>
+                        <th class="px-4 py-3 text-right font-semibold no-print">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -150,6 +150,24 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-gray-500 max-w-xs truncate">{{ $leave->reason ?? '-' }}</td>
+                        <td class="px-4 py-3 no-print">
+                            @if($leave->status === 'pending')
+                                <div class="flex items-center gap-1.5">
+                                    <button wire:click="approve({{ $leave->id }})" wire:confirm="هل تريد الموافقة على هذه الإجازة؟"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                        موافقة
+                                    </button>
+                                    <button wire:click="reject({{ $leave->id }})" wire:confirm="هل تريد رفض هذه الإجازة؟"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                                        رفض
+                                    </button>
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-300">—</span>
+                            @endif
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>

@@ -136,16 +136,18 @@ class TripSettle extends Component
             // Update delegate deficit stats regardless of approval status
             if ($cashDeficit > 0 || $totalProductDeficit > 0) {
                 $delegate  = $this->trip->delegate;
-                $deduction = 0;
-                if ($cashDeficit > 0) {
-                    $deduction += 5;
-                    $delegate->increment('total_cash_deficit', $cashDeficit);
+                if ($delegate) {
+                    $deduction = 0;
+                    if ($cashDeficit > 0) {
+                        $deduction += 5;
+                        $delegate->increment('total_cash_deficit', $cashDeficit);
+                    }
+                    if ($totalProductDeficit > 0) {
+                        $deduction += 5;
+                        $delegate->increment('total_product_deficit', $totalProductDeficit);
+                    }
+                    $delegate->decrement('rating', min($deduction, (float)$delegate->rating));
                 }
-                if ($totalProductDeficit > 0) {
-                    $deduction += 5;
-                    $delegate->increment('total_product_deficit', $totalProductDeficit);
-                }
-                $delegate->decrement('rating', min($deduction, (float)$delegate->rating));
             }
         });
 

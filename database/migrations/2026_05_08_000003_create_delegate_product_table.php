@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('delegate_product', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('delegate_id')->constrained('admins')->cascadeOnDelete();
+            $table->foreignId('delegate_id')->constrained('delegates')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('unit_id')->nullable()->constrained('units')->nullOnDelete();
             $table->decimal('quantity', 14, 4)->default(0);
