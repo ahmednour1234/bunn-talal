@@ -28,6 +28,7 @@
         ['route' => 'reports.income-statement', 'icon' => 'chart-bar', 'label' => 'قائمة الدخل', 'permission' => 'reports.view'],
         ['route' => 'reports.account-statement', 'icon' => 'document-text', 'label' => 'كشف الحساب', 'permission' => 'reports.view'],
         ['route' => 'reports.balance-sheet', 'icon' => 'calculator', 'label' => 'الميزانية العمومية', 'permission' => 'reports.view'],
+        ['route' => 'reports.financial-overview', 'icon' => 'chart-bar', 'label' => 'التقرير المالي الشامل', 'permission' => 'reports.view'],
     ];
 
     $inventoryLinks = [

@@ -235,6 +235,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::get('/reports/income-statement', [ReportController::class, 'incomeStatement'])->name('reports.income-statement');
         Route::get('/reports/account-statement', [ReportController::class, 'accountStatement'])->name('reports.account-statement');
         Route::get('/reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance-sheet');
+        Route::get('/reports/financial-overview', [ReportController::class, 'financialOverview'])->name('reports.financial-overview');
     });
 
     // Trips
