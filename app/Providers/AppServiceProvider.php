@@ -109,17 +109,24 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Force the root URL from the actual HTTP request host so Livewire's
-        // JavaScript URL and /livewire/update endpoint are always correct,
-        // regardless of what APP_URL is set to in .env (shared hosting fix).
+        // Force correct root URL from the actual request so Livewire AJAX,
+        // asset URLs, and CSRF all work on shared hosting regardless of
+        // what APP_URL is set to in .env.
         if (isset($_SERVER['HTTP_HOST'])) {
-            $scheme = (
-                (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
-                (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
-                (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
-            ) ? 'https' : 'http';
+            // After trustProxies middleware, request()->isSecure() is reliable.
+            // But AppServiceProvider::boot() runs before the HTTP kernel,
+            // so we detect HTTPS manually from forwarded headers.
+            $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+                || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+                || (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on');
 
-            URL::forceRootUrl($scheme . '://' . $_SERVER['HTTP_HOST']);
+            $scheme  = $https ? 'https' : 'http';
+            $rootUrl = $scheme . '://' . $_SERVER['HTTP_HOST'];
+
+            // Override app.url so Livewire reads the right URL from config.
+            config(['app.url' => $rootUrl]);
+            URL::forceRootUrl($rootUrl);
             URL::forceScheme($scheme);
         }
     }

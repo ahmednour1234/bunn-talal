@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust all proxies so HTTPS, CSRF, and Livewire AJAX work
+        // correctly on shared hosting / servers behind a reverse proxy.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'permission'       => \App\Http\Middleware\CheckPermission::class,
             'delegate.active'  => \App\Http\Middleware\EnsureDelegateIsActive::class,
