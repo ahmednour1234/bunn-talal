@@ -50,13 +50,13 @@
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 mb-1">إجمالي الأصول</p>
             <p class="text-2xl font-extrabold text-primary-700">{{ $fmt($totalAssets) }}</p>
-            <p class="text-xs text-gray-400 mt-1">كاش + ذمم + مخزون</p>
+            <p class="text-xs text-gray-400 mt-1">كاش + ذمم + مناديب + مخزون</p>
         </div>
         {{-- Total Liabilities --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 mb-1">إجمالي الالتزامات</p>
             <p class="text-2xl font-extrabold text-red-600">{{ $fmt($totalLiabilities) }}</p>
-            <p class="text-xs text-gray-400 mt-1">مستحق للموردين</p>
+            <p class="text-xs text-gray-400 mt-1">موردين جاري + افتتاحي</p>
         </div>
         {{-- Net Worth --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -97,7 +97,7 @@
         </div>
 
         {{-- ═══ SECTION 2: RECEIVABLES ═══ --}}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"><!-- receivables -->
             <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
                 <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
@@ -297,4 +297,141 @@
             </div>
         </div>
     </div>
+
+    {{-- ═══════════════════════════════════════════════════════════════════ --}}
+    {{-- OPENING BALANCES + DELEGATES + ACCOUNTS                            --}}
+    {{-- ═══════════════════════════════════════════════════════════════════ --}}
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+        {{-- ═══ SECTION 8: OPENING BALANCES — الأرصدة الافتتاحية ═══ --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
+                </div>
+                <h2 class="font-bold text-gray-700">الأرصدة الافتتاحية</h2>
+                <span class="text-xs text-gray-400 mr-auto">(منذ بداية النظام)</span>
+            </div>
+            <div class="divide-y divide-gray-50">
+                {{-- Customers --}}
+                <div class="flex items-center justify-between px-5 py-3">
+                    <div>
+                        <p class="text-sm text-gray-600">ذمم العملاء الافتتاحية</p>
+                        <p class="text-xs text-gray-400">ما كان مستحقاً للشركة قبل النظام</p>
+                    </div>
+                    <span class="text-sm font-bold text-orange-600">{{ $fmt($customerOpeningBalance) }}</span>
+                </div>
+                <div class="flex items-center justify-between px-5 py-3">
+                    <div>
+                        <p class="text-sm text-gray-600">رصيد العملاء الجاري</p>
+                        <p class="text-xs text-gray-400">الرصيد المتراكم الحالي</p>
+                    </div>
+                    <span class="text-sm font-bold text-orange-600">{{ $fmt($customerCurrentBalance) }}</span>
+                </div>
+                {{-- Suppliers --}}
+                <div class="flex items-center justify-between px-5 py-3">
+                    <div>
+                        <p class="text-sm text-gray-600">ذمم الموردين الافتتاحية</p>
+                        <p class="text-xs text-gray-400">ما كانت الشركة مدينة به قبل النظام</p>
+                    </div>
+                    <span class="text-sm font-bold text-red-600">{{ $fmt($supplierOpeningBalance) }}</span>
+                </div>
+                <div class="flex items-center justify-between px-5 py-3">
+                    <div>
+                        <p class="text-sm text-gray-600">رصيد الموردين الجاري</p>
+                        <p class="text-xs text-gray-400">الرصيد المتراكم الحالي</p>
+                    </div>
+                    <span class="text-sm font-bold text-red-600">{{ $fmt($supplierCurrentBalance) }}</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 divide-x divide-x-reverse divide-indigo-100 border-t border-indigo-100">
+                <div class="px-5 py-3 bg-orange-50/50 text-center">
+                    <p class="text-xs text-orange-700 font-bold">إجمالي ذمم العملاء</p>
+                    <p class="font-extrabold text-orange-700 mt-0.5">{{ $fmt($customerOpeningBalance + $customerCurrentBalance) }}</p>
+                </div>
+                <div class="px-5 py-3 bg-red-50/50 text-center">
+                    <p class="text-xs text-red-700 font-bold">إجمالي ذمم الموردين</p>
+                    <p class="font-extrabold text-red-700 mt-0.5">{{ $fmt($supplierOpeningBalance + $supplierCurrentBalance) }}</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- ═══ SECTION 9: DELEGATES — المناديب ═══ --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
+                </div>
+                <h2 class="font-bold text-gray-700">وضع المناديب المالي</h2>
+            </div>
+            <div class="divide-y divide-gray-50 max-h-60 overflow-y-auto">
+                @forelse($delegates as $d)
+                @php
+                    $netDue = max(0, (float)$d->total_due - (float)$d->total_collected);
+                @endphp
+                <div class="flex items-start justify-between px-5 py-3">
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">{{ $d->name }}</p>
+                        <p class="text-xs text-gray-400">محصّل: {{ $fmt($d->total_collected) }} / مستحق: {{ $fmt($d->total_due) }}</p>
+                    </div>
+                    <div class="text-left text-right flex flex-col items-end gap-0.5">
+                        <span class="text-xs text-teal-700 font-semibold">عهدة: {{ $fmt($d->cash_custody) }}</span>
+                        @if($netDue > 0)
+                        <span class="text-xs text-orange-600 font-semibold">متأخر: {{ $fmt($netDue) }}</span>
+                        @endif
+                    </div>
+                </div>
+                @empty
+                <div class="px-5 py-6 text-center text-sm text-gray-400">لا يوجد مناديب نشطون</div>
+                @endforelse
+            </div>
+            <div class="grid grid-cols-2 divide-x divide-x-reverse divide-teal-100 border-t border-teal-100">
+                <div class="px-5 py-3 bg-teal-50/50 text-center">
+                    <p class="text-xs text-teal-700 font-bold">نقدية عند المناديب</p>
+                    <p class="font-extrabold text-teal-700 mt-0.5">{{ $fmt($delegateCashCustody) }}</p>
+                </div>
+                <div class="px-5 py-3 bg-orange-50/50 text-center">
+                    <p class="text-xs text-orange-700 font-bold">مستحق من المناديب</p>
+                    <p class="font-extrabold text-orange-700 mt-0.5">{{ $fmt($delegateNetReceivable) }}</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ═══ SECTION 10: ACCOUNT BALANCES — أرصدة الحسابات ═══ --}}
+    @if($accountBalances->isNotEmpty())
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" /></svg>
+            </div>
+            <h2 class="font-bold text-gray-700">أرصدة الحسابات</h2>
+            <span class="text-xs text-gray-400 mr-auto">صافي (إيرادات − مصروفات) لكل حساب — كل الوقت</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-5 py-3 text-right font-semibold text-gray-500">الحساب</th>
+                        <th class="px-5 py-3 text-right font-semibold text-gray-500">رقم الحساب</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-500">صافي الرصيد</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @foreach($accountBalances as $account)
+                    <tr class="hover:bg-gray-50/50">
+                        <td class="px-5 py-3 font-medium text-gray-700">{{ $account->name }}</td>
+                        <td class="px-5 py-3 text-gray-400 font-mono text-xs">{{ $account->account_number }}</td>
+                        <td class="px-5 py-3 text-left font-bold {{ $account->net_balance >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                            {{ $fmt($account->net_balance) }}
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 </x-layouts.app>

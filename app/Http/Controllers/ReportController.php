@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Customer;
+use App\Models\Delegate;
 use App\Models\FinancialTransaction;
 use App\Models\InstallmentPlan;
 use App\Models\Product;
@@ -148,10 +150,52 @@ class ReportController extends Controller
         $netProfit   = $totalRevenue - $netPurchases - $totalExpenses - $totalDepreciation;
 
         // ══════════════════════════════════════════════════════════
-        // 10. TOTAL NET WORTH — صافي الوضع المالي
+        // 10. OPENING BALANCES — الأرصدة الافتتاحية
         // ══════════════════════════════════════════════════════════
-        $totalAssets = $totalCash + $totalReceivables + $inventoryValue;
-        $totalLiabilities = $supplierPayables;
+
+        // Customers — ذمم افتتاحية على العملاء
+        $customerOpeningBalance = Customer::sum('opening_balance');
+        // Customers — رصيد العملاء الجاري (balance column)
+        $customerCurrentBalance = Customer::sum('balance');
+
+        // Suppliers — ذمم افتتاحية للموردين
+        $supplierOpeningBalance = Supplier::sum('opening_balance');
+        // Suppliers — رصيد الموردين الجاري
+        $supplierCurrentBalance = Supplier::sum('balance');
+
+        // Delegates — فلوس المناديب
+        $delegates = Delegate::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'cash_custody', 'total_collected', 'total_due']);
+        $delegateCashCustody  = $delegates->sum('cash_custody');   // نقدية عند المناديب (أصل)
+        $delegateNetReceivable = $delegates->sum(fn($d) =>          // صافي ما يستحقه المندوب لنا
+            max(0, (float)$d->total_due - (float)$d->total_collected)
+        );
+
+        // Accounts — رصيد كل حساب من حركات المالية (كل الوقت)
+        $accountBalances = Account::where('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->map(function ($account) {
+                $revenues = FinancialTransaction::where('account_id', $account->id)
+                    ->where('type', 'revenue')->sum('amount');
+                $expenses = FinancialTransaction::where('account_id', $account->id)
+                    ->where('type', 'expense')->sum('amount');
+                $account->net_balance = (float)$revenues - (float)$expenses;
+                return $account;
+            });
+
+        // ══════════════════════════════════════════════════════════
+        // 11. TOTAL NET WORTH — صافي الوضع المالي
+        // ══════════════════════════════════════════════════════════
+        $totalAssets = $totalCash
+            + $totalReceivables
+            + $customerOpeningBalance
+            + $delegateCashCustody
+            + $delegateNetReceivable
+            + $inventoryValue;
+
+        $totalLiabilities = $supplierPayables + $supplierOpeningBalance;
         $netWorth = $totalAssets - $totalLiabilities;
 
         return view('pages.reports.financial-overview', compact(
@@ -174,6 +218,11 @@ class ReportController extends Controller
             'depreciations', 'totalDepreciation',
             // Profit
             'grossProfit', 'netProfit',
+            // Opening Balances
+            'customerOpeningBalance', 'customerCurrentBalance',
+            'supplierOpeningBalance', 'supplierCurrentBalance',
+            'delegates', 'delegateCashCustody', 'delegateNetReceivable',
+            'accountBalances',
             // Summary
             'totalAssets', 'totalLiabilities', 'netWorth',
         ));
