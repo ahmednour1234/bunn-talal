@@ -42,7 +42,11 @@ class CustomerController extends Controller
             'area'   => ['nullable', 'string', 'max:100'],
         ]);
 
-        $query = Customer::where('is_active', true)->with('area:id,name');
+        $delegate = $request->user();
+
+        $query = Customer::where('is_active', true)
+            ->with('area:id,name')
+            ->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegate->id));
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -110,6 +114,9 @@ class CustomerController extends Controller
             'balance'         => 0,
             'classification'  => 'regular',
         ]);
+
+        // Auto-attach the newly created customer to the authenticated delegate
+        $customer->delegates()->attach($request->user()->id);
 
         return $this->successResponse(
             CustomerResource::make($customer)->resolve(),

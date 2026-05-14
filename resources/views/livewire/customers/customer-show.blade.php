@@ -148,6 +148,28 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Delegates Section --}}
+            <div class="mt-6">
+                <h3 class="text-sm font-bold text-gray-700 border-b pb-2 mb-3">المندوبون المرتبطون</h3>
+                @if($customer->delegates->isNotEmpty())
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($customer->delegates as $delegate)
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-100">
+                                <span class="w-6 h-6 rounded-full bg-primary-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                    {{ mb_substr($delegate->name, 0, 1) }}
+                                </span>
+                                {{ $delegate->name }}
+                                @if($delegate->phone)
+                                    <span class="text-gray-400" dir="ltr">· {{ $delegate->phone }}</span>
+                                @endif
+                            </span>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-gray-400">لا يوجد مندوبون مرتبطون بهذا العميل</p>
+                @endif
+            </div>
             @endif
 
             {{-- ══ Invoices Tab ══════════════════════════════════════ --}}

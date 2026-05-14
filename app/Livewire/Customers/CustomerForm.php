@@ -4,6 +4,7 @@ namespace App\Livewire\Customers;
 
 use App\Models\Area;
 use App\Models\Customer;
+use App\Models\Delegate;
 use App\Services\CustomerService;
 use Livewire\Component;
 
@@ -21,6 +22,7 @@ class CustomerForm extends Component
     public string $opening_balance = '0';
     public string $classification = 'regular';
     public bool $is_active = true;
+    public array $selectedDelegates = [];
 
     public function mount(CustomerService $customerService, ?int $id = null)
     {
@@ -38,6 +40,7 @@ class CustomerForm extends Component
             $this->opening_balance = (string) ($customer->opening_balance * 1);
             $this->classification = $customer->classification;
             $this->is_active = $customer->is_active;
+            $this->selectedDelegates = $customer->delegates->pluck('id')->map(fn ($v) => (string) $v)->toArray();
         }
     }
 
@@ -55,6 +58,8 @@ class CustomerForm extends Component
             'opening_balance' => 'required|numeric|min:0',
             'classification' => 'required|in:premium,regular,medium',
             'is_active' => 'boolean',
+            'selectedDelegates' => 'array',
+            'selectedDelegates.*' => 'exists:delegates,id',
         ];
     }
 
@@ -86,11 +91,13 @@ class CustomerForm extends Component
             'is_active' => $this->is_active,
         ];
 
+        $delegateIds = array_map('intval', $this->selectedDelegates);
+
         if ($this->customerId) {
-            $customerService->updateCustomer($this->customerId, $data);
+            $customerService->updateCustomer($this->customerId, $data, $delegateIds);
             session()->flash('success', 'تم تحديث بيانات العميل بنجاح');
         } else {
-            $customerService->createCustomer($data);
+            $customerService->createCustomer($data, $delegateIds);
             session()->flash('success', 'تم إضافة العميل بنجاح');
         }
 
@@ -102,6 +109,7 @@ class CustomerForm extends Component
         return view('livewire.customers.customer-form', [
             'classificationLabels' => Customer::classificationLabels(),
             'areas' => Area::where('is_active', true)->orderBy('name')->get(),
+            'delegates' => Delegate::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 }

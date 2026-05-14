@@ -63,6 +63,11 @@ class Delegate extends Authenticatable
         return $this->belongsToMany(Category::class, 'delegate_category');
     }
 
+    public function customers()
+    {
+        return $this->belongsToMany(Customer::class, 'customer_delegate');
+    }
+
     public function trips()
     {
         return $this->hasMany(Trip::class);

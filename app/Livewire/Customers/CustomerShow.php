@@ -26,7 +26,7 @@ class CustomerShow extends Component
 
     public function render()
     {
-        $customer = Customer::with('area')->findOrFail($this->customerId);
+        $customer = Customer::with('area', 'delegates')->findOrFail($this->customerId);
 
         // ── Invoices (Sale Orders) ────────────────────────────────
         $orders = SaleOrder::where('customer_id', $this->customerId)

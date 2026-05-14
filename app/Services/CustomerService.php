@@ -20,14 +20,18 @@ class CustomerService
         return $this->customerRepository->getById($id);
     }
 
-    public function createCustomer(array $data)
+    public function createCustomer(array $data, array $delegateIds = [])
     {
-        return $this->customerRepository->create($data);
+        $customer = $this->customerRepository->create($data);
+        $customer->delegates()->sync($delegateIds);
+        return $customer;
     }
 
-    public function updateCustomer(int $id, array $data)
+    public function updateCustomer(int $id, array $data, array $delegateIds = [])
     {
-        return $this->customerRepository->update($id, $data);
+        $customer = $this->customerRepository->update($id, $data);
+        $customer->delegates()->sync($delegateIds);
+        return $customer;
     }
 
     public function deleteCustomer(int $id): bool

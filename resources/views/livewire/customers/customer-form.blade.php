@@ -151,6 +151,33 @@
                 <p class="text-xs text-gray-400 mt-2">اضغط على الخريطة لتحديد موقع العميل</p>
             </div>
 
+            {{-- Delegates --}}
+            <div>
+                <h4 class="text-base font-bold text-primary-700 mb-4 pb-2 border-b border-gray-100">المندوبون المرتبطون</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    @foreach($delegates as $delegate)
+                        <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-primary-50 hover:border-primary-300 transition-all">
+                            <input
+                                type="checkbox"
+                                wire:model="selectedDelegates"
+                                value="{{ $delegate->id }}"
+                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4"
+                            >
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">{{ $delegate->name }}</p>
+                                <p class="text-xs text-gray-400">{{ $delegate->phone ?? '—' }}</p>
+                            </div>
+                        </label>
+                    @endforeach
+                    @if($delegates->isEmpty())
+                        <p class="text-sm text-gray-400 col-span-3">لا يوجد مندوبون نشطون</p>
+                    @endif
+                </div>
+                @error('selectedDelegates')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
             {{-- Actions --}}
             <div class="flex items-center gap-3 pt-6 border-t border-gray-100">
                 <x-button type="submit" variant="primary">

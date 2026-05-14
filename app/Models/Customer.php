@@ -56,6 +56,11 @@ class Customer extends Model
         return $this->hasMany(Collection::class);
     }
 
+    public function delegates()
+    {
+        return $this->belongsToMany(Delegate::class, 'customer_delegate');
+    }
+
     public static function classificationLabels(): array
     {
         return [
