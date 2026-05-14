@@ -57,8 +57,8 @@
 
             {{-- Assignments --}}
             <div>
-                <h3 class="text-base font-bold text-primary-700 mb-4 pb-2 border-b border-gray-100">الفروع والمناطق والتصنيفات</h3>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <h3 class="text-base font-bold text-primary-700 mb-4 pb-2 border-b border-gray-100">الفروع والمناطق والتصنيفات والعملاء</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {{-- Branches --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الفروع</label>
@@ -105,6 +105,28 @@
                                 <p class="text-xs text-gray-400 text-center py-2">لا توجد تصنيفات</p>
                             @endif
                         </div>
+                    </div>
+
+                    {{-- Customers --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">العملاء</label>
+                        <div class="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2 bg-gray-50">
+                            @foreach($customers as $customer)
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-white p-1.5 rounded transition-colors">
+                                    <input type="checkbox" wire:model="selectedCustomers" value="{{ $customer->id }}" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-4 h-4">
+                                    <span class="text-sm text-gray-700">{{ $customer->name }}</span>
+                                    @if($customer->phone)
+                                        <span class="text-xs text-gray-400 mr-auto" dir="ltr">{{ $customer->phone }}</span>
+                                    @endif
+                                </label>
+                            @endforeach
+                            @if($customers->isEmpty())
+                                <p class="text-xs text-gray-400 text-center py-2">لا يوجد عملاء</p>
+                            @endif
+                        </div>
+                        @error('selectedCustomers')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
             </div>

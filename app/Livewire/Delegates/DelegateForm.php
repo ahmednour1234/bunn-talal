@@ -5,6 +5,7 @@ namespace App\Livewire\Delegates;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\Category;
+use App\Models\Customer;
 use App\Services\DelegateService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -34,6 +35,7 @@ class DelegateForm extends Component
     public array $selectedBranches = [];
     public array $selectedAreas = [];
     public array $selectedCategories = [];
+    public array $selectedCustomers = [];
 
     public function mount(DelegateService $delegateService, ?int $id = null)
     {
@@ -57,6 +59,7 @@ class DelegateForm extends Component
             $this->selectedBranches = $delegate->branches->pluck('id')->map(fn ($v) => (string) $v)->toArray();
             $this->selectedAreas = $delegate->areas->pluck('id')->map(fn ($v) => (string) $v)->toArray();
             $this->selectedCategories = $delegate->categories->pluck('id')->map(fn ($v) => (string) $v)->toArray();
+            $this->selectedCustomers = $delegate->customers->pluck('id')->map(fn ($v) => (string) $v)->toArray();
         }
     }
 
@@ -80,6 +83,8 @@ class DelegateForm extends Component
             'selectedBranches' => 'array',
             'selectedAreas' => 'array',
             'selectedCategories' => 'array',
+            'selectedCustomers' => 'array',
+            'selectedCustomers.*' => 'exists:customers,id',
         ];
 
         if (!$this->delegateId) {
@@ -133,12 +138,13 @@ class DelegateForm extends Component
         $branchIds = array_map('intval', $this->selectedBranches);
         $areaIds = array_map('intval', $this->selectedAreas);
         $categoryIds = array_map('intval', $this->selectedCategories);
+        $customerIds = array_map('intval', $this->selectedCustomers);
 
         if ($this->delegateId) {
-            $delegateService->updateDelegate($this->delegateId, $data, $uploadedImage, $branchIds, $areaIds, $categoryIds);
+            $delegateService->updateDelegate($this->delegateId, $data, $uploadedImage, $branchIds, $areaIds, $categoryIds, $customerIds);
             session()->flash('success', 'تم تحديث بيانات المندوب بنجاح');
         } else {
-            $delegateService->createDelegate($data, $uploadedImage, $branchIds, $areaIds, $categoryIds);
+            $delegateService->createDelegate($data, $uploadedImage, $branchIds, $areaIds, $categoryIds, $customerIds);
             session()->flash('success', 'تم إضافة المندوب بنجاح');
         }
 
@@ -151,6 +157,7 @@ class DelegateForm extends Component
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
             'areas' => Area::where('is_active', true)->orderBy('name')->get(),
             'categories' => Category::where('is_active', true)->orderBy('name')->get(),
+            'customers' => Customer::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 }

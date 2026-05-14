@@ -27,7 +27,7 @@ class DelegateService
         return $this->delegateRepository->getById($id);
     }
 
-    public function createDelegate(array $data, ?UploadedFile $image = null, array $branchIds = [], array $areaIds = [], array $categoryIds = [])
+    public function createDelegate(array $data, ?UploadedFile $image = null, array $branchIds = [], array $areaIds = [], array $categoryIds = [], array $customerIds = [])
     {
         if ($image) {
             $data['national_id_image'] = $image->store('delegates/ids', 'public');
@@ -37,11 +37,12 @@ class DelegateService
         $delegate->branches()->sync($branchIds);
         $delegate->areas()->sync($areaIds);
         $delegate->categories()->sync($categoryIds);
+        $delegate->customers()->sync($customerIds);
 
         return $delegate;
     }
 
-    public function updateDelegate(int $id, array $data, ?UploadedFile $image = null, array $branchIds = [], array $areaIds = [], array $categoryIds = [])
+    public function updateDelegate(int $id, array $data, ?UploadedFile $image = null, array $branchIds = [], array $areaIds = [], array $categoryIds = [], array $customerIds = [])
     {
         if ($image) {
             $delegate = $this->delegateRepository->getById($id);
@@ -55,6 +56,7 @@ class DelegateService
         $delegate->branches()->sync($branchIds);
         $delegate->areas()->sync($areaIds);
         $delegate->categories()->sync($categoryIds);
+        $delegate->customers()->sync($customerIds);
 
         return $delegate;
     }
