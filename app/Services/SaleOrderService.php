@@ -128,25 +128,6 @@ class SaleOrderService
     public function createOrder(array $data, array $items, ?float $initialPayment = null): SaleOrder
     {
         return DB::transaction(function () use ($data, $items, $initialPayment) {
-            // Validate delegate stock before proceeding
-            if (!empty($data['delegate_id'])) {
-                foreach ($items as $item) {
-                    $stock = DB::table('delegate_product')
-                        ->where('delegate_id', $data['delegate_id'])
-                        ->where('product_id', $item['product_id'])
-                        ->value('quantity');
-
-                    $available = (float) ($stock ?? 0);
-                    $requested = (float) $item['quantity'];
-
-                    if ($available < $requested) {
-                        $product = \App\Models\Product::find($item['product_id']);
-                        $name = $product?->name ?? "المنتج #{$item['product_id']}";
-                        throw new \Exception("الكمية المطلوبة ({$requested}) من \"{$name}\" تتجاوز مخزون المندوب المتاح ({$available})");
-                    }
-                }
-            }
-
             $subtotal = 0;
             $totalTax = 0;
 
@@ -199,10 +180,25 @@ class SaleOrderService
 
                 // Decrement stock from delegate (delegate sale) or branch (direct branch sale)
                 if (!empty($data['delegate_id'])) {
-                    DB::table('delegate_product')
+                    $exists = DB::table('delegate_product')
                         ->where('delegate_id', $data['delegate_id'])
                         ->where('product_id', $item['product_id'])
-                        ->decrement('quantity', (float) $item['quantity']);
+                        ->exists();
+
+                    if ($exists) {
+                        DB::table('delegate_product')
+                            ->where('delegate_id', $data['delegate_id'])
+                            ->where('product_id', $item['product_id'])
+                            ->decrement('quantity', (float) $item['quantity']);
+                    } else {
+                        DB::table('delegate_product')->insert([
+                            'delegate_id' => $data['delegate_id'],
+                            'product_id'  => $item['product_id'],
+                            'quantity'    => -((float) $item['quantity']),
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                        ]);
+                    }
                 } else {
                     $stockRow = DB::table('branch_product')
                         ->where('branch_id', $data['branch_id'])
