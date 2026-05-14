@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 
 class StoreSaleOrderRequest extends FormRequest
 {
@@ -14,7 +15,20 @@ class StoreSaleOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id'           => ['required', 'integer', 'exists:customers,id'],
+            'customer_id' => [
+                'required',
+                'integer',
+                'exists:customers,id',
+                function ($attribute, $value, $fail) {
+                    $isAssigned = DB::table('customer_delegate')
+                        ->where('customer_id', $value)
+                        ->where('delegate_id', $this->user()->id)
+                        ->exists();
+                    if (!$isAssigned) {
+                        $fail('هذا العميل غير مرتبط بك');
+                    }
+                },
+            ],
             'payment_method'        => ['required', 'string', 'in:cash,credit,partial'],
             'discount_amount'       => ['nullable', 'numeric', 'min:0'],
             'discount_type'         => ['nullable', 'string', 'in:fixed,percentage'],

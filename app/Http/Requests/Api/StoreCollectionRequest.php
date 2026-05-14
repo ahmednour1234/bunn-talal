@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 
 class StoreCollectionRequest extends FormRequest
 {
@@ -14,7 +15,21 @@ class StoreCollectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id'           => ['nullable', 'integer', 'exists:customers,id'],
+            'customer_id' => [
+                'nullable',
+                'integer',
+                'exists:customers,id',
+                function ($attribute, $value, $fail) {
+                    if ($value === null) return;
+                    $isAssigned = DB::table('customer_delegate')
+                        ->where('customer_id', $value)
+                        ->where('delegate_id', $this->user()->id)
+                        ->exists();
+                    if (!$isAssigned) {
+                        $fail('هذا العميل غير مرتبط بك');
+                    }
+                },
+            ],
             'notes'                 => ['nullable', 'string'],
             'items'                 => ['required', 'array', 'min:1'],
             'items.*.sale_order_id' => ['nullable', 'integer', 'exists:sale_orders,id'],
@@ -26,9 +41,9 @@ class StoreCollectionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'items.required'              => 'يجب إضافة صنف واحد على الأقل',
-            'items.*.amount.required'     => 'المبلغ مطلوب لكل صنف',
-            'items.*.amount.min'          => 'المبلغ يجب أن يكون أكبر من صفر',
+            'items.required'               => 'يجب إضافة صنف واحد على الأقل',
+            'items.*.amount.required'      => 'المبلغ مطلوب لكل صنف',
+            'items.*.amount.min'           => 'المبلغ يجب أن يكون أكبر من صفر',
             'items.*.sale_order_id.exists' => 'فاتورة البيع غير موجودة',
         ];
     }
