@@ -43,7 +43,7 @@ class CustomerShow extends Component
             ->with('branch')
             ->orderByDesc('date')
             ->get();
-        $totalReturns = $returns->where('status', 'completed')->sum('refund_amount');
+        $totalReturns = $returns->whereIn('status', ['confirmed', 'refunded'])->sum('refund_amount');
 
         // ── Collections ───────────────────────────────────────────
         $collections = Collection::where('customer_id', $this->customerId)
@@ -107,7 +107,7 @@ class CustomerShow extends Component
             }
         }
 
-        foreach ($returns->where('status', 'completed') as $r) {
+        foreach ($returns->whereIn('status', ['confirmed', 'refunded']) as $r) {
             $ledger->push([
                 'date'        => $r->date,
                 'type'        => 'return',

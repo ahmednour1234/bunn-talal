@@ -279,6 +279,16 @@ class CollectionForm extends Component
                     }
                 }
             }
+            // Add collected amount to delegate's عهدة if a delegate is involved
+            if ($this->delegateId && $this->status === 'completed') {
+                \App\Models\DelegateLoan::create([
+                    'delegate_id' => (int) $this->delegateId,
+                    'amount'      => (float) $this->totalAmount,
+                    'paid_amount' => 0,
+                    'is_paid'     => false,
+                    'note'        => 'تحصيل رقم #' . $collection->collection_number,
+                ]);
+            }
         });
 
         session()->flash('success', 'تم تسجيل التحصيل بنجاح');

@@ -5,6 +5,7 @@ namespace App\Livewire\SaleOrders;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Delegate;
+use App\Models\DelegateLoan;
 use App\Models\Product;
 use App\Models\Treasury;
 use App\Models\Unit;
@@ -280,7 +281,20 @@ class SaleOrderForm extends Component
         }
 
         try {
-            $service->createOrder($data, $this->items, $initialPayment);
+            $order = $service->createOrder($data, $this->items, $initialPayment);
+
+            // Add collected amount to delegate's عهدة
+            if (!empty($data['delegate_id']) && (float) $order->paid_amount > 0) {
+                DelegateLoan::create([
+                    'delegate_id'   => $data['delegate_id'],
+                    'sale_order_id' => $order->id,
+                    'amount'        => (float) $order->paid_amount,
+                    'paid_amount'   => 0,
+                    'is_paid'       => false,
+                    'note'          => 'تحصيل فاتورة #' . $order->order_number,
+                ]);
+            }
+
             session()->flash('success', 'تم إنشاء طلب المبيعات بنجاح');
             return redirect()->route('sale-orders.index');
         } catch (\Exception $e) {

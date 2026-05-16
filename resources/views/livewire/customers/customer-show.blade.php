@@ -386,7 +386,7 @@
                     @if($returns->count())
                     <tfoot class="bg-gray-50 border-t-2 border-gray-200">
                         <tr class="font-bold">
-                            <td colspan="2" class="px-4 py-2.5 text-gray-600">إجمالي المرتجعات المكتملة</td>
+                            <td colspan="2" class="px-4 py-2.5 text-gray-600">إجمالي المرتجعات المؤكدة</td>
                             <td class="px-4 py-2.5 text-red-500">{{ number_format($totalReturns, 2) }}</td>
                             <td colspan="3"></td>
                         </tr>
