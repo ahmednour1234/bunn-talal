@@ -138,24 +138,6 @@ class SaleReturnService
                 ]);
             }
 
-            // If linked to a trip, add returned qty back to delegate stock
-            if (!empty($data['trip_id'])) {
-                $trip = \App\Models\Trip::find($data['trip_id']);
-                if ($trip && $trip->delegate_id) {
-                    foreach ($items as $item) {
-                        DB::table('delegate_product')->updateOrInsert(
-                            ['delegate_id' => $trip->delegate_id, 'product_id' => $item['product_id']],
-                            [
-                                'quantity'   => DB::raw('COALESCE(quantity, 0) + ' . (float) $item['quantity']),
-                                'unit_id'    => $item['unit_id'] ?? null,
-                                'updated_at' => now(),
-                                'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
-                            ]
-                        );
-                    }
-                }
-            }
-
             return $return->load(['items.product', 'items.unit', 'order', 'customer']);
         });
     }
@@ -189,9 +171,13 @@ class SaleReturnService
                 }
             }
 
-            // Add stock back — delegate returns already updated delegate_product in createReturn()
-            // Only update branch stock for non-delegate (direct branch) returns
-            if (!$return->trip_id) {
+            // Add stock back to the appropriate location
+            if ($return->trip_id) {
+                // Delegate trip return: confirmed → products are now back in delegate's vehicle
+                // tripProducts calculates available stock dynamically (dispatched - sold + returns)
+                // so no explicit stock table update is needed here.
+            } else {
+                // Direct branch return: add qty back to branch_product
                 foreach ($return->items as $item) {
                     $current = DB::table('branch_product')
                         ->where('branch_id', $return->branch_id)

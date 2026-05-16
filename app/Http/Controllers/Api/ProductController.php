@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\ProductResource;
 use App\Models\Category;
 use App\Models\InventoryDispatch;
+use App\Models\SaleOrderItem;
+use App\Models\SaleReturnItem;
 use App\Models\Trip;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -107,29 +109,42 @@ class ProductController extends Controller
             }
         }
 
-        // Collect remaining quantities per product from dispatches of this trip
+        // Collect dispatched quantities per product for this trip
         $dispatches = InventoryDispatch::where('trip_id', $trip->id)
             ->where('delegate_id', $delegate->id)
             ->with('items.unit')
             ->get();
 
-        // Store raw (remaining, dispatch_unit_factor) per product to convert later
-        $rawQuantities = []; // [product_id => [['qty' => float, 'factor' => float|null]]]
+        // [product_id => [['qty' => float, 'factor' => float|null]]]
+        $dispatchedRaw = [];
         foreach ($dispatches as $dispatch) {
             foreach ($dispatch->items as $item) {
-                $remaining = (float) $item->quantity - (float) ($item->returned_quantity ?? 0);
-                $rawQuantities[$item->product_id][] = [
-                    'qty'    => $remaining,
+                $dispatchedRaw[$item->product_id][] = [
+                    'qty'    => (float) $item->quantity,
                     'factor' => $item->unit ? (float) $item->unit->conversion_factor : null,
                 ];
             }
         }
 
-        if (empty($rawQuantities)) {
+        if (empty($dispatchedRaw)) {
             return $this->successResponse([], 'لا توجد منتجات في هذه الرحلة');
         }
 
-        $productIds = array_keys($rawQuantities);
+        $productIds = array_keys($dispatchedRaw);
+
+        // Sold qty per product (non-cancelled sale orders on this trip), in dispatch-item units
+        $soldInBase = SaleOrderItem::whereHas('order', fn($q) => $q->where('trip_id', $trip->id)->whereNotIn('status', ['cancelled']))
+            ->whereIn('product_id', $productIds)
+            ->with('unit')
+            ->get()
+            ->groupBy('product_id');
+
+        // Returned qty per product (non-cancelled sale returns on this trip)
+        $returnedInBase = SaleReturnItem::whereHas('saleReturn', fn($q) => $q->where('trip_id', $trip->id)->whereNotIn('status', ['cancelled']))
+            ->whereIn('product_id', $productIds)
+            ->with('unit')
+            ->get()
+            ->groupBy('product_id');
 
         $query = \App\Models\Product::whereIn('id', $productIds)
             ->where('is_active', true)
@@ -149,19 +164,33 @@ class ProductController extends Controller
         }
 
         $products = $query->get()
-            ->each(function ($product) use ($rawQuantities) {
-                $productFactor = $product->unit ? (float) $product->unit->conversion_factor : 1.0;
-                $total = 0.0;
-                foreach ($rawQuantities[$product->id] ?? [] as $entry) {
-                    // If dispatch unit is known and differs from product unit, convert
-                    $dispatchFactor = $entry['factor'] ?? $productFactor;
-                    if ($productFactor > 0) {
-                        $total += $entry['qty'] * $dispatchFactor / $productFactor;
-                    } else {
-                        $total += $entry['qty'];
-                    }
+            ->each(function ($product) use ($dispatchedRaw, $soldInBase, $returnedInBase) {
+                $pf = $product->unit ? (float) $product->unit->conversion_factor : 1.0;
+
+                // Helper: convert qty from any unit factor to product's unit
+                $convert = fn(float $qty, ?float $uf) => $pf > 0 ? $qty * ($uf ?? $pf) / $pf : $qty;
+
+                // Dispatched in product unit
+                $dispatched = 0.0;
+                foreach ($dispatchedRaw[$product->id] ?? [] as $entry) {
+                    $dispatched += $convert((float) $entry['qty'], $entry['factor']);
                 }
-                $product->available_stock = $total;
+
+                // Sold in product unit
+                $sold = 0.0;
+                foreach ($soldInBase->get($product->id, collect()) as $row) {
+                    $uf = $row->unit ? (float) $row->unit->conversion_factor : $pf;
+                    $sold += $convert((float) $row->quantity, $uf);
+                }
+
+                // Returned from customers (back to delegate's car) in product unit
+                $returned = 0.0;
+                foreach ($returnedInBase->get($product->id, collect()) as $row) {
+                    $uf = $row->unit ? (float) $row->unit->conversion_factor : $pf;
+                    $returned += $convert((float) $row->quantity, $uf);
+                }
+
+                $product->available_stock = max(0.0, $dispatched - $sold + $returned);
             });
 
         return $this->successResponse(ProductResource::collection($products)->resolve(), 'تم جلب منتجات الرحلة بنجاح');
