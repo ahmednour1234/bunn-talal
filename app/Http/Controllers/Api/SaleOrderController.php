@@ -141,6 +141,84 @@ class SaleOrderController extends Controller
         }
         // For 'cash' - SaleOrderService will pay the full amount automatically
 
+        // ── Stock availability check ────────────────────────────────────────
+        $productIds = collect($validated['items'])->pluck('product_id')->unique()->values()->toArray();
+        $unitIds    = collect($validated['items'])->pluck('unit_id')->filter()->unique()->values()->toArray();
+
+        $productMap = Product::whereIn('id', $productIds)->with('unit')->get()->keyBy('id');
+        $unitMap    = Unit::whereIn('id', $unitIds)->get()->keyBy('id');
+
+        // Helper: convert qty from item unit to product's native unit
+        $toProductUnit = function (float $qty, ?float $uf, ?float $pf): float {
+            $pf = $pf ?: 1.0;
+            $uf = $uf ?: $pf;
+            return $pf > 0 ? $qty * $uf / $pf : $qty;
+        };
+
+        // Dispatched qty per product for this trip
+        $dispatchedQties = InventoryDispatchItem::whereHas('dispatch', fn($q) => $q->where('trip_id', $trip->id))
+            ->whereIn('product_id', $productIds)
+            ->with('unit')
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($rows) use ($productMap, $toProductUnit) {
+                return $rows->sum(function ($r) use ($productMap, $toProductUnit) {
+                    $pf = $productMap->get($r->product_id)?->unit ? (float) $productMap->get($r->product_id)->unit->conversion_factor : 1.0;
+                    $uf = $r->unit ? (float) $r->unit->conversion_factor : $pf;
+                    return $toProductUnit((float) $r->quantity, $uf, $pf);
+                });
+            });
+
+        // Already sold qty per product this trip (non-cancelled)
+        $soldQties = SaleOrderItem::whereHas('order', fn($q) => $q->where('trip_id', $trip->id)->whereNotIn('status', ['cancelled']))
+            ->whereIn('product_id', $productIds)
+            ->with('unit')
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($rows) use ($productMap, $toProductUnit) {
+                return $rows->sum(function ($r) use ($productMap, $toProductUnit) {
+                    $pf = $productMap->get($r->product_id)?->unit ? (float) $productMap->get($r->product_id)->unit->conversion_factor : 1.0;
+                    $uf = $r->unit ? (float) $r->unit->conversion_factor : $pf;
+                    return $toProductUnit((float) $r->quantity, $uf, $pf);
+                });
+            });
+
+        // Returned qty per product this trip (non-cancelled sale returns)
+        $returnedQties = SaleReturnItem::whereHas('saleReturn', fn($q) => $q->where('trip_id', $trip->id)->whereNotIn('status', ['cancelled']))
+            ->whereIn('product_id', $productIds)
+            ->with('unit')
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($rows) use ($productMap, $toProductUnit) {
+                return $rows->sum(function ($r) use ($productMap, $toProductUnit) {
+                    $pf = $productMap->get($r->product_id)?->unit ? (float) $productMap->get($r->product_id)->unit->conversion_factor : 1.0;
+                    $uf = $r->unit ? (float) $r->unit->conversion_factor : $pf;
+                    return $toProductUnit((float) $r->quantity, $uf, $pf);
+                });
+            });
+
+        foreach ($validated['items'] as $item) {
+            $pid      = $item['product_id'];
+            $product  = $productMap->get($pid);
+            $pf       = $product?->unit ? (float) $product->unit->conversion_factor : 1.0;
+            $itemUnit = isset($item['unit_id']) ? $unitMap->get($item['unit_id']) : null;
+            $uf       = $itemUnit ? (float) $itemUnit->conversion_factor : $pf;
+
+            $requestedInBase = $toProductUnit((float) $item['quantity'], $uf, $pf);
+            $dispatched      = (float) ($dispatchedQties[$pid] ?? 0);
+            $sold            = (float) ($soldQties[$pid] ?? 0);
+            $returned        = (float) ($returnedQties[$pid] ?? 0);
+            $available       = max(0.0, $dispatched - $sold + $returned);
+
+            if ($requestedInBase > $available + 0.0001) {
+                $productName = $product?->name ?? "المنتج #{$pid}";
+                return $this->errorResponse(
+                    "الكمية المطلوبة للمنتج \"{$productName}\" ({$item['quantity']}) تتجاوز المتاح لديك (" . round($available, 2) . ")"
+                );
+            }
+        }
+        // ── End stock check ─────────────────────────────────────────────────
+
         $order = $this->saleOrderService->createOrder($orderData, $validated['items'], $initialPayment);
 
         // Add collected cash to delegate's عهدة
