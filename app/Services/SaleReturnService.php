@@ -90,14 +90,35 @@ class SaleReturnService
         return DB::transaction(function () use ($data, $items) {
             $subtotal = 0;
 
+            // Pre-load order items to calculate proportional refund with discount
+            $orderItemIds = collect($items)->pluck('sale_order_item_id')->filter()->unique()->values();
+            $orderItemsMap = $orderItemIds->isNotEmpty()
+                ? \App\Models\SaleOrderItem::whereIn('id', $orderItemIds)->get()->keyBy('id')
+                : collect();
+
             foreach ($items as &$item) {
-                // Use pre-calculated refund_amount (proportional with discount+tax) if provided,
-                // otherwise fall back to simple qty * unit_price
                 if (!isset($item['refund_amount']) || $item['refund_amount'] === null) {
-                    $item['refund_amount'] = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+                    $orderItemId = $item['sale_order_item_id'] ?? null;
+                    $origItem    = $orderItemId ? $orderItemsMap->get($orderItemId) : null;
+
+                    if ($origItem && (float) $origItem->quantity > 0) {
+                        // Proportional refund: accounts for discount & tax on the original line
+                        $ratio = min(1, (float) $item['quantity'] / (float) $origItem->quantity);
+                        $item['refund_amount']    = round((float) $origItem->total * $ratio, 2);
+                        $item['gross_amount']     = round((float) $item['quantity'] * (float) $origItem->unit_price, 2);
+                        $item['discount_amount']  = round($item['gross_amount'] - $item['refund_amount'], 2);
+                    } else {
+                        $item['refund_amount']   = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+                        $item['gross_amount']    = $item['refund_amount'];
+                        $item['discount_amount'] = 0;
+                    }
+                } else {
+                    $item['gross_amount']    = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+                    $item['discount_amount'] = round($item['gross_amount'] - (float) $item['refund_amount'], 2);
                 }
                 $subtotal += (float) $item['refund_amount'];
             }
+            unset($item);
 
             $return = $this->returnRepository->create(array_merge($data, [
                 'subtotal'      => round($subtotal, 2),

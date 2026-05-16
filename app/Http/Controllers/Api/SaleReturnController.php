@@ -107,6 +107,30 @@ class SaleReturnController extends Controller
             return $this->errorResponse('لا يمكن إنشاء مرتجع — لا توجد رحلة نشطة أو الرحلة في وضع لا يسمح بالإرجاع');
         }
 
+        // Load order items keyed by id and product_id
+        $order->load('items.product');
+        $orderItems          = $order->items->keyBy('id');
+        $orderItemsByProduct = $order->items->keyBy('product_id');
+
+        // Validate: returned qty must not exceed (original qty - already returned qty)
+        foreach ($validated['items'] as $itemInput) {
+            $origItem = !empty($itemInput['sale_order_item_id'])
+                ? $orderItems->get($itemInput['sale_order_item_id'])
+                : $orderItemsByProduct->get($itemInput['product_id']);
+
+            if ($origItem) {
+                $alreadyReturned = \App\Models\SaleReturnItem::where('sale_order_item_id', $origItem->id)
+                    ->whereHas('saleReturn', fn($q) => $q->whereNotIn('status', ['cancelled']))
+                    ->sum('quantity');
+                $remaining = max(0, (float) $origItem->quantity - (float) $alreadyReturned);
+                if ((float) $itemInput['quantity'] > $remaining) {
+                    return $this->errorResponse(
+                        "الكمية المُرتجعة للمنتج \"{$origItem->product?->name}\" تتجاوز الكمية المتاحة للإرجاع ({$remaining})"
+                    );
+                }
+            }
+        }
+
         $returnData = [
             'sale_order_id' => $validated['sale_order_id'],
             'customer_id'   => $order->customer_id,
@@ -117,10 +141,6 @@ class SaleReturnController extends Controller
             'date'          => now()->toDateString(),
             'notes'         => $validated['notes'] ?? null,
         ];
-
-        // Load order items keyed by sale_order_item_id and product_id for price/discount/tax lookup
-        $orderItems = $order->items->keyBy('id');
-        $orderItemsByProduct = $order->items->keyBy('product_id');
 
         $items = collect($validated['items'])->map(function (array $item) use ($orderItems, $orderItemsByProduct) {
             // Resolve the original order item
@@ -136,13 +156,13 @@ class SaleReturnController extends Controller
                 $item['discount_type'] = $origItem->discount_type;
                 $item['tax_amount']    = (float) $origItem->tax_amount;
 
-                // Calculate proportional refund:
-                // refund = (returned_qty / original_qty) * original_item_total
+                // Calculate proportional refund: accounts for discount & tax
                 $origQty = (float) $origItem->quantity;
                 $retQty  = (float) $item['quantity'];
                 $ratio   = $origQty > 0 ? min(1, $retQty / $origQty) : 0;
 
                 $item['refund_amount'] = round((float) $origItem->total * $ratio, 2);
+                $item['sale_order_item_id'] = $origItem->id;
             } else {
                 $item['unit_price']    = 0;
                 $item['discount']      = 0;
