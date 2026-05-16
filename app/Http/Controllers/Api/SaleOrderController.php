@@ -155,8 +155,18 @@ class SaleOrderController extends Controller
             return $pf > 0 ? $qty * $uf / $pf : $qty;
         };
 
-        // Dispatched qty per product for this trip
-        $dispatchedQties = InventoryDispatchItem::whereHas('dispatch', fn($q) => $q->where('trip_id', $trip->id))
+        // Dispatched qty per product: trip_id match OR delegate dispatches during trip period
+        $dispatchedQties = InventoryDispatchItem::whereHas('dispatch', function ($q) use ($trip, $delegate) {
+                $q->where('delegate_id', $delegate->id)
+                  ->where(function ($q2) use ($trip) {
+                      $q2->where('trip_id', $trip->id)
+                         ->orWhere(function ($q3) use ($trip) {
+                             $q3->whereNull('trip_id')
+                                ->whereDate('date', '>=', $trip->start_date ?? $trip->created_at->toDateString())
+                                ->whereDate('date', '<=', now()->toDateString());
+                         });
+                  });
+            })
             ->whereIn('product_id', $productIds)
             ->with('unit')
             ->get()

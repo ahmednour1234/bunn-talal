@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Delegate;
 use App\Models\Product;
 use App\Models\PurchaseInvoiceItem;
+use App\Models\Trip;
 use App\Models\Unit;
 use App\Services\InventoryDispatchService;
 use Livewire\Component;
@@ -224,12 +225,19 @@ class InventoryDispatchForm extends Component
 
         $admin = auth('admin')->user();
 
+        // Auto-link to delegate's active trip if one exists
+        $activeTrip = Trip::where('delegate_id', $this->delegate_id)
+            ->whereIn('status', ['active', 'in_transit'])
+            ->latest()
+            ->first();
+
         $service->createDispatch([
             'branch_id'   => $this->branch_id,
             'delegate_id' => $this->delegate_id,
             'admin_id'    => $admin->id,
             'date'        => $this->date,
             'notes'       => $this->notes ?: null,
+            'trip_id'     => $activeTrip?->id,
         ], $this->items);
 
         session()->flash('success', 'تم إنشاء أمر الصرف بنجاح');

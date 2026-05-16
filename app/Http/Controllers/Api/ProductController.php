@@ -72,9 +72,16 @@ class ProductController extends Controller
             // Compute trip-based available stock: dispatched - sold + customer_returns
             $productIds = $products->pluck('id')->toArray();
 
-            // Dispatched in this trip
-            $dispatches = InventoryDispatch::where('trip_id', $trip->id)
-                ->where('delegate_id', $delegate->id)
+            // Dispatched in this trip (trip_id match OR delegate dispatches during trip period without trip_id)
+            $dispatches = InventoryDispatch::where('delegate_id', $delegate->id)
+                ->where(function ($q) use ($trip) {
+                    $q->where('trip_id', $trip->id)
+                      ->orWhere(function ($q2) use ($trip) {
+                          $q2->whereNull('trip_id')
+                             ->whereDate('date', '>=', $trip->start_date ?? $trip->created_at->toDateString())
+                             ->whereDate('date', '<=', now()->toDateString());
+                      });
+                })
                 ->with('items.unit')
                 ->get();
 
@@ -176,9 +183,16 @@ class ProductController extends Controller
             }
         }
 
-        // Collect dispatched quantities per product for this trip
-        $dispatches = InventoryDispatch::where('trip_id', $trip->id)
-            ->where('delegate_id', $delegate->id)
+        // Collect dispatched quantities: trip_id matches OR (delegate match + dispatched during trip period)
+        $dispatches = InventoryDispatch::where('delegate_id', $delegate->id)
+            ->where(function ($q) use ($trip) {
+                $q->where('trip_id', $trip->id)
+                  ->orWhere(function ($q2) use ($trip) {
+                      $q2->whereNull('trip_id')
+                         ->whereDate('date', '>=', $trip->start_date ?? $trip->created_at->toDateString())
+                         ->whereDate('date', '<=', now()->toDateString());
+                  });
+            })
             ->with('items.unit')
             ->get();
 
