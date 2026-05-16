@@ -3,6 +3,7 @@
 namespace App\Livewire\SaleReturns;
 
 use App\Models\SaleOrder;
+use App\Models\SaleReturnItem;
 use App\Models\Treasury;
 use App\Models\Unit;
 use App\Services\SaleReturnService;
@@ -42,9 +43,22 @@ class SaleReturnForm extends Component
                 $this->loaded_customer_name = $order->customer->name;
                 $this->loaded_order_number = $order->order_number;
 
+                // Calculate already-returned quantities per order item (excluding cancelled returns)
+                $alreadyReturned = SaleReturnItem::whereIn('sale_order_item_id', $order->items->pluck('id'))
+                    ->whereHas('saleReturn', fn($q) => $q->whereNotIn('status', ['cancelled']))
+                    ->selectRaw('sale_order_item_id, SUM(quantity) as total_returned')
+                    ->groupBy('sale_order_item_id')
+                    ->pluck('total_returned', 'sale_order_item_id');
+
                 foreach ($order->items as $item) {
                     $orderUnit = $item->unit ?: $item->product?->unit;
                     if (!$orderUnit) continue;
+
+                    $alreadyReturnedQty = (float) ($alreadyReturned[$item->id] ?? 0);
+                    $remainingQty = max(0, (float) $item->quantity - $alreadyReturnedQty);
+
+                    // Skip items that are fully returned
+                    if ($remainingQty <= 0) continue;
 
                     $availableUnits = $this->getReturnableUnits($orderUnit);
 
@@ -55,12 +69,12 @@ class SaleReturnForm extends Component
                         'unit_id'              => (string) $orderUnit->id,
                         'unit_symbol'          => $orderUnit->symbol ?? '',
                         'order_unit_symbol'    => $orderUnit->symbol ?? '',
-                        'original_qty'         => (string) $item->quantity,
+                        'original_qty'         => (string) $remainingQty,
                         'unit_price'           => (string) $item->unit_price,
                         'order_unit_id'        => (string) $orderUnit->id,
                         'order_unit_factor'    => (string) $orderUnit->conversion_factor,
                         'order_unit_price'     => (string) $item->unit_price,
-                        'max_quantity'         => (string) $item->quantity,
+                        'max_quantity'         => (string) $remainingQty,
                         'available_units'      => $availableUnits,
                         'quantity'             => '0',
                         'reason'               => '',
@@ -210,6 +224,22 @@ class SaleReturnForm extends Component
             if ($maxQty > 0 && $qty > $maxQty) {
                 session()->flash('error', 'كمية الإرجاع تتجاوز الحد المسموح للوحدة المختارة');
                 return;
+            }
+
+            // Server-side: re-verify against actual returned quantities in DB
+            $orderItemId = (int) ($ri['sale_order_item_id'] ?? 0);
+            if ($orderItemId) {
+                $orderItem = \App\Models\SaleOrderItem::find($orderItemId);
+                if ($orderItem) {
+                    $alreadyReturned = SaleReturnItem::where('sale_order_item_id', $orderItemId)
+                        ->whereHas('saleReturn', fn($q) => $q->whereNotIn('status', ['cancelled']))
+                        ->sum('quantity');
+                    $remaining = max(0, (float) $orderItem->quantity - (float) $alreadyReturned);
+                    if ($qty > $remaining) {
+                        session()->flash('error', "الكمية المُرتجعة للمنتج \"{$orderItem->product?->name}\" تتجاوز الكمية المتاحة للإرجاع ({$remaining})");
+                        return;
+                    }
+                }
             }
         }
 

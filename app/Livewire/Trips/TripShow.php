@@ -309,7 +309,7 @@ class TripShow extends Component
         $saleOrders     = $this->trip->saleOrders()->whereNotIn('status', ['cancelled'])->with(['customer', 'items.product.unit', 'items.unit', 'payments'])->latest()->get();
         $viewingOrder   = $this->viewingOrderId ? $saleOrders->firstWhere('id', $this->viewingOrderId) : null;
         $collections    = $this->trip->collections()->with('customer')->latest()->get();
-        $saleReturns    = $this->trip->saleReturns()->with('customer')->latest()->get();
+        $saleReturns    = $this->trip->saleReturns()->whereNotIn('status', ['cancelled'])->with(['customer', 'items.product.unit', 'items.unit'])->latest()->get();
         $bookingRequests = $this->trip->bookingRequests()->with(['delegate', 'items.product.unit', 'items.unit'])->latest()->get();
         $treasuries     = Treasury::where('is_active', true)->orderBy('name')->get(['id', 'name', 'balance']);
 

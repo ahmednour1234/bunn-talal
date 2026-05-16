@@ -347,6 +347,7 @@
                                     'dispatched_qty'   => $qtyInProductUnit,
                                     'dispatched_value' => $qtyInProductUnit * $item->selling_price,
                                     'sold_qty'         => 0,
+                                    'returned_qty'     => 0,
                                 ]);
                             }
                         }
@@ -367,6 +368,22 @@
                             }
                         }
                     }
+                    // Add returned quantities from trip sale returns (convert to product base unit)
+                    foreach($saleReturns as $sr) {
+                        foreach($sr->items as $sri) {
+                            $pid = $sri->product_id;
+                            if ($dispatchedProducts->has($pid)) {
+                                $existing       = $dispatchedProducts->get($pid);
+                                $prodFactor     = (float) ($sri->product?->unit?->conversion_factor ?? 1);
+                                $sriFactor      = (float) ($sri->unit?->conversion_factor ?? $prodFactor);
+                                $retInBaseUnit  = $prodFactor > 0
+                                    ? (float) $sri->quantity * $sriFactor / $prodFactor
+                                    : (float) $sri->quantity;
+                                $existing['returned_qty'] += $retInBaseUnit;
+                                $dispatchedProducts->put($pid, $existing);
+                            }
+                        }
+                    }
                 @endphp
                 @if($dispatchedProducts->isNotEmpty())
                 <div class="rounded-xl border border-gray-200 overflow-hidden">
@@ -381,6 +398,7 @@
                                 <th class="px-4 py-2.5 font-semibold">المنتج</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">المصروف</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">المُباع</th>
+                                <th class="px-3 py-2.5 font-semibold text-center">المُرتجع</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">الحالي معه</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">الوحدة</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">سعر البيع</th>
@@ -390,13 +408,15 @@
                         <tbody class="divide-y divide-gray-50">
                             @foreach($dispatchedProducts as $pid => $prod)
                             @php
-                                $currentQty   = max(0, $prod['dispatched_qty'] - $prod['sold_qty']);
+                                $netSold      = max(0, $prod['sold_qty'] - $prod['returned_qty']);
+                                $currentQty   = max(0, $prod['dispatched_qty'] - $netSold);
                                 $currentValue = $currentQty * $prod['selling_price'];
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-4 py-2.5 font-semibold text-gray-800">{{ $prod['name'] }}</td>
                                 <td class="px-3 py-2.5 text-center text-gray-600">{{ $fmtQty($prod['dispatched_qty']) }}</td>
                                 <td class="px-3 py-2.5 text-center text-primary-600 font-semibold">{{ $fmtQty($prod['sold_qty']) }}</td>
+                                <td class="px-3 py-2.5 text-center text-blue-600 font-semibold">{{ $fmtQty($prod['returned_qty']) }}</td>
                                 <td class="px-3 py-2.5 text-center">
                                     <span class="inline-block font-extrabold text-sm px-2.5 py-1 rounded-lg {{ $currentQty > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-green-50 text-green-700 border border-green-200' }}">
                                         {{ $fmtQty($currentQty) }}
@@ -417,12 +437,13 @@
                                 <td class="px-4 py-2.5 text-xs font-bold text-gray-500">الإجمالي</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-bold text-gray-600">{{ $fmtQty($dispatchedProducts->sum('dispatched_qty')) }}</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-bold text-primary-600">{{ $fmtQty($dispatchedProducts->sum('sold_qty')) }}</td>
+                                <td class="px-3 py-2.5 text-center text-xs font-bold text-blue-600">{{ $fmtQty($dispatchedProducts->sum('returned_qty')) }}</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-extrabold text-amber-700">
-                                    {{ $fmtQty($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - $p['sold_qty']))) }}
+                                    {{ $fmtQty($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - max(0, $p['sold_qty'] - $p['returned_qty'])))) }}
                                 </td>
                                 <td colspan="2"></td>
                                 <td class="px-3 py-2.5 text-center text-xs font-extrabold text-amber-700">
-                                    {{ number_format($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - $p['sold_qty']) * $p['selling_price']), 2) }} ج.م
+                                    {{ number_format($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - max(0, $p['sold_qty'] - $p['returned_qty'])) * $p['selling_price']), 2) }} ج.م
                                 </td>
                             </tr>
                         </tfoot>
