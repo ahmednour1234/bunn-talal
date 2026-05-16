@@ -120,6 +120,7 @@ class TripSettle extends Component
                 'settlement_cash_deficit'    => $cashDeficit,
                 'settlement_product_deficit' => $totalProductDeficit,
                 'settlement_notes'           => $this->settlementNotes ?: null,
+                'settlement_treasury_id'     => $this->settlementTreasuryId,
                 'settled_by'                 => $admin->id,
                 'settled_at'                 => now(),
             ];

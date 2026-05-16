@@ -37,6 +37,7 @@ class Trip extends Model
         'cash_custody_amount',
         'cash_custody_treasury_id',
         'cash_custody_note',
+        'settlement_treasury_id',
     ];
 
     protected function casts(): array
@@ -56,6 +57,7 @@ class Trip extends Model
             'settlement_product_deficit' => 'decimal:2',
             'cash_custody_amount'     => 'decimal:2',
             'settlement_approved_at'  => 'datetime',
+            'settlement_treasury_id'  => 'integer',
         ];
     }
 
@@ -169,6 +171,11 @@ class Trip extends Model
     public function custodyTreasury()
     {
         return $this->belongsTo(Treasury::class, 'cash_custody_treasury_id');
+    }
+
+    public function settlementTreasury()
+    {
+        return $this->belongsTo(Treasury::class, 'settlement_treasury_id');
     }
 
     // ── Computed helpers ───────────────────────────────────────────
