@@ -188,6 +188,18 @@
         </div>
 
         <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">الخزينة المستلِمة للكاش <span class="text-red-500">*</span></label>
+            <select wire:model="settlementTreasuryId"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-right focus:ring-2 focus:ring-primary-300 @error('settlementTreasuryId') border-red-400 @enderror">
+                <option value="">— اختر الخزينة —</option>
+                @foreach($treasuries as $treasury)
+                    <option value="{{ $treasury->id }}">{{ $treasury->name }}</option>
+                @endforeach
+            </select>
+            @error('settlementTreasuryId')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+        </div>
+
+        <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1.5">الكاش الفعلي المُسلَّم <span class="text-red-500">*</span></label>
             <input type="number" wire:model.live="cashActual" step="0.01" min="0"
                 class="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg font-bold text-right focus:ring-2 focus:ring-primary-300 @error('cashActual') border-red-400 @enderror">

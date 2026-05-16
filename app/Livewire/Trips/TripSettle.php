@@ -3,6 +3,7 @@
 namespace App\Livewire\Trips;
 
 use App\Models\InventoryDispatch;
+use App\Models\Treasury;
 use App\Models\Trip;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -12,8 +13,9 @@ class TripSettle extends Component
     public Trip  $trip;
     public int   $tripId;
 
-    public float  $cashActual      = 0;
-    public string $settlementNotes = '';
+    public float  $cashActual            = 0;
+    public ?int   $settlementTreasuryId  = null;
+    public string $settlementNotes       = '';
 
     /** @var array<int, array{product_id:int, name:string, unit:string, selling_price:float, dispatched:float, sold:float, already_returned:float, expected_remaining:float, actual_received:string}> */
     public array $productItems = [];
@@ -28,7 +30,8 @@ class TripSettle extends Component
         ])->findOrFail($id);
 
         $this->trip->syncTotals();
-        $this->cashActual = round((float)$this->trip->total_collected + (float)$this->trip->cash_custody_amount, 2);
+        $this->cashActual           = round((float)$this->trip->total_collected + (float)$this->trip->cash_custody_amount, 2);
+        $this->settlementTreasuryId = $this->trip->cash_custody_treasury_id;
         $this->buildProductItems();
     }
 
@@ -87,9 +90,12 @@ class TripSettle extends Component
     public function settle(): void
     {
         $this->validate([
-            'cashActual'      => 'required|numeric|min:0',
-            'settlementNotes' => 'nullable|string|max:2000',
+            'cashActual'             => 'required|numeric|min:0',
+            'settlementTreasuryId'   => 'required|exists:treasuries,id',
+            'settlementNotes'        => 'nullable|string|max:2000',
             'productItems.*.actual_received' => 'required|numeric|min:0',
+        ], [
+            'settlementTreasuryId.required' => 'يجب اختيار الخزينة التي ستستقبل الكاش',
         ]);
 
         $admin       = auth('admin')->user();
@@ -184,12 +190,19 @@ class TripSettle extends Component
 
         // Mark all linked dispatches as settled
         $this->trip->dispatches()->update(['status' => 'settled']);
+
+        // Deposit actual cash handed over into the selected treasury
+        if ($this->settlementTreasuryId && $this->cashActual > 0) {
+            Treasury::where('id', $this->settlementTreasuryId)
+                ->increment('balance', $this->cashActual);
+        }
     }
 
     public function render()
     {
         $this->trip->syncTotals();
         $this->trip->load('custodyTreasury');
-        return view('livewire.trips.trip-settle');
+        $treasuries = Treasury::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        return view('livewire.trips.trip-settle', compact('treasuries'));
     }
 }
