@@ -11,40 +11,60 @@ class FixCancelledOrdersCustomerBalance extends Command
 {
     protected $signature = 'fix:cancelled-orders-balance {--dry-run : Show what will change without applying}';
 
-    protected $description = 'Fix customer balances for already-cancelled sale orders (apply full total reversal instead of remaining-only)';
+    protected $description = 'Fix customer balances for already-cancelled sale orders (apply full total reversal)';
 
     public function handle(): int
     {
         $isDryRun = $this->option('dry-run');
 
-        // For each cancelled order that had payments (paid_amount > 0),
-        // the old code only decremented (total - paid_amount).
-        // The new code decrements the full total.
-        // So the missing adjustment per order = paid_amount.
+        // All cancelled orders affected customer balance on creation (+total).
+        // New cancel logic decrements the full total (not just remaining).
+        // Old logic decremented only (total - paid_amount).
+        // Missing adjustment per order = paid_amount.
+        //
+        // For credit orders (paid_amount = 0): old and new logic are identical → no extra needed.
+        // For partial orders (paid_amount > 0): need to additionally decrement by paid_amount.
         $cancelledOrders = SaleOrder::where('status', 'cancelled')
-            ->where('paid_amount', '>', 0)
             ->select('id', 'order_number', 'customer_id', 'total', 'paid_amount')
             ->get();
 
         if ($cancelledOrders->isEmpty()) {
-            $this->info('No cancelled orders with paid amounts found. Nothing to fix.');
+            $this->info('No cancelled orders found. Nothing to fix.');
             return self::SUCCESS;
         }
 
-        // Group by customer and sum the extra adjustment needed
+        $this->info("Found {$cancelledOrders->count()} cancelled order(s).");
+
+        // Group by customer; adjustment = paid_amount (the extra bit not covered by old logic)
         $adjustmentsByCustomer = $cancelledOrders
             ->groupBy('customer_id')
-            ->map(fn($orders) => $orders->sum('paid_amount'));
+            ->map(fn($orders) => $orders->sum('paid_amount'))
+            ->filter(fn($amount) => $amount > 0); // credit-only customers need no change
+
+        if ($adjustmentsByCustomer->isEmpty()) {
+            $this->info('All cancelled orders are credit (paid_amount = 0). No balance corrections needed.');
+            return self::SUCCESS;
+        }
+
+        $rows = $adjustmentsByCustomer->map(function ($amount, $customerId) use ($cancelledOrders) {
+            $customer   = Customer::find($customerId);
+            $orderNums  = $cancelledOrders
+                ->where('customer_id', $customerId)
+                ->where('paid_amount', '>', 0)
+                ->pluck('order_number')
+                ->implode(', ');
+
+            return [
+                $customerId,
+                $customer?->name ?? '—',
+                number_format($amount, 2),
+                $orderNums,
+            ];
+        })->values()->toArray();
 
         $this->table(
-            ['Customer ID', 'Extra Decrement (paid_amount sum)', 'Affected Orders'],
-            $adjustmentsByCustomer->map(fn($amount, $customerId) => [
-                $customerId,
-                number_format($amount, 2),
-                $cancelledOrders->where('customer_id', $customerId)
-                    ->pluck('order_number')
-                    ->implode(', '),
-            ])->values()->toArray()
+            ['Customer ID', 'Name', 'Extra Balance Decrement', 'Affected Orders'],
+            $rows
         );
 
         if ($isDryRun) {
