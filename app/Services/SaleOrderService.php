@@ -317,9 +317,8 @@ class SaleOrderService
                 }
             }
 
-            // Reset customer balance
-            $remainingOwed = (float) $order->total - (float) $order->paid_amount;
-            Customer::where('id', $order->customer_id)->decrement('balance', $remainingOwed);
+            // Reverse the full invoice amount from customer balance
+            Customer::where('id', $order->customer_id)->decrement('balance', (float) $order->total);
 
             $order->update(['status' => 'cancelled']);
 
@@ -367,9 +366,8 @@ class SaleOrderService
                 }
             }
 
-            // Reset customer balance
-            $remainingOwed = (float) $order->total - (float) $order->paid_amount;
-            Customer::where('id', $order->customer_id)->decrement('balance', $remainingOwed);
+            // Reverse the full invoice amount from customer balance
+            Customer::where('id', $order->customer_id)->decrement('balance', (float) $order->total);
 
             $order->update(['status' => 'cancelled']);
 
