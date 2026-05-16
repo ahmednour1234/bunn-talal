@@ -41,8 +41,14 @@ class FixCancelledOrdersCustomerBalance extends Command
             ->map(fn($orders) => $orders->sum('paid_amount'))
             ->filter(fn($amount) => $amount > 0); // credit-only customers need no change
 
+        $creditCount  = $cancelledOrders->where('paid_amount', 0)->count();
+        $partialCount = $cancelledOrders->where('paid_amount', '>', 0)->count();
+
+        $this->info("  → Credit orders (آجل, paid=0): {$creditCount} — already correct, no fix needed.");
+        $this->info("  → Partial orders (جزئي, paid>0): {$partialCount} — need extra balance correction.");
+
         if ($adjustmentsByCustomer->isEmpty()) {
-            $this->info('All cancelled orders are credit (paid_amount = 0). No balance corrections needed.');
+            $this->info('All cancelled orders are credit (آجل). Balances were already correctly adjusted. Nothing to fix.');
             return self::SUCCESS;
         }
 
