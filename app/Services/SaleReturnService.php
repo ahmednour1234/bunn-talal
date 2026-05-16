@@ -169,6 +169,26 @@ class SaleReturnService
                 throw new \Exception('لا يمكن تأكيد هذا المرتجع');
             }
 
+            // Validate: each item's returned qty must not exceed (original qty - already confirmed/refunded returns)
+            foreach ($return->items as $item) {
+                if (!$item->sale_order_item_id) continue;
+
+                $alreadyReturned = \App\Models\SaleReturnItem::where('sale_order_item_id', $item->sale_order_item_id)
+                    ->where('sale_return_id', '!=', $return->id)
+                    ->whereHas('saleReturn', fn($q) => $q->whereNotIn('status', ['cancelled']))
+                    ->sum('quantity');
+
+                $orderItem = \App\Models\SaleOrderItem::find($item->sale_order_item_id);
+                if ($orderItem) {
+                    $remaining = max(0, (float) $orderItem->quantity - (float) $alreadyReturned);
+                    if ((float) $item->quantity > $remaining) {
+                        throw new \Exception(
+                            "لا يمكن تأكيد المرتجع: الكمية المُرتجعة للمنتج \"{$orderItem->product?->name}\" ({$item->quantity}) تتجاوز الكمية المتاحة ({$remaining})"
+                        );
+                    }
+                }
+            }
+
             // Add stock back — delegate returns already updated delegate_product in createReturn()
             // Only update branch stock for non-delegate (direct branch) returns
             if (!$return->trip_id) {
