@@ -247,6 +247,8 @@ class SaleOrderController extends Controller
         // Sync trip totals
         $trip->syncTotals();
 
+        $order->load(['items.product', 'items.unit', 'payments', 'customer']);
+
         return $this->successResponse(SaleOrderResource::make($order)->resolve(), 'تم إنشاء فاتورة البيع بنجاح', 201);
     }
 

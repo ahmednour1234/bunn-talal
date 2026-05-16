@@ -8,13 +8,16 @@ class SaleOrderResource extends JsonResource
 {
     public function toArray($request): array
     {
-        // Gross = sum of (qty × price) before any discount
+        // Gross = sum of (qty × price) before any discount.
+        // IMPORTANT: always load items relation before using this resource for accurate values.
+        // Fallback (items not loaded): subtotal already includes item discounts, so we can only
+        // add back the order-level discount. Item-level discounts are lost without the items relation.
         $grossAmount = $this->whenLoaded('items',
             fn() => round($this->items->sum(fn($i) => (float)$i->quantity * (float)$i->unit_price), 2),
             round((float)$this->subtotal + (float)$this->discount_amount, 2)
         );
 
-        // Total discount = all item-level discounts + order-level discount
+        // Total discount = gross - total - tax (= item discounts + order discount combined)
         $totalDiscount = $this->whenLoaded('items',
             fn() => round(
                 $this->items->sum(fn($i) => (float)$i->quantity * (float)$i->unit_price)
@@ -22,7 +25,7 @@ class SaleOrderResource extends JsonResource
                 + (float)$this->tax_amount,
                 2
             ),
-            round((float)$this->discount_amount, 2)
+            round((float)$this->subtotal - (float)$this->total + (float)$this->discount_amount, 2)
         );
 
         return [
