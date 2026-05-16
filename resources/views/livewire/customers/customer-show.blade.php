@@ -433,14 +433,17 @@
                             </td>
                         </tr>
                         @php
-                            $typeIcon = ['invoice'=>'🧾','payment'=>'💵','return'=>'↩️','collection'=>'📥'];
-                            $typeColor = ['invoice'=>'text-gray-800','payment'=>'text-green-600','return'=>'text-blue-600','collection'=>'text-green-700'];
+                            $typeIcon  = ['invoice'=>'🧾','payment'=>'💵','return'=>'↩️','collection'=>'📥','cancellation'=>'🚫'];
+                            $typeColor = ['invoice'=>'text-gray-800','payment'=>'text-green-600','return'=>'text-blue-600','collection'=>'text-green-700','cancellation'=>'text-red-400'];
                         @endphp
                         @forelse($ledger as $row)
-                        <tr class="hover:bg-gray-50/50">
+                        <tr class="hover:bg-gray-50/50 {{ ($row['cancelled'] ?? false) ? 'opacity-60' : '' }}">
                             <td class="px-4 py-2.5 text-gray-500 text-xs">{{ $row['date']?->format('Y-m-d') }}</td>
                             <td class="px-4 py-2.5 {{ $typeColor[$row['type']] ?? '' }}">
                                 {{ $typeIcon[$row['type']] ?? '' }} {{ $row['description'] }}
+                                @if(($row['cancelled'] ?? false) && $row['type'] !== 'cancellation')
+                                    <span class="text-xs text-red-400">(ملغي)</span>
+                                @endif
                             </td>
                             <td class="px-4 py-2.5 font-mono text-xs text-gray-500">{{ $row['reference'] }}</td>
                             <td class="px-4 py-2.5 {{ $row['debit'] > 0 ? 'text-red-500 font-semibold' : 'text-gray-300' }}">
@@ -449,7 +452,7 @@
                             <td class="px-4 py-2.5 {{ $row['credit'] > 0 ? 'text-green-600 font-semibold' : 'text-gray-300' }}">
                                 {{ $row['credit'] > 0 ? number_format($row['credit'], 2) : '—' }}
                             </td>
-                            <td class="px-4 py-2.5 font-bold {{ $row['balance'] > 0 ? 'text-amber-600' : 'text-green-600' }}">
+                            <td class="px-4 py-2.5 font-bold {{ $row['balance'] > 0 ? 'text-amber-600' : ($row['balance'] < 0 ? 'text-blue-600' : 'text-green-600') }}">
                                 {{ number_format($row['balance'], 2) }}
                             </td>
                         </tr>

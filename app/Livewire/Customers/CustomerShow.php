@@ -66,15 +66,21 @@ class CustomerShow extends Component
         // ── Account Statement (Debit/Credit ledger) ────────────────
         $ledger = collect();
 
-        foreach ($orders->whereNotIn('status', ['cancelled', 'draft']) as $o) {
+        foreach ($orders->whereNotIn('status', ['draft']) as $o) {
+            $isCancelled = $o->status === 'cancelled';
+
+            // Original invoice debit entry (all orders except draft)
             $ledger->push([
                 'date'        => $o->date,
                 'type'        => 'invoice',
                 'reference'   => $o->order_number,
                 'description' => 'فاتورة بيع',
-                'debit'       => (float) $o->total,   // العميل مدين بقيمة الفاتورة
+                'debit'       => (float) $o->total,
                 'credit'      => 0,
+                'cancelled'   => $isCancelled,
             ]);
+
+            // Payment credit entry (if any amount was paid)
             if ((float) $o->paid_amount > 0) {
                 $ledger->push([
                     'date'        => $o->date,
@@ -83,6 +89,20 @@ class CustomerShow extends Component
                     'description' => 'دفعة على فاتورة',
                     'debit'       => 0,
                     'credit'      => (float) $o->paid_amount,
+                    'cancelled'   => $isCancelled,
+                ]);
+            }
+
+            // Cancellation reversal entry — reverses the full total
+            if ($isCancelled) {
+                $ledger->push([
+                    'date'        => $o->date,
+                    'type'        => 'cancellation',
+                    'reference'   => $o->order_number,
+                    'description' => 'إلغاء فاتورة',
+                    'debit'       => 0,
+                    'credit'      => (float) $o->total,
+                    'cancelled'   => true,
                 ]);
             }
         }
