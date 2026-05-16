@@ -351,13 +351,18 @@
                             }
                         }
                     }
-                    // Subtract sold quantities from trip sale orders
+                    // Subtract sold quantities from trip sale orders (convert to product base unit)
                     foreach($saleOrders as $so) {
                         foreach($so->items as $soi) {
                             $pid = $soi->product_id;
                             if ($dispatchedProducts->has($pid)) {
-                                $existing = $dispatchedProducts->get($pid);
-                                $existing['sold_qty'] += (float) $soi->quantity;
+                                $existing        = $dispatchedProducts->get($pid);
+                                $prodFactor      = (float) ($soi->product?->unit?->conversion_factor ?? 1);
+                                $soiFactor       = (float) ($soi->unit?->conversion_factor ?? $prodFactor);
+                                $soldInBaseUnit  = $prodFactor > 0
+                                    ? (float) $soi->quantity * $soiFactor / $prodFactor
+                                    : (float) $soi->quantity;
+                                $existing['sold_qty'] += $soldInBaseUnit;
                                 $dispatchedProducts->put($pid, $existing);
                             }
                         }
