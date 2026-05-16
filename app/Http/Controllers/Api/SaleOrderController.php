@@ -229,6 +229,27 @@ class SaleOrderController extends Controller
         }
         // ── End stock check ─────────────────────────────────────────────────
 
+        // ── Apply product's own built-in discount from DB ───────────────────
+        // The mobile app may send a wrong items[].discount (e.g. the additional order
+        // discount amount). We override it with the product's actual discount so it
+        // is never double-counted alongside the order-level discount_amount.
+        foreach ($validated['items'] as &$item) {
+            $product = $productMap->get($item['product_id']);
+            if (
+                $product &&
+                $product->net_price !== null &&
+                abs((float) $item['unit_price'] - (float) $product->selling_price) < 0.01
+            ) {
+                // unit_price matches product's selling_price → apply product's own discount
+                $discountPerUnit       = max(0.0, (float) $product->selling_price - (float) $product->net_price);
+                $item['discount']      = round($discountPerUnit * (float) $item['quantity'], 4); // total for line
+                $item['discount_type'] = 'fixed';
+            }
+            // else: custom/negotiated price → keep request discount as-is
+        }
+        unset($item);
+        // ── End product discount override ────────────────────────────────────
+
         $order = $this->saleOrderService->createOrder($orderData, $validated['items'], $initialPayment);
 
         // Add collected cash to delegate's عهدة
