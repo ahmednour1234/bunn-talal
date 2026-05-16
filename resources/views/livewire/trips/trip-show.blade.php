@@ -661,8 +661,8 @@
                 </tr></thead>
                 <tbody class="divide-y divide-gray-50">
                 @foreach($saleReturns as $r)
-                <tr class="text-gray-700">
-                    <td class="py-2.5 font-mono text-xs">{{ $r->return_number }}</td>
+                <tr class="text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors" wire:click="viewReturn({{ $r->id }})">
+                    <td class="py-2.5 font-mono text-xs text-primary-700">{{ $r->return_number }}</td>
                     <td class="py-2.5">{{ $r->customer?->name }}</td>
                     <td class="py-2.5 text-gray-500">{{ $r->date?->format('Y-m-d') }}</td>
                     <td class="py-2.5 font-semibold text-red-700">{{ number_format($r->refund_amount, 2) }} ج.م</td>
@@ -804,6 +804,92 @@
             العودة لقائمة الرحلات
         </a>
     </div>
+
+    {{-- Sale Return Popup Modal --}}
+    @if($viewingReturn)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" wire:click.self="closeReturnModal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto" dir="rtl">
+            {{-- Header --}}
+            <div class="flex items-center justify-between p-5 border-b border-gray-100">
+                <div>
+                    <h2 class="text-base font-extrabold text-gray-800 font-mono">{{ $viewingReturn->return_number }}</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ $viewingReturn->date?->format('Y-m-d') }} · {{ $viewingReturn->customer?->name }}</p>
+                </div>
+                <button wire:click="closeReturnModal" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Summary --}}
+            <div class="grid grid-cols-2 gap-3 p-5 border-b border-gray-100">
+                <div class="text-center">
+                    <p class="text-xs text-gray-400 mb-1">إجمالي المرتجع</p>
+                    <p class="font-extrabold text-gray-800">{{ number_format($viewingReturn->subtotal, 2) }} ج.م</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-400 mb-1">قيمة الاسترداد</p>
+                    <p class="font-extrabold text-red-600">{{ number_format($viewingReturn->refund_amount, 2) }} ج.م</p>
+                </div>
+            </div>
+
+            {{-- Status & order --}}
+            <div class="grid grid-cols-2 gap-3 px-5 py-3 border-b border-gray-100 text-sm">
+                <div><span class="text-gray-400">الفاتورة الأصلية:</span> <span class="font-semibold font-mono text-primary-700">{{ $viewingReturn->order?->order_number ?? '—' }}</span></div>
+                <div><span class="text-gray-400">الحالة:</span>
+                    @php
+                        $stColors = ['pending'=>'text-amber-600','confirmed'=>'text-green-700','refunded'=>'text-blue-600','cancelled'=>'text-red-500'];
+                        $stLabels = ['pending'=>'في الانتظار','confirmed'=>'مؤكد','refunded'=>'تم الاسترداد','cancelled'=>'ملغي'];
+                    @endphp
+                    <span class="font-semibold {{ $stColors[$viewingReturn->status] ?? 'text-gray-600' }}">{{ $stLabels[$viewingReturn->status] ?? $viewingReturn->status }}</span>
+                </div>
+                @if($viewingReturn->notes)
+                <div class="col-span-2"><span class="text-gray-400">ملاحظات:</span> {{ $viewingReturn->notes }}</div>
+                @endif
+            </div>
+
+            {{-- Items --}}
+            <div class="p-5">
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-3">الأصناف المُرتجعة</h3>
+                <table class="w-full text-sm text-right">
+                    <thead><tr class="text-xs text-gray-400 border-b border-gray-100">
+                        <th class="pb-2 font-semibold">المنتج</th>
+                        <th class="pb-2 font-semibold">الوحدة</th>
+                        <th class="pb-2 font-semibold">الكمية</th>
+                        <th class="pb-2 font-semibold">سعر الوحدة</th>
+                        <th class="pb-2 font-semibold">الاسترداد</th>
+                    </tr></thead>
+                    <tbody class="divide-y divide-gray-50">
+                    @foreach($viewingReturn->items as $ri)
+                    @php
+                        $gross    = round((float)$ri->quantity * (float)$ri->unit_price, 2);
+                        $discount = round($gross - (float)$ri->refund_amount, 2);
+                    @endphp
+                    <tr class="text-gray-700">
+                        <td class="py-2">{{ $ri->product?->name }}</td>
+                        <td class="py-2 text-gray-500">{{ $ri->unit?->name }}</td>
+                        <td class="py-2">{{ $ri->quantity }}</td>
+                        <td class="py-2">{{ number_format($ri->unit_price, 2) }}</td>
+                        <td class="py-2">
+                            <span class="font-semibold text-red-600">{{ number_format($ri->refund_amount, 2) }} ج.م</span>
+                            @if($discount > 0)
+                            <span class="text-xs text-gray-400 block">خصم: {{ number_format($discount, 2) }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-5 pb-5 flex justify-end">
+                <a href="{{ route('sale-returns.show', $viewingReturn->id) }}" class="text-sm text-primary-700 hover:underline font-semibold">
+                    عرض المرتجع كاملاً ←
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Sale Order Popup Modal --}}
     @if($viewingOrder)
