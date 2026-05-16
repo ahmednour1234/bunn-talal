@@ -664,8 +664,8 @@
                 <tr class="text-gray-700">
                     <td class="py-2.5 font-mono text-xs">{{ $r->return_number }}</td>
                     <td class="py-2.5">{{ $r->customer?->name }}</td>
-                    <td class="py-2.5 text-gray-500">{{ $r->return_date?->format('Y-m-d') }}</td>
-                    <td class="py-2.5 font-semibold text-red-700">{{ number_format($r->final_amount, 0) }} ج.م</td>
+                    <td class="py-2.5 text-gray-500">{{ $r->date?->format('Y-m-d') }}</td>
+                    <td class="py-2.5 font-semibold text-red-700">{{ number_format($r->refund_amount, 2) }} ج.م</td>
                 </tr>
                 @endforeach
                 </tbody>
