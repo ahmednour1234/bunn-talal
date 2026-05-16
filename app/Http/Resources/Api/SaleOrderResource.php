@@ -8,6 +8,23 @@ class SaleOrderResource extends JsonResource
 {
     public function toArray($request): array
     {
+        // Gross = sum of (qty × price) before any discount
+        $grossAmount = $this->whenLoaded('items',
+            fn() => round($this->items->sum(fn($i) => (float)$i->quantity * (float)$i->unit_price), 2),
+            round((float)$this->subtotal + (float)$this->discount_amount, 2)
+        );
+
+        // Total discount = all item-level discounts + order-level discount
+        $totalDiscount = $this->whenLoaded('items',
+            fn() => round(
+                $this->items->sum(fn($i) => (float)$i->quantity * (float)$i->unit_price)
+                - (float)$this->total
+                + (float)$this->tax_amount,
+                2
+            ),
+            round((float)$this->discount_amount, 2)
+        );
+
         return [
             'id'                   => $this->id,
             'order_number'         => $this->order_number,
@@ -17,9 +34,11 @@ class SaleOrderResource extends JsonResource
             'payment_method_label' => $this->payment_method_label,
             'date'                 => $this->date,
             'due_date'             => $this->due_date,
+            'gross_amount'         => $grossAmount,
             'subtotal'             => $this->subtotal,
             'discount_amount'      => $this->discount_amount,
             'discount_type'        => $this->discount_type,
+            'total_discount'       => $totalDiscount,
             'tax_amount'           => $this->tax_amount,
             'total'                => $this->total,
             'paid_amount'          => $this->paid_amount,
