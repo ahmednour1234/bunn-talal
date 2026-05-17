@@ -10,19 +10,25 @@ class StatisticsService
         private readonly StatisticsRepositoryInterface $statisticsRepository
     ) {}
 
-    public function getDelegateStatistics(int $delegateId, float $totalDue, array $filters = []): array
+    public function getDelegateStatistics(int $delegateId, float $totalDue, float $basicSalary, float $cashCustody, array $filters = []): array
     {
         $data = $this->statisticsRepository->delegateStatistics($delegateId, $filters);
 
         return [
-            ['label' => 'إجمالي المبيعات',    'value' => $data['total_sales']],
-            ['label' => 'إجمالي التحصيلات',   'value' => $data['total_collections']],
-            ['label' => 'إجمالي المرتجعات',   'value' => $data['total_returns']],
-            ['label' => 'المبلغ المستحق',      'value' => $totalDue],
-            ['label' => 'عدد الرحلات',         'value' => $data['trips_count']],
-            ['label' => 'عدد أوامر البيع',     'value' => $data['orders_count']],
-            ['label' => 'عدد التحصيلات',       'value' => $data['collections_count']],
-            ['label' => 'عدد المرتجعات',       'value' => $data['returns_count']],
+            ['label' => 'إجمالي المبيعات',          'value' => $data['total_sales']],
+            ['label' => 'إجمالي المبيعات النقدية',  'value' => $data['cash_sales_total']],
+            ['label' => 'إجمالي المبيعات الجزئية',  'value' => $data['partial_sales_total']],
+            ['label' => 'إجمالي التحصيلات',         'value' => $data['total_collections']],
+            ['label' => 'إجمالي النقدية المحصلة',   'value' => $data['cash_received']],
+            ['label' => 'إجمالي المرتجعات',         'value' => $data['total_returns']],
+            ['label' => 'المبلغ المستحق',            'value' => $totalDue],
+            ['label' => 'إجمالي النقدية لديه',      'value' => $cashCustody],
+            ['label' => 'الراتب الأساسي',           'value' => $basicSalary],
+            ['label' => 'إجمالي العمولات',          'value' => $data['total_commissions']],
+            ['label' => 'عدد الرحلات',              'value' => $data['trips_count']],
+            ['label' => 'عدد أوامر البيع',          'value' => $data['orders_count']],
+            ['label' => 'عدد التحصيلات',            'value' => $data['collections_count']],
+            ['label' => 'عدد المرتجعات',            'value' => $data['returns_count']],
         ];
     }
 

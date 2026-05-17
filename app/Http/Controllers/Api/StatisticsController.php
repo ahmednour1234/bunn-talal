@@ -35,9 +35,15 @@ class StatisticsController extends Controller
      *   "message": "تم جلب الإحصائيات بنجاح",
      *   "data": [
      *     { "label": "إجمالي المبيعات", "value": 15000.00 },
+     *     { "label": "إجمالي المبيعات النقدية", "value": 8000.00 },
+     *     { "label": "إجمالي المبيعات الجزئية", "value": 4000.00 },
      *     { "label": "إجمالي التحصيلات", "value": 12000.00 },
+     *     { "label": "إجمالي النقدية المحصلة", "value": 9500.00 },
      *     { "label": "إجمالي المرتجعات", "value": 500.00 },
      *     { "label": "المبلغ المستحق", "value": 3000.00 },
+     *     { "label": "إجمالي النقدية لديه", "value": 2000.00 },
+     *     { "label": "الراتب الأساسي", "value": 3500.00 },
+     *     { "label": "إجمالي العمولات", "value": 750.00 },
      *     { "label": "عدد الرحلات", "value": 10 },
      *     { "label": "عدد أوامر البيع", "value": 45 },
      *     { "label": "عدد التحصيلات", "value": 38 },
@@ -62,6 +68,8 @@ class StatisticsController extends Controller
         $statistics = $this->statisticsService->getDelegateStatistics(
             $delegate->id,
             (float) $delegate->total_due,
+            (float) $delegate->basic_salary,
+            (float) $delegate->cash_custody,
             $filters
         );
 

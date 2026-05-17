@@ -53,14 +53,42 @@ class StatisticsRepository implements StatisticsRepositoryInterface
             $filters, 'date'
         )->count();
 
+        $cashSalesTotal = $this->applyDateFilters(
+            SaleOrder::where('delegate_id', $delegateId)->where('payment_method', 'cash')->whereNotIn('status', ['cancelled']),
+            $filters, 'date'
+        )->sum('total');
+
+        $cashReceived = $this->applyDateFilters(
+            SaleOrder::where('delegate_id', $delegateId)->whereIn('payment_method', ['cash', 'partial'])->whereNotIn('status', ['cancelled']),
+            $filters, 'date'
+        )->sum('paid_amount');
+
+        $partialSalesTotal = $this->applyDateFilters(
+            SaleOrder::where('delegate_id', $delegateId)->where('payment_method', 'partial')->whereNotIn('status', ['cancelled']),
+            $filters, 'date'
+        )->sum('total');
+
+        $commissionQuery = HrSalary::where('delegate_id', $delegateId)->where('status', 'paid');
+        if (!empty($filters['month'])) {
+            $commissionQuery->where('month', $filters['month']);
+        }
+        if (!empty($filters['year'])) {
+            $commissionQuery->where('year', $filters['year']);
+        }
+        $totalCommissions = $commissionQuery->sum('commissions');
+
         return [
-            'total_sales'        => (float) $totalSales,
-            'total_collections'  => (float) $totalCollections,
-            'total_returns'      => (float) $totalReturns,
-            'trips_count'        => $tripsCount,
-            'orders_count'       => $ordersCount,
-            'collections_count'  => $collectionsCount,
-            'returns_count'      => $returnsCount,
+            'total_sales'         => (float) $totalSales,
+            'total_collections'   => (float) $totalCollections,
+            'total_returns'       => (float) $totalReturns,
+            'cash_sales_total'    => (float) $cashSalesTotal,
+            'cash_received'       => (float) $cashReceived,
+            'partial_sales_total' => (float) $partialSalesTotal,
+            'total_commissions'   => (float) $totalCommissions,
+            'trips_count'         => $tripsCount,
+            'orders_count'        => $ordersCount,
+            'collections_count'   => $collectionsCount,
+            'returns_count'       => $returnsCount,
         ];
     }
 
