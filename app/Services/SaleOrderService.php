@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\DelegateLoan;
 use App\Models\SaleOrder;
 use App\Models\Treasury;
+use App\Models\TreasuryTransaction;
 use App\Models\Trip;
 use App\Repositories\Contracts\SaleOrderRepositoryInterface;
 use Illuminate\Support\Facades\DB;
@@ -245,6 +246,15 @@ class SaleOrderService
 
         if ($treasuryId) {
             Treasury::where('id', $treasuryId)->increment('balance', $payAmount);
+            TreasuryTransaction::create([
+                'treasury_id'      => $treasuryId,
+                'type'             => 'deposit',
+                'amount'           => $payAmount,
+                'description'      => 'سداد طلب مبيعات #' . $order->id,
+                'reference_number' => (string) $order->id,
+                'date'             => now()->toDateString(),
+                'admin_id'         => $adminId,
+            ]);
         }
 
         $newPaid = (float) $order->paid_amount + $payAmount;
@@ -314,6 +324,15 @@ class SaleOrderService
             foreach ($order->payments as $payment) {
                 if ($payment->treasury_id) {
                     Treasury::where('id', $payment->treasury_id)->decrement('balance', $payment->amount);
+                    TreasuryTransaction::create([
+                        'treasury_id'      => $payment->treasury_id,
+                        'type'             => 'withdrawal',
+                        'amount'           => $payment->amount,
+                        'description'      => 'إلغاء طلب مبيعات #' . $order->id,
+                        'reference_number' => (string) $order->id,
+                        'date'             => now()->toDateString(),
+                        'admin_id'         => auth('admin')->id(),
+                    ]);
                 }
             }
 
@@ -364,6 +383,15 @@ class SaleOrderService
             foreach ($order->payments as $payment) {
                 if ($payment->treasury_id) {
                     Treasury::where('id', $payment->treasury_id)->decrement('balance', $payment->amount);
+                    TreasuryTransaction::create([
+                        'treasury_id'      => $payment->treasury_id,
+                        'type'             => 'withdrawal',
+                        'amount'           => $payment->amount,
+                        'description'      => 'إلغاء طلب مبيعات #' . $order->id,
+                        'reference_number' => (string) $order->id,
+                        'date'             => now()->toDateString(),
+                        'admin_id'         => auth('admin')->id(),
+                    ]);
                 }
             }
 

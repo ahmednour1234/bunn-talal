@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PurchaseReturn;
 use App\Models\Supplier;
 use App\Models\Treasury;
+use App\Models\TreasuryTransaction;
 use App\Models\Unit;
 use App\Repositories\Contracts\PurchaseReturnRepositoryInterface;
 use Illuminate\Support\Facades\DB;
@@ -196,6 +197,15 @@ class PurchaseReturnService
             // If treasury specified, deposit refund
             if ($return->treasury_id && $return->refund_amount > 0) {
                 Treasury::where('id', $return->treasury_id)->increment('balance', $return->refund_amount);
+                TreasuryTransaction::create([
+                    'treasury_id'      => $return->treasury_id,
+                    'type'             => 'deposit',
+                    'amount'           => $return->refund_amount,
+                    'description'      => 'مرتجع مشتريات #' . $return->id,
+                    'reference_number' => (string) $return->id,
+                    'date'             => now()->toDateString(),
+                    'admin_id'         => auth('admin')->id(),
+                ]);
                 $return->update(['status' => 'refunded']);
             } else {
                 $return->update(['status' => 'confirmed']);

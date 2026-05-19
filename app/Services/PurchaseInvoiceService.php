@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\PurchaseInvoice;
 use App\Models\Treasury;
+use App\Models\TreasuryTransaction;
 use App\Models\Supplier;
 use App\Repositories\Contracts\PurchaseInvoiceRepositoryInterface;
 use Illuminate\Support\Facades\DB;
@@ -193,6 +194,15 @@ class PurchaseInvoiceService
         // Deduct from treasury
         if ($treasuryId) {
             Treasury::where('id', $treasuryId)->decrement('balance', $payAmount);
+            TreasuryTransaction::create([
+                'treasury_id'      => $treasuryId,
+                'type'             => 'withdrawal',
+                'amount'           => $payAmount,
+                'description'      => 'سداد فاتورة مشتريات #' . $invoice->id,
+                'reference_number' => (string) $invoice->id,
+                'date'             => now()->toDateString(),
+                'admin_id'         => $adminId,
+            ]);
         }
 
         // Update invoice
@@ -251,6 +261,15 @@ class PurchaseInvoiceService
             foreach ($invoice->payments as $payment) {
                 if ($payment->treasury_id) {
                     Treasury::where('id', $payment->treasury_id)->increment('balance', $payment->amount);
+                    TreasuryTransaction::create([
+                        'treasury_id'      => $payment->treasury_id,
+                        'type'             => 'deposit',
+                        'amount'           => $payment->amount,
+                        'description'      => 'إلغاء فاتورة مشتريات #' . $invoice->id,
+                        'reference_number' => (string) $invoice->id,
+                        'date'             => now()->toDateString(),
+                        'admin_id'         => auth('admin')->id(),
+                    ]);
                 }
             }
 

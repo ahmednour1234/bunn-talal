@@ -4,6 +4,7 @@ namespace App\Livewire\Trips;
 
 use App\Models\InventoryDispatch;
 use App\Models\Treasury;
+use App\Models\TreasuryTransaction;
 use App\Models\Trip;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -196,6 +197,15 @@ class TripSettle extends Component
         if ($this->settlementTreasuryId && $this->cashActual > 0) {
             Treasury::where('id', $this->settlementTreasuryId)
                 ->increment('balance', $this->cashActual);
+            TreasuryTransaction::create([
+                'treasury_id'      => $this->settlementTreasuryId,
+                'type'             => 'deposit',
+                'amount'           => $this->cashActual,
+                'description'      => 'تسوية رحلة #' . $this->trip->id,
+                'reference_number' => (string) $this->trip->id,
+                'date'             => now()->toDateString(),
+                'admin_id'         => auth('admin')->id(),
+            ]);
         }
     }
 

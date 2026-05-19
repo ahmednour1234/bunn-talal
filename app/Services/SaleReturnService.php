@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Customer;
 use App\Models\SaleReturn;
 use App\Models\Treasury;
+use App\Models\TreasuryTransaction;
 use App\Models\Unit;
 use App\Repositories\Contracts\SaleReturnRepositoryInterface;
 use Illuminate\Support\Facades\DB;
@@ -226,6 +227,15 @@ class SaleReturnService
             // Deposit refund to treasury if specified
             if ($return->treasury_id && (float) $return->refund_amount > 0) {
                 Treasury::where('id', $return->treasury_id)->decrement('balance', (float) $return->refund_amount);
+                TreasuryTransaction::create([
+                    'treasury_id'      => $return->treasury_id,
+                    'type'             => 'withdrawal',
+                    'amount'           => (float) $return->refund_amount,
+                    'description'      => 'مرتجع مبيعات #' . $return->id,
+                    'reference_number' => (string) $return->id,
+                    'date'             => now()->toDateString(),
+                    'admin_id'         => auth('admin')->id(),
+                ]);
                 $return->update(['status' => 'refunded']);
             } else {
                 $return->update(['status' => 'confirmed']);
