@@ -76,6 +76,7 @@ class TreasuryForm extends Component
                         'treasury_id'      => $this->treasuryId,
                         'type'             => $diff > 0 ? 'deposit' : 'withdrawal',
                         'amount'           => abs($diff),
+                        'date'             => now()->toDateString(),
                         'description'      => $diff > 0
                             ? 'تعديل يدوي — رصيد افتتاحي أو تسوية'
                             : 'تعديل يدوي — خصم رصيد',
@@ -94,6 +95,7 @@ class TreasuryForm extends Component
                         'treasury_id'      => $treasury->id,
                         'type'             => 'deposit',
                         'amount'           => (float) $this->balance,
+                        'date'             => now()->toDateString(),
                         'description'      => 'رصيد افتتاحي',
                         'reference_number' => 'OPENING',
                         'admin_id'         => auth('admin')->id(),
