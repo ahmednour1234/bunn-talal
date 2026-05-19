@@ -39,6 +39,11 @@ class ReportController extends Controller
         return view('pages.reports.balance-sheet');
     }
 
+    public function treasuryStatement()
+    {
+        return view('pages.reports.treasury-statement');
+    }
+
     public function financialOverview(Request $request)
     {
         $dateFrom = $request->input('date_from', now()->startOfYear()->format('Y-m-d'));
