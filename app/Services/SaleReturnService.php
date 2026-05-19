@@ -90,35 +90,14 @@ class SaleReturnService
         return DB::transaction(function () use ($data, $items) {
             $subtotal = 0;
 
-            // Pre-load order items to calculate proportional refund with discount
-            $orderItemIds = collect($items)->pluck('sale_order_item_id')->filter()->unique()->values();
-            $orderItemsMap = $orderItemIds->isNotEmpty()
-                ? \App\Models\SaleOrderItem::whereIn('id', $orderItemIds)->get()->keyBy('id')
-                : collect();
-
             foreach ($items as &$item) {
+                // Use pre-calculated refund_amount (proportional with discount+tax) if provided,
+                // otherwise fall back to simple qty * unit_price
                 if (!isset($item['refund_amount']) || $item['refund_amount'] === null) {
-                    $orderItemId = $item['sale_order_item_id'] ?? null;
-                    $origItem    = $orderItemId ? $orderItemsMap->get($orderItemId) : null;
-
-                    if ($origItem && (float) $origItem->quantity > 0) {
-                        // Proportional refund: accounts for discount & tax on the original line
-                        $ratio = min(1, (float) $item['quantity'] / (float) $origItem->quantity);
-                        $item['refund_amount']    = round((float) $origItem->total * $ratio, 2);
-                        $item['gross_amount']     = round((float) $item['quantity'] * (float) $origItem->unit_price, 2);
-                        $item['discount_amount']  = round($item['gross_amount'] - $item['refund_amount'], 2);
-                    } else {
-                        $item['refund_amount']   = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
-                        $item['gross_amount']    = $item['refund_amount'];
-                        $item['discount_amount'] = 0;
-                    }
-                } else {
-                    $item['gross_amount']    = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
-                    $item['discount_amount'] = round($item['gross_amount'] - (float) $item['refund_amount'], 2);
+                    $item['refund_amount'] = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
                 }
                 $subtotal += (float) $item['refund_amount'];
             }
-            unset($item);
 
             $return = $this->returnRepository->create(array_merge($data, [
                 'subtotal'      => round($subtotal, 2),
@@ -138,6 +117,24 @@ class SaleReturnService
                 ]);
             }
 
+            // If linked to a trip, add returned qty back to delegate stock
+            if (!empty($data['trip_id'])) {
+                $trip = \App\Models\Trip::find($data['trip_id']);
+                if ($trip && $trip->delegate_id) {
+                    foreach ($items as $item) {
+                        DB::table('delegate_product')->updateOrInsert(
+                            ['delegate_id' => $trip->delegate_id, 'product_id' => $item['product_id']],
+                            [
+                                'quantity'   => DB::raw('COALESCE(quantity, 0) + ' . (float) $item['quantity']),
+                                'unit_id'    => $item['unit_id'] ?? null,
+                                'updated_at' => now(),
+                                'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
+                            ]
+                        );
+                    }
+                }
+            }
+
             return $return->load(['items.product', 'items.unit', 'order', 'customer']);
         });
     }
@@ -151,33 +148,9 @@ class SaleReturnService
                 throw new \Exception('لا يمكن تأكيد هذا المرتجع');
             }
 
-            // Validate: each item's returned qty must not exceed (original qty - already confirmed/refunded returns)
-            foreach ($return->items as $item) {
-                if (!$item->sale_order_item_id) continue;
-
-                $alreadyReturned = \App\Models\SaleReturnItem::where('sale_order_item_id', $item->sale_order_item_id)
-                    ->where('sale_return_id', '!=', $return->id)
-                    ->whereHas('saleReturn', fn($q) => $q->whereNotIn('status', ['cancelled']))
-                    ->sum('quantity');
-
-                $orderItem = \App\Models\SaleOrderItem::find($item->sale_order_item_id);
-                if ($orderItem) {
-                    $remaining = max(0, (float) $orderItem->quantity - (float) $alreadyReturned);
-                    if ((float) $item->quantity > $remaining) {
-                        throw new \Exception(
-                            "لا يمكن تأكيد المرتجع: الكمية المُرتجعة للمنتج \"{$orderItem->product?->name}\" ({$item->quantity}) تتجاوز الكمية المتاحة ({$remaining})"
-                        );
-                    }
-                }
-            }
-
-            // Add stock back to the appropriate location
-            if ($return->trip_id) {
-                // Delegate trip return: confirmed → products are now back in delegate's vehicle
-                // tripProducts calculates available stock dynamically (dispatched - sold + returns)
-                // so no explicit stock table update is needed here.
-            } else {
-                // Direct branch return: add qty back to branch_product
+            // Add stock back — delegate returns already updated delegate_product in createReturn()
+            // Only update branch stock for non-delegate (direct branch) returns
+            if (!$return->trip_id) {
                 foreach ($return->items as $item) {
                     $current = DB::table('branch_product')
                         ->where('branch_id', $return->branch_id)

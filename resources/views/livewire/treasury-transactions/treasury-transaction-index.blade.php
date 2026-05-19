@@ -23,6 +23,34 @@
         </div>
     </div>
 
+    {{-- Treasury Balance Cards --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        <div class="bg-stone-50 flex items-center justify-between px-4 py-4 border-b border-stone-100">
+            <span class="text-xs text-primary-700 font-semibold">أرصدة الخزائن</span>
+            <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold text-gray-800">الخزائن</h3>
+                <div class="bg-stone-200 p-1.5 rounded-lg">
+                    <svg class="w-4 h-4 text-primary-800" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" /></svg>
+                </div>
+            </div>
+        </div>
+        @php $tc = ['bg-primary-800', 'bg-primary-700', 'bg-primary-600', 'bg-primary-500']; @endphp
+        <div class="p-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+            @forelse($treasuries as $ti => $treasury)
+                <div class="{{ $tc[$ti % count($tc)] }} rounded-xl px-4 py-3 text-right shadow-sm">
+                    <p class="text-xs text-white/80 font-medium mb-0.5">{{ $treasury->name }}</p>
+                    <p class="text-xl font-extrabold text-white">{{ number_format($treasury->balance, 0) }}<span class="text-xs font-normal text-white/70 mr-1">ج.م</span></p>
+                </div>
+            @empty
+                <div class="col-span-4 py-4 text-center text-xs text-gray-300">لا توجد خزائن</div>
+            @endforelse
+        </div>
+        <div class="px-4 py-3 bg-primary-900 text-right">
+            <p class="text-xs text-primary-200 font-medium">الإجمالي</p>
+            <p class="text-base font-extrabold text-white">{{ number_format($totalTreasuryBalance, 0) }} <span class="text-xs font-normal text-primary-200">ج.م</span></p>
+        </div>
+    </div>
+
     {{-- Filters --}}
     <div class="bg-card rounded-2xl shadow-sm border border-primary-100 p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

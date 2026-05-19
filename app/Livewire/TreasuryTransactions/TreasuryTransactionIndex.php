@@ -50,9 +50,12 @@ class TreasuryTransactionIndex extends Component
             $query->where('type', $this->typeFilter);
         }
 
+        $treasuries = Treasury::where('is_active', true)->orderBy('name')->get();
+
         return view('livewire.treasury-transactions.treasury-transaction-index', [
             'transactions' => $query->latest()->paginate(10),
-            'treasuries' => Treasury::where('is_active', true)->orderBy('name')->get(),
+            'treasuries' => $treasuries,
+            'totalTreasuryBalance' => $treasuries->sum('balance'),
             'typeLabels' => TreasuryTransaction::typeLabels(),
         ]);
     }
