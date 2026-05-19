@@ -20,8 +20,9 @@ class TreasuryStatementReport extends Component
 
     public function mount(): void
     {
-        $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
-        $this->dateTo   = now()->format('Y-m-d');
+        $this->dateFrom   = request('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $this->dateTo     = request('date_to',   now()->format('Y-m-d'));
+        $this->treasuryId = request('treasury_id', '');
     }
 
     public function render()

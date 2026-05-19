@@ -2,7 +2,10 @@
 
 namespace App\Livewire\Treasuries;
 
+use App\Models\Treasury;
+use App\Models\TreasuryTransaction;
 use App\Services\TreasuryService;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class TreasuryForm extends Component
@@ -12,6 +15,9 @@ class TreasuryForm extends Component
     public string $balance = '0';
     public bool $is_active = true;
 
+    /** الرصيد الأصلي قبل التعديل */
+    private float $originalBalance = 0;
+
     public function mount(TreasuryService $treasuryService, ?int $id = null)
     {
         if ($id) {
@@ -20,6 +26,7 @@ class TreasuryForm extends Component
             $this->name = $treasury->name;
             $this->balance = (string) ($treasury->balance * 1);
             $this->is_active = $treasury->is_active;
+            $this->originalBalance = (float) $treasury->balance;
         }
     }
 
@@ -51,10 +58,48 @@ class TreasuryForm extends Component
         ];
 
         if ($this->treasuryId) {
-            $treasuryService->updateTreasury($this->treasuryId, $data);
+            DB::transaction(function () use ($treasuryService, $data) {
+                // Detect manual balance change and log a transaction
+                $newBalance = (float) $this->balance;
+                $diff = round($newBalance - $this->originalBalance, 4);
+
+                if ($diff != 0) {
+                    // Re-read the original balance from DB to avoid Livewire re-hydration issues
+                    $currentBalance = (float) Treasury::find($this->treasuryId)?->balance;
+                    $diff = round($newBalance - $currentBalance, 4);
+                }
+
+                $treasuryService->updateTreasury($this->treasuryId, $data);
+
+                if ($diff != 0) {
+                    TreasuryTransaction::create([
+                        'treasury_id'      => $this->treasuryId,
+                        'type'             => $diff > 0 ? 'deposit' : 'withdrawal',
+                        'amount'           => abs($diff),
+                        'description'      => $diff > 0
+                            ? 'تعديل يدوي — رصيد افتتاحي أو تسوية'
+                            : 'تعديل يدوي — خصم رصيد',
+                        'reference_number' => 'MANUAL-ADJ',
+                        'admin_id'         => auth('admin')->id(),
+                    ]);
+                }
+            });
             session()->flash('success', 'تم تحديث الخزنة بنجاح');
         } else {
-            $treasuryService->createTreasury($data);
+            // New treasury: if opening balance > 0, log it
+            DB::transaction(function () use ($treasuryService, $data) {
+                $treasury = $treasuryService->createTreasury($data);
+                if ((float) $this->balance > 0) {
+                    TreasuryTransaction::create([
+                        'treasury_id'      => $treasury->id,
+                        'type'             => 'deposit',
+                        'amount'           => (float) $this->balance,
+                        'description'      => 'رصيد افتتاحي',
+                        'reference_number' => 'OPENING',
+                        'admin_id'         => auth('admin')->id(),
+                    ]);
+                }
+            });
             session()->flash('success', 'تم إضافة الخزنة بنجاح');
         }
 
