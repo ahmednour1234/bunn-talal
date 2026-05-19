@@ -161,6 +161,11 @@ class TreasuryStatementReport extends Component
         $totalWithdrawals = $allRows->where('type', 'withdrawal')->sum('amount');
 
         // ── Untracked balance (all-time) per treasury ──
+        // Define treasuryBalances first so we can loop over it below
+        $treasuryBalances = $this->treasuryId
+            ? $treasuries->where('id', $this->treasuryId)
+            : $treasuries;
+
         // Compute across ALL time (no date filter) to compare to current balance
         $allTimeSources = collect()
             ->concat(SaleOrderPayment::whereNotNull('treasury_id')
@@ -201,11 +206,6 @@ class TreasuryStatementReport extends Component
             'withdrawals' => $rows->where('type', 'withdrawal')->sum('amount'),
             'count'       => $rows->count(),
         ])->values();
-
-        // ── Treasury current balances ──
-        $treasuryBalances = $this->treasuryId
-            ? $treasuries->where('id', $this->treasuryId)
-            : $treasuries;
 
         return view('livewire.reports.treasury-statement', compact(
             'treasuries',
