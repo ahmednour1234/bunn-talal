@@ -15,19 +15,11 @@ class TreasuryTransactionIndex extends Component
     public string $treasuryFilter = '';
     public string $typeFilter = '';
 
-    public function updatingSearch()
+    public function mount()
     {
-        $this->resetPage();
-    }
-
-    public function updatingTreasuryFilter()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingTypeFilter()
-    {
-        $this->resetPage();
+        $this->search = request('search', '');
+        $this->treasuryFilter = request('treasury', '');
+        $this->typeFilter = request('type', '');
     }
 
     public function render()

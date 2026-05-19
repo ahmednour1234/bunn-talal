@@ -52,27 +52,33 @@
     </div>
 
     {{-- Filters --}}
-    <div class="bg-card rounded-2xl shadow-sm border border-primary-100 p-4 mb-6">
+    <form method="GET" action="{{ route('treasury-transactions.index') }}" class="bg-card rounded-2xl shadow-sm border border-primary-100 p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="relative">
                 <x-icon name="search" class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
-                <input type="text" wire:model.live.debounce.300ms="search" placeholder="بحث بالوصف أو رقم المرجع..."
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="بحث بالوصف أو رقم المرجع..."
                     class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
             </div>
-            <select wire:model.live="treasuryFilter" class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
+            <select name="treasury" onchange="this.form.submit()" class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
                 <option value="">كل الخزن</option>
                 @foreach($treasuries as $treasury)
-                    <option value="{{ $treasury->id }}">{{ $treasury->name }}</option>
+                    <option value="{{ $treasury->id }}" {{ request('treasury') == $treasury->id ? 'selected' : '' }}>{{ $treasury->name }}</option>
                 @endforeach
             </select>
-            <select wire:model.live="typeFilter" class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
+            <select name="type" onchange="this.form.submit()" class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
                 <option value="">كل الأنواع</option>
                 @foreach($typeLabels as $value => $label)
-                    <option value="{{ $value }}">{{ $label }}</option>
+                    <option value="{{ $value }}" {{ request('type') == $value ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
             </select>
         </div>
-    </div>
+        <div class="mt-3 flex justify-end gap-2">
+            @if(request()->hasAny(['search', 'treasury', 'type']))
+                <a href="{{ route('treasury-transactions.index') }}" class="px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">مسح الفلاتر</a>
+            @endif
+            <button type="submit" class="px-4 py-2 text-sm bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors">بحث</button>
+        </div>
+    </form>
 
     {{-- Table --}}
     <x-data-table :headers="['#', 'الخزنة', 'النوع', 'المبلغ', 'الوصف', 'التاريخ', 'رقم المرجع', 'بواسطة']">
