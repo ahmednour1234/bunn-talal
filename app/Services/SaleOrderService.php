@@ -375,6 +375,8 @@ class SaleOrderService
 
             return $order;
         });
+    }
+
     /**
      * Restore sold quantities on order cancellation.
      *
