@@ -650,6 +650,41 @@
             </table>
             </div>
             @endif
+
+            {{-- Cancelled Orders Section --}}
+            @if($cancelledOrders->isNotEmpty())
+            <div class="mt-5 rounded-xl border border-red-100 overflow-hidden">
+                <div class="flex items-center gap-2 px-4 py-2.5 bg-red-50 border-b border-red-100">
+                    <span class="text-xs font-bold text-red-600">الفواتير الملغية</span>
+                    <span class="text-xs text-red-400">({{ $cancelledOrders->count() }})</span>
+                </div>
+                <div class="overflow-x-auto">
+                <table class="w-full text-sm text-right opacity-75">
+                    <thead><tr class="text-xs text-gray-400 border-b border-red-50">
+                        <th class="px-4 pb-2 pt-2 font-semibold">رقم الفاتورة</th>
+                        <th class="pb-2 pt-2 font-semibold">العميل</th>
+                        <th class="pb-2 pt-2 font-semibold">التاريخ</th>
+                        <th class="pb-2 pt-2 font-semibold">طريقة الدفع</th>
+                        <th class="pb-2 pt-2 font-semibold">الإجمالي</th>
+                    </tr></thead>
+                    <tbody class="divide-y divide-red-50">
+                    @foreach($cancelledOrders as $co)
+                    <tr class="text-gray-400 line-through">
+                        <td class="px-4 py-2.5 font-mono text-xs text-red-400 no-underline" style="text-decoration:none">
+                            <span class="line-through">{{ $co->order_number }}</span>
+                            <span class="ml-1 no-underline inline-block bg-red-100 text-red-500 text-[10px] font-bold px-1.5 py-0.5 rounded" style="text-decoration:none">ملغي</span>
+                        </td>
+                        <td class="py-2.5">{{ $co->customer?->name }}</td>
+                        <td class="py-2.5">{{ $co->date?->format('Y-m-d') }}</td>
+                        <td class="py-2.5">{{ $co->payment_method_label }}</td>
+                        <td class="py-2.5 font-semibold text-red-400">{{ number_format($co->total, 2) }} ج.م</td>
+                    </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            @endif
             @endif
 
             {{-- Collections Tab --}}

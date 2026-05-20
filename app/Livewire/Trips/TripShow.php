@@ -333,7 +333,7 @@ class TripShow extends Component
     {
         $dispatches     = $this->trip->dispatches()->with(['branch', 'items.product.unit', 'items.unit'])->latest()->get();
         $saleOrders      = $this->trip->saleOrders()->whereNotIn('status', ['cancelled'])->with(['customer', 'items.product.unit', 'items.unit', 'payments'])->latest()->get();
-        $cancelledOrders = $this->trip->saleOrders()->where('status', 'cancelled')->with(['items.product.unit', 'items.unit'])->get();
+        $cancelledOrders = $this->trip->saleOrders()->where('status', 'cancelled')->with(['customer', 'items.product.unit', 'items.unit'])->latest()->get();
         $viewingOrder    = $this->viewingOrderId ? $saleOrders->firstWhere('id', $this->viewingOrderId) : null;
         $collections     = $this->trip->collections()->with('customer')->latest()->get();
         $saleReturns     = $this->trip->saleReturns()->whereNotIn('status', ['cancelled'])->with(['customer', 'items.product.unit', 'items.unit'])->latest()->get();
