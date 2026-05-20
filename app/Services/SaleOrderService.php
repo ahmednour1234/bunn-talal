@@ -296,29 +296,8 @@ class SaleOrderService
                 throw new \Exception('الطلب ملغي بالفعل');
             }
 
-            // Restore stock to delegate or branch
-            foreach ($order->items as $item) {
-                if ($order->delegate_id) {
-                    DB::table('delegate_product')
-                        ->where('delegate_id', $order->delegate_id)
-                        ->where('product_id', $item->product_id)
-                        ->increment('quantity', (float) $item->quantity);
-                } else {
-                    $stockRow = DB::table('branch_product')
-                        ->where('branch_id', $order->branch_id)
-                        ->where('product_id', $item->product_id)
-                        ->first();
-
-                    if ($stockRow) {
-                        DB::table('branch_product')
-                            ->where('id', $stockRow->id)
-                            ->update([
-                                'quantity'   => ((float) $stockRow->quantity) + ((float) $item->quantity),
-                                'updated_at' => now(),
-                            ]);
-                    }
-                }
-            }
+            // Restore stock based on trip settlement status
+            $this->restoreStockOnCancellation($order);
 
             // Restore treasury (refund paid amount)
             foreach ($order->payments as $payment) {
@@ -355,29 +334,8 @@ class SaleOrderService
                 throw new \Exception('الطلب ليس في حالة انتظار الإلغاء');
             }
 
-            // Restore stock to delegate or branch
-            foreach ($order->items as $item) {
-                if ($order->delegate_id) {
-                    DB::table('delegate_product')
-                        ->where('delegate_id', $order->delegate_id)
-                        ->where('product_id', $item->product_id)
-                        ->increment('quantity', (float) $item->quantity);
-                } else {
-                    $stockRow = DB::table('branch_product')
-                        ->where('branch_id', $order->branch_id)
-                        ->where('product_id', $item->product_id)
-                        ->first();
-
-                    if ($stockRow) {
-                        DB::table('branch_product')
-                            ->where('id', $stockRow->id)
-                            ->update([
-                                'quantity'   => ((float) $stockRow->quantity) + ((float) $item->quantity),
-                                'updated_at' => now(),
-                            ]);
-                    }
-                }
-            }
+            // Restore stock based on trip settlement status
+            $this->restoreStockOnCancellation($order);
 
             // Restore treasury (refund paid amount)
             foreach ($order->payments as $payment) {
@@ -417,6 +375,50 @@ class SaleOrderService
 
             return $order;
         });
+    /**
+     * Restore sold quantities on order cancellation.
+     *
+     * Rule:
+     *  - Trip exists AND not yet settled → return to delegate_product (delegate still holds the goods)
+     *  - Trip settled OR no trip         → return to branch_product   (goods are back in the warehouse)
+     */
+    private function restoreStockOnCancellation(SaleOrder $order): void
+    {
+        $trip = $order->trip_id ? $order->trip : null;
+        $returnToDelegate = $order->delegate_id
+            && $trip
+            && $trip->status !== 'settled';
+
+        foreach ($order->items as $item) {
+            if ($returnToDelegate) {
+                DB::table('delegate_product')
+                    ->where('delegate_id', $order->delegate_id)
+                    ->where('product_id', $item->product_id)
+                    ->increment('quantity', (float) $item->quantity);
+            } else {
+                $stockRow = DB::table('branch_product')
+                    ->where('branch_id', $order->branch_id)
+                    ->where('product_id', $item->product_id)
+                    ->first();
+
+                if ($stockRow) {
+                    DB::table('branch_product')
+                        ->where('id', $stockRow->id)
+                        ->update([
+                            'quantity'   => ((float) $stockRow->quantity) + ((float) $item->quantity),
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    DB::table('branch_product')->insert([
+                        'branch_id'  => $order->branch_id,
+                        'product_id' => $item->product_id,
+                        'quantity'   => (float) $item->quantity,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
     }
 }
 
