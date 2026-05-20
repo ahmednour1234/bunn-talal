@@ -18,7 +18,7 @@ class TripSettle extends Component
     public ?int   $settlementTreasuryId  = null;
     public string $settlementNotes       = '';
 
-    /** @var array<int, array{product_id:int, name:string, unit:string, selling_price:float, dispatched:float, sold:float, already_returned:float, expected_remaining:float, actual_received:string}> */
+    /** @var array<int, array{product_id:int, name:string, unit:string, selling_price:float, dispatched:float, sold:float, cancelled:float, already_returned:float, expected_remaining:float, actual_received:string}> */
     public array $productItems = [];
 
     public function mount(int $id): void
@@ -57,6 +57,7 @@ class TripSettle extends Component
                         'selling_price'      => (float)$item->selling_price,
                         'dispatched'         => 0.0,
                         'sold'               => 0.0,
+                        'cancelled'          => 0.0,
                         'already_returned'   => 0.0,
                         'expected_remaining' => 0.0,
                         'actual_received'    => '0',
@@ -69,7 +70,15 @@ class TripSettle extends Component
 
         // Subtract sold quantities from non-cancelled sale orders on this trip
         foreach ($this->trip->saleOrders as $order) {
-            if ($order->status === 'cancelled') continue;
+            if ($order->status === 'cancelled') {
+                foreach ($order->items as $item) {
+                    $pid = $item->product_id;
+                    if (isset($rows[$pid])) {
+                        $rows[$pid]['cancelled'] += (float)$item->quantity;
+                    }
+                }
+                continue;
+            }
             foreach ($order->items as $item) {
                 $pid = $item->product_id;
                 if (isset($rows[$pid])) {
@@ -78,9 +87,9 @@ class TripSettle extends Component
             }
         }
 
-        // expected_remaining = dispatched - sold - already_returned (via prior return forms)
+        // expected_remaining = dispatched - sold + cancelled - already_returned
         foreach ($rows as $pid => &$row) {
-            $row['expected_remaining'] = max(0, $row['dispatched'] - $row['sold'] - $row['already_returned']);
+            $row['expected_remaining'] = max(0, $row['dispatched'] - $row['sold'] + $row['cancelled'] - $row['already_returned']);
             $row['actual_received']    = (string)round($row['expected_remaining'], 3);
         }
         unset($row);

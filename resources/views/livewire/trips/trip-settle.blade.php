@@ -87,6 +87,7 @@
                     <th class="px-3 py-3 text-center">الوحدة</th>
                     <th class="px-3 py-3 text-center">المصروف</th>
                     <th class="px-3 py-3 text-center">المُباع</th>
+                    <th class="px-3 py-3 text-center text-red-500">الملغي</th>
                     <th class="px-3 py-3 text-center">المتبقي المتوقع</th>
                     <th class="px-3 py-3 text-center w-32">الفعلي المُستلَم</th>
                     <th class="px-3 py-3 text-center">الناقص</th>
@@ -112,6 +113,16 @@
                 <td class="px-3 py-3 text-center">
                     <span class="font-bold text-blue-600">{{ number_format($item['sold'], 0) }}</span>
                     <span class="text-xs text-gray-400 mr-0.5">{{ $item['unit'] }}</span>
+                </td>
+                <td class="px-3 py-3 text-center">
+                    @if(($item['cancelled'] ?? 0) > 0)
+                    <span class="inline-flex items-center gap-1 text-red-600 font-semibold text-xs bg-red-50 border border-red-200 px-2.5 py-1 rounded-md">
+                        {{ number_format($item['cancelled'], 0) }}
+                        <span class="text-gray-400 font-normal">{{ $item['unit'] }}</span>
+                    </span>
+                    @else
+                    <span class="text-gray-300 text-xs">—</span>
+                    @endif
                 </td>
                 <td class="px-3 py-3 text-center">
                     <span class="inline-block bg-primary-50 text-primary-700 font-extrabold text-xs px-2 py-1 rounded-lg">
