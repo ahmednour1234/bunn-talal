@@ -32,10 +32,12 @@ class Dashboard extends Component
     public function render()
     {
         // ── Sales stats ─────────────────────────────────────────────
-        $saleOrdersTotal  = SaleOrder::whereNotIn('status', ['cancelled'])->sum('total');
-        $saleOrdersPaid   = SaleOrder::whereNotIn('status', ['cancelled'])->sum('paid_amount');
-        $saleOrdersCount  = SaleOrder::whereNotIn('status', ['cancelled'])->count();
-        $saleReturnsTotal = SaleReturn::whereNotIn('status', ['cancelled'])->sum('refund_amount');
+        $saleOrdersTotal          = SaleOrder::whereNotIn('status', ['cancelled'])->sum('total');
+        $saleOrdersPaid           = SaleOrder::whereNotIn('status', ['cancelled'])->sum('paid_amount');
+        $saleOrdersCount          = SaleOrder::whereNotIn('status', ['cancelled'])->count();
+        $saleReturnsTotal         = SaleReturn::whereNotIn('status', ['cancelled'])->sum('refund_amount');
+        $cancelledSaleOrdersCount = SaleOrder::where('status', 'cancelled')->count();
+        $cancelledSaleOrdersTotal = SaleOrder::where('status', 'cancelled')->sum('total');
 
         // ── Purchase stats ───────────────────────────────────────────
         $purchaseTotal      = PurchaseInvoice::whereNotIn('status', ['cancelled'])->sum('total');
@@ -304,6 +306,8 @@ class Dashboard extends Component
             'saleOrdersPaid'             => $saleOrdersPaid,
             'saleOrdersCount'            => $saleOrdersCount,
             'saleReturnsTotal'           => $saleReturnsTotal,
+            'cancelledSaleOrdersCount'   => $cancelledSaleOrdersCount,
+            'cancelledSaleOrdersTotal'   => $cancelledSaleOrdersTotal,
             // purchases
             'purchaseTotal'              => $purchaseTotal,
             'purchasePaid'               => $purchasePaid,

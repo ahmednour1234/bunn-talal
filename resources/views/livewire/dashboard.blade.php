@@ -56,6 +56,9 @@
                 </div>
                 <p class="text-2xl font-extrabold text-white text-right leading-none mb-1">{{ number_format($saleOrdersTotal, 0) }}<span class="text-sm font-medium text-primary-200 mr-1">ج.م</span></p>
                 <p class="text-xs text-primary-200 text-right">محصّل: <span class="text-white font-bold">{{ number_format($saleOrdersPaid, 0) }} ج.م</span></p>
+                @if($cancelledSaleOrdersCount > 0)
+                <p class="text-xs text-red-300 text-right mt-1">ملغي: <span class="text-red-200 font-bold">{{ $cancelledSaleOrdersCount }} فاتورة &bull; {{ number_format($cancelledSaleOrdersTotal, 0) }} ج.م</span></p>
+                @endif
         </a>
 
         <a href="{{ route('purchase-invoices.index') }}" class="rounded-2xl bg-primary-700 p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all block group">                <div class="flex items-center justify-between mb-4">
