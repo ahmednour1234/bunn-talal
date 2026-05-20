@@ -207,6 +207,20 @@ class SaleOrderController extends Controller
                 });
             });
 
+        // Cancelled sale order items — quantities returned back to delegate
+        $cancelledQties = SaleOrderItem::whereHas('order', fn($q) => $q->where('trip_id', $trip->id)->where('status', 'cancelled'))
+            ->whereIn('product_id', $productIds)
+            ->with('unit')
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($rows) use ($productMap, $toProductUnit) {
+                return $rows->sum(function ($r) use ($productMap, $toProductUnit) {
+                    $pf = $productMap->get($r->product_id)?->unit ? (float) $productMap->get($r->product_id)->unit->conversion_factor : 1.0;
+                    $uf = $r->unit ? (float) $r->unit->conversion_factor : $pf;
+                    return $toProductUnit((float) $r->quantity, $uf, $pf);
+                });
+            });
+
         foreach ($validated['items'] as $item) {
             $pid      = $item['product_id'];
             $product  = $productMap->get($pid);
@@ -218,7 +232,8 @@ class SaleOrderController extends Controller
             $dispatched      = (float) ($dispatchedQties[$pid] ?? 0);
             $sold            = (float) ($soldQties[$pid] ?? 0);
             $returned        = (float) ($returnedQties[$pid] ?? 0);
-            $available       = max(0.0, $dispatched - $sold + $returned);
+            $cancelled       = (float) ($cancelledQties[$pid] ?? 0);
+            $available       = max(0.0, $dispatched - $sold + $cancelled + $returned);
 
             if ($requestedInBase > $available + 0.0001) {
                 $productName = $product?->name ?? "المنتج #{$pid}";
