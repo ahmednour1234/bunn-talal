@@ -64,8 +64,24 @@ class CustomerController extends Controller
 
         $customers = $query
             ->select('id', 'name', 'phone', 'email', 'area_id', 'address', 'latitude', 'longitude', 'classification', 'balance', 'opening_balance', 'credit_limit')
-            ->withSum('saleOrders as total_invoiced', 'total')
-            ->withSum('collections as total_paid', 'total_amount')
+            // آجل وجزئي فقط، بدون مسودات أو ملغيات
+            ->withSum(['saleOrders as total_invoiced' => fn ($q) => $q
+                ->whereNotIn('status', ['cancelled', 'draft'])
+                ->whereIn('payment_method', ['credit', 'partial'])
+            ], 'total')
+            // ما دُفع عند إنشاء الفاتورة (الدفع الجزئي المبدئي)
+            ->withSum(['saleOrders as total_order_paid' => fn ($q) => $q
+                ->whereNotIn('status', ['cancelled', 'draft'])
+                ->whereIn('payment_method', ['credit', 'partial'])
+            ], 'paid_amount')
+            // مرتجعات مؤكدة أو مكتملة فقط
+            ->withSum(['saleReturns as total_returned' => fn ($q) => $q
+                ->whereIn('status', ['confirmed', 'refunded'])
+            ], 'refund_amount')
+            // تحصيلات غير ملغية فقط
+            ->withSum(['collections as total_paid' => fn ($q) => $q
+                ->whereNotIn('status', ['cancelled'])
+            ], 'total_amount')
             ->get();
 
         return $this->successResponse(CustomerResource::collection($customers)->resolve(), 'تم جلب العملاء بنجاح');

@@ -8,10 +8,13 @@ class CustomerResource extends JsonResource
 {
     public function toArray($request): array
     {
-        $openingBalance = (float) $this->opening_balance;
+        $openingBalance  = (float) $this->opening_balance;
         $totalInvoiced  = (float) ($this->total_invoiced ?? 0);
-        $totalPaid      = (float) ($this->total_paid ?? 0);
-        $netBalance     = $openingBalance + $totalInvoiced - $totalPaid;
+        $totalOrderPaid = (float) ($this->total_order_paid ?? 0);  // مدفوع عند إنشاء الفاتورة
+        $totalReturned  = (float) ($this->total_returned ?? 0);    // مرتجعات مؤكدة
+        $totalPaid      = (float) ($this->total_paid ?? 0);        // تحصيلات
+        // صافي المديونية = رصيد افتتاحي + (إجمالي الفواتير الآجلة - ما دُفع منها) - المرتجعات - التحصيلات
+        $netBalance     = $openingBalance + ($totalInvoiced - $totalOrderPaid) - $totalReturned - $totalPaid;
 
         return [
             'id'                   => $this->id,
@@ -26,6 +29,8 @@ class CustomerResource extends JsonResource
             'credit_limit'         => (float) $this->credit_limit,
             'opening_balance'      => $openingBalance,
             'total_invoiced'       => $totalInvoiced,
+            'total_order_paid'     => $totalOrderPaid,
+            'total_returned'       => $totalReturned,
             'total_paid'           => $totalPaid,
             'net_balance'          => $netBalance,
             'balance'              => (float) $this->balance,
