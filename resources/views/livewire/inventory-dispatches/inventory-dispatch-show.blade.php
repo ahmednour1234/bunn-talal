@@ -150,6 +150,12 @@
     {{-- Actions --}}
     @if(auth('admin')->user()?->hasPermission('inventory-dispatches.edit'))
         <div class="flex items-center gap-3 mb-6">
+            @if($dispatch->status === 'pending')
+                <x-button type="button" variant="danger" wire:click="cancelDispatch"
+                    wire:confirm="هل أنت متأكد من رفض أمر الصرف؟">
+                    رفض أمر الصرف
+                </x-button>
+            @endif
             @if(in_array($dispatch->status, ['dispatched', 'partial_return']))
                 <x-button type="button" variant="secondary" wire:click="toggleReturnForm">
                     {{ $showReturnForm ? 'إخفاء نموذج المرتجع' : 'تسجيل مرتجعات' }}

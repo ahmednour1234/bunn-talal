@@ -60,11 +60,12 @@ class InventoryDispatch extends Model
     public static function statusLabels(): array
     {
         return [
-            'pending' => 'قيد الإعداد',
-            'dispatched' => 'تم الصرف',
+            'pending'        => 'قيد الإعداد',
+            'dispatched'     => 'تم الصرف',
             'partial_return' => 'مرتجع جزئي',
-            'returned' => 'مرتجع كامل',
-            'settled' => 'تمت التسوية',
+            'returned'       => 'مرتجع كامل',
+            'settled'        => 'تمت التسوية',
+            'cancelled'      => 'ملغي',
         ];
     }
 

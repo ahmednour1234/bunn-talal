@@ -173,6 +173,23 @@ class InventoryDispatchShow extends Component
         return (int) $current->id;
     }
 
+    public function cancelDispatch(InventoryDispatchService $service): void
+    {
+        $admin = auth('admin')->user();
+        if (!$admin->hasPermission('inventory-dispatches.edit')) {
+            session()->flash('error', 'ليس لديك صلاحية التعديل');
+            return;
+        }
+
+        $dispatch = $service->getById($this->dispatchId);
+
+        if ($dispatch->status !== 'pending') return;
+
+        $dispatch->update(['status' => 'cancelled']);
+
+        session()->flash('success', 'تم رفض أمر الصرف');
+    }
+
     public function render(InventoryDispatchService $service)
     {
         return view('livewire.inventory-dispatches.inventory-dispatch-show', [
