@@ -48,6 +48,12 @@ class BookingRequestIndex extends Component
     {
         $req = TripBookingRequest::with('items.product')->findOrFail($id);
 
+        // Guard: only pending requests can be acted on
+        if ($req->status !== 'pending') {
+            session()->flash('error', 'لا يمكن تعديل هذا الطلب في وضعه الحالي');
+            return;
+        }
+
         // When confirming — ensure the request has a trip assigned
         if ($status === 'confirmed') {
             $trip = $this->resolveOrCreateTrip($req);

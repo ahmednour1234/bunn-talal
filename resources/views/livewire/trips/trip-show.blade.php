@@ -515,6 +515,11 @@
                                 class="text-xs font-bold px-2 py-1 rounded border text-white bg-green-600 border-green-600 hover:bg-green-700 transition-colors">
                                 تأكيد الصرف ✓
                             </button>
+                            <button wire:click="cancelDispatch({{ $d->id }})"
+                                wire:confirm="هل أنت متأكد من رفض أمر الصرف؟"
+                                class="text-xs font-bold px-2 py-1 rounded border text-white bg-red-600 border-red-600 hover:bg-red-700 transition-colors">
+                                رفض
+                            </button>
                             @endif
                         </div>
                     </td>

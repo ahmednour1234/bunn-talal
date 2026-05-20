@@ -209,6 +209,19 @@ class TripShow extends Component
         $this->loadTrip();
     }
 
+    public function cancelDispatch(int $id): void
+    {
+        $dispatch = InventoryDispatch::findOrFail($id);
+
+        if ($dispatch->status !== 'pending') return;
+
+        $dispatch->update(['status' => 'cancelled']);
+
+        $this->trip->syncTotals();
+        session()->flash('success', 'تم رفض أمر الصرف');
+        $this->loadTrip();
+    }
+
     // ── Settlement Approval ──────────────────────────────────────────
 
     public string $rejectionReason = '';
