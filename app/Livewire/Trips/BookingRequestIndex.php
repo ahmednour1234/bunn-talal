@@ -20,6 +20,9 @@ class BookingRequestIndex extends Component
     public string $statusFilter   = '';
     public string $delegateFilter = '';
 
+    public bool  $showModal       = false;
+    public ?int  $selectedId      = null;
+
     protected $queryString = [
         'search'         => ['except' => ''],
         'statusFilter'   => ['except' => ''],
@@ -28,6 +31,18 @@ class BookingRequestIndex extends Component
 
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingStatusFilter(): void { $this->resetPage(); }
+
+    public function showBooking(int $id): void
+    {
+        $this->selectedId = $id;
+        $this->showModal  = true;
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal  = false;
+        $this->selectedId = null;
+    }
 
     public function updateStatus(int $id, string $status): void
     {
@@ -116,6 +131,11 @@ class BookingRequestIndex extends Component
 
     public function render()
     {
+        $selected = $this->selectedId
+            ? TripBookingRequest::with(['delegate', 'trip', 'items.product:id,name', 'items.unit:id,name,symbol'])
+                ->find($this->selectedId)
+            : null;
+
         $requests = TripBookingRequest::with(['delegate', 'trip'])
             ->when($this->search, fn($q) => $q->where(function ($q2) {
                 $q2->where('customer_name', 'like', "%{$this->search}%")
@@ -129,6 +149,6 @@ class BookingRequestIndex extends Component
         $delegates    = Delegate::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $statusLabels = TripBookingRequest::statusLabels();
 
-        return view('livewire.trips.booking-request-index', compact('requests', 'delegates', 'statusLabels'));
+        return view('livewire.trips.booking-request-index', compact('requests', 'delegates', 'statusLabels', 'selected'));
     }
 }
