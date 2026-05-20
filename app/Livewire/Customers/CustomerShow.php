@@ -34,9 +34,13 @@ class CustomerShow extends Component
             ->orderByDesc('date')
             ->get();
 
-        $totalInvoiced  = $orders->whereNotIn('status', ['cancelled'])->sum('total');
-        $totalPaid      = $orders->whereNotIn('status', ['cancelled'])->sum('paid_amount');
-        $totalRemaining = $orders->whereIn('status', ['confirmed', 'partial_paid'])->sum(fn($o) => (float)$o->total - (float)$o->paid_amount);
+        // آجل وجزئي فقط — الكاش مدفوع فوراً ولا يُعدّ مديونية
+        $creditOrders   = $orders->whereNotIn('status', ['cancelled'])->whereIn('payment_method', ['credit', 'partial']);
+        $totalInvoiced  = $creditOrders->sum('total');
+        $totalPaid      = $creditOrders->sum('paid_amount');
+        $totalRemaining = $orders->whereIn('status', ['confirmed', 'partial_paid'])
+                                 ->whereIn('payment_method', ['credit', 'partial'])
+                                 ->sum(fn($o) => (float)$o->total - (float)$o->paid_amount);
 
         // ── Returns ───────────────────────────────────────────────
         $returns = SaleReturn::where('customer_id', $this->customerId)
