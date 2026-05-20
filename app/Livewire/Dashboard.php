@@ -137,6 +137,7 @@ class Dashboard extends Component
                 DB::raw('SUM(quantity) as total_qty'),
                 DB::raw('SUM(total) as total_revenue')
             )
+            ->whereHas('order', fn($q) => $q->whereNotIn('status', ['cancelled', 'draft']))
             ->with('product.category')
             ->groupBy('product_id')
             ->orderByDesc('total_qty')
@@ -181,14 +182,15 @@ class Dashboard extends Component
                 'customers.id',
                 'customers.name',
                 'customers.phone',
-                DB::raw('SUM(sale_orders.total) as total_sales'),
-                DB::raw('SUM(sale_orders.paid_amount) as total_paid'),
-                DB::raw('COUNT(sale_orders.id) as orders_count')
+                DB::raw('SUM(CASE WHEN sale_orders.status NOT IN ("cancelled","draft") THEN sale_orders.total ELSE 0 END) as total_sales'),
+                DB::raw('SUM(CASE WHEN sale_orders.status NOT IN ("cancelled","draft") THEN sale_orders.paid_amount ELSE 0 END) as total_paid'),
+                DB::raw('SUM(CASE WHEN sale_orders.status NOT IN ("cancelled","draft") THEN 1 ELSE 0 END) as orders_count'),
+                DB::raw('SUM(CASE WHEN sale_orders.status = "cancelled" THEN 1 ELSE 0 END) as cancelled_count')
             )
             ->join('sale_orders', 'sale_orders.customer_id', '=', 'customers.id')
             ->whereNull('sale_orders.deleted_at')
-            ->whereNotIn('sale_orders.status', ['cancelled'])
             ->groupBy('customers.id', 'customers.name', 'customers.phone')
+            ->havingRaw('SUM(CASE WHEN sale_orders.status NOT IN ("cancelled","draft") THEN sale_orders.total ELSE 0 END) > 0')
             ->orderByDesc('total_sales')
             ->take(8)
             ->get();
@@ -202,7 +204,8 @@ class Dashboard extends Component
                 DB::raw('SUM(sale_orders.total) as total_sales'),
                 DB::raw('SUM(sale_orders.paid_amount) as total_paid'),
                 DB::raw('(SUM(sale_orders.total) - SUM(sale_orders.paid_amount)) as outstanding'),
-                DB::raw('COUNT(sale_orders.id) as orders_count')
+                DB::raw('COUNT(sale_orders.id) as orders_count'),
+                DB::raw('(SELECT COUNT(*) FROM sale_orders s2 WHERE s2.customer_id = customers.id AND s2.status = "cancelled" AND s2.deleted_at IS NULL) as cancelled_count')
             )
             ->join('sale_orders', 'sale_orders.customer_id', '=', 'customers.id')
             ->whereNull('sale_orders.deleted_at')

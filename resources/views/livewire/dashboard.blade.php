@@ -608,9 +608,13 @@
                                 <p class="text-xs text-gray-400">{{ $customer->phone }}</p>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-stone-100 text-primary-700 text-xs font-extrabold">{{ $customer->orders_count }}</span>
+                                <div class="flex flex-col items-center gap-0.5">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-50 text-amber-700 text-xs font-extrabold">{{ $customer->orders_count }}</span>
+                                    @if(($customer->cancelled_count ?? 0) > 0)
+                                    <span class="inline-flex items-center gap-0.5 text-xs text-red-500 font-bold"><span class="w-1 h-1 bg-red-400 rounded-full"></span>{{ $customer->cancelled_count }} ملغي</span>
+                                    @endif
+                                </div>
                             </td>
-                            <td class="px-4 py-3 font-bold text-primary-700">{{ number_format($customer->total_sales, 0) }}<span class="text-xs text-gray-400 font-normal mr-0.5">ج.م</span></td>
                             <td class="px-4 py-3">
                                 @if($remaining > 0)
                                 <span class="font-bold text-amber-600">{{ number_format($remaining, 0) }}<span class="text-xs text-gray-400 font-normal mr-0.5">ج.م</span></span>
@@ -670,7 +674,12 @@
                                 <p class="text-xs text-gray-400">{{ $customer->phone }}</p>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-50 text-amber-700 text-xs font-extrabold">{{ $customer->orders_count }}</span>
+                                <div class="flex flex-col items-center gap-0.5">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-stone-100 text-primary-700 text-xs font-extrabold">{{ $customer->orders_count }}</span>
+                                    @if(($customer->cancelled_count ?? 0) > 0)
+                                    <span class="inline-flex items-center gap-0.5 text-xs text-red-500 font-bold"><span class="w-1 h-1 bg-red-400 rounded-full"></span>{{ $customer->cancelled_count }} ملغي</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-4 py-3 font-extrabold text-red-600">{{ number_format($customer->outstanding, 0) }}<span class="text-xs text-gray-400 font-normal mr-0.5">ج.م</span></td>
                             <td class="px-4 py-3">
