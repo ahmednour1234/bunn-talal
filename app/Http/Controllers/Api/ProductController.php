@@ -103,6 +103,13 @@ class ProductController extends Controller
                 ->get()
                 ->groupBy('product_id');
 
+            // Cancelled orders — quantities returned back to delegate
+            $cancelledRows = SaleOrderItem::whereHas('order', fn($q) => $q->where('trip_id', $trip->id)->where('status', 'cancelled'))
+                ->whereIn('product_id', $productIds)
+                ->with('unit')
+                ->get()
+                ->groupBy('product_id');
+
             // Returned from customers (non-cancelled)
             $returnedRows = SaleReturnItem::whereHas('saleReturn', fn($q) => $q->where('trip_id', $trip->id)->whereNotIn('status', ['cancelled']))
                 ->whereIn('product_id', $productIds)
@@ -110,7 +117,7 @@ class ProductController extends Controller
                 ->get()
                 ->groupBy('product_id');
 
-            $products->each(function ($product) use ($dispatchedRaw, $soldRows, $returnedRows) {
+            $products->each(function ($product) use ($dispatchedRaw, $soldRows, $cancelledRows, $returnedRows) {
                 $pf      = $product->unit ? (float) $product->unit->conversion_factor : 1.0;
                 $convert = fn(float $qty, ?float $uf) => $pf > 0 ? $qty * ($uf ?? $pf) / $pf : $qty;
 
@@ -124,12 +131,17 @@ class ProductController extends Controller
                     return $convert((float) $r->quantity, $uf);
                 });
 
+                $cancelled = $cancelledRows->get($product->id, collect())->sum(function ($r) use ($pf, $convert) {
+                    $uf = $r->unit ? (float) $r->unit->conversion_factor : $pf;
+                    return $convert((float) $r->quantity, $uf);
+                });
+
                 $returned = $returnedRows->get($product->id, collect())->sum(function ($r) use ($pf, $convert) {
                     $uf = $r->unit ? (float) $r->unit->conversion_factor : $pf;
                     return $convert((float) $r->quantity, $uf);
                 });
 
-                $product->available_stock = max(0.0, $dispatched - $sold + $returned);
+                $product->available_stock = max(0.0, $dispatched - $sold + $cancelled + $returned);
             });
         } else {
             // No active trip — show branch stock
@@ -220,6 +232,13 @@ class ProductController extends Controller
             ->get()
             ->groupBy('product_id');
 
+        // Cancelled sale order items (quantities returned back to delegate)
+        $cancelledInBase = SaleOrderItem::whereHas('order', fn($q) => $q->where('trip_id', $trip->id)->where('status', 'cancelled'))
+            ->whereIn('product_id', $productIds)
+            ->with('unit')
+            ->get()
+            ->groupBy('product_id');
+
         // Returned qty per product (non-cancelled sale returns on this trip)
         $returnedInBase = SaleReturnItem::whereHas('saleReturn', fn($q) => $q->where('trip_id', $trip->id)->whereNotIn('status', ['cancelled']))
             ->whereIn('product_id', $productIds)
@@ -245,7 +264,7 @@ class ProductController extends Controller
         }
 
         $products = $query->get()
-            ->each(function ($product) use ($dispatchedRaw, $soldInBase, $returnedInBase) {
+            ->each(function ($product) use ($dispatchedRaw, $soldInBase, $cancelledInBase, $returnedInBase) {
                 $pf = $product->unit ? (float) $product->unit->conversion_factor : 1.0;
 
                 // Helper: convert qty from any unit factor to product's unit
@@ -264,6 +283,13 @@ class ProductController extends Controller
                     $sold += $convert((float) $row->quantity, $uf);
                 }
 
+                // Cancelled orders — quantities returned back to delegate
+                $cancelled = 0.0;
+                foreach ($cancelledInBase->get($product->id, collect()) as $row) {
+                    $uf = $row->unit ? (float) $row->unit->conversion_factor : $pf;
+                    $cancelled += $convert((float) $row->quantity, $uf);
+                }
+
                 // Returned from customers (back to delegate's car) in product unit
                 $returned = 0.0;
                 foreach ($returnedInBase->get($product->id, collect()) as $row) {
@@ -271,7 +297,7 @@ class ProductController extends Controller
                     $returned += $convert((float) $row->quantity, $uf);
                 }
 
-                $product->available_stock = max(0.0, $dispatched - $sold + $returned);
+                $product->available_stock = max(0.0, $dispatched - $sold + $cancelled + $returned);
             });
 
         return $this->successResponse(ProductResource::collection($products)->resolve(), 'تم جلب منتجات الرحلة بنجاح');
