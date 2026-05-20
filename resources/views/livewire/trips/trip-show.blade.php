@@ -432,9 +432,18 @@
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-4 py-2.5 font-semibold text-gray-800">{{ $prod['name'] }}</td>
-                                <td class="px-3 py-2.5 text-center text-gray-600">{{ $fmtQty($prod['dispatched_qty']) }}</td>
-                                <td class="px-3 py-2.5 text-center text-primary-600 font-semibold">{{ $fmtQty($prod['sold_qty']) }}</td>
-                                <td class="px-3 py-2.5 text-center text-blue-600 font-semibold">{{ $fmtQty($prod['returned_qty']) }}</td>
+                                <td class="px-3 py-2.5 text-center text-gray-600">
+                                    {{ $fmtQty($prod['dispatched_qty']) }}
+                                    <span class="text-gray-400 text-xs">{{ $prod['unit'] }}</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-center text-primary-600 font-semibold">
+                                    {{ $fmtQty($prod['sold_qty']) }}
+                                    <span class="text-gray-400 text-xs font-normal">{{ $prod['unit'] }}</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-center text-blue-600 font-semibold">
+                                    {{ $fmtQty($prod['returned_qty']) }}
+                                    <span class="text-gray-400 text-xs font-normal">{{ $prod['unit'] }}</span>
+                                </td>
                                 <td class="px-3 py-2.5 text-center">
                                     @if($prod['cancelled_qty'] > 0)
                                     <span class="inline-flex items-center gap-1 text-red-600 font-semibold text-xs bg-red-50 border border-red-200 px-2.5 py-1 rounded-md">
