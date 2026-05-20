@@ -348,6 +348,7 @@
                                     'dispatched_value' => $qtyInProductUnit * $item->selling_price,
                                     'sold_qty'         => 0,
                                     'returned_qty'     => 0,
+                                    'cancelled_qty'    => 0,
                                 ]);
                             }
                         }
@@ -384,6 +385,22 @@
                             }
                         }
                     }
+                    // Add quantities from cancelled sale orders (returned back from invoices)
+                    foreach($cancelledOrders as $co) {
+                        foreach($co->items as $coi) {
+                            $pid = $coi->product_id;
+                            if ($dispatchedProducts->has($pid)) {
+                                $existing       = $dispatchedProducts->get($pid);
+                                $prodFactor     = (float) ($coi->product?->unit?->conversion_factor ?? 1);
+                                $coiFactor      = (float) ($coi->unit?->conversion_factor ?? $prodFactor);
+                                $cancelInBase   = $prodFactor > 0
+                                    ? (float) $coi->quantity * $coiFactor / $prodFactor
+                                    : (float) $coi->quantity;
+                                $existing['cancelled_qty'] += $cancelInBase;
+                                $dispatchedProducts->put($pid, $existing);
+                            }
+                        }
+                    }
                 @endphp
                 @if($dispatchedProducts->isNotEmpty())
                 <div class="rounded-xl border border-gray-200 overflow-hidden">
@@ -399,6 +416,7 @@
                                 <th class="px-3 py-2.5 font-semibold text-center">المصروف</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">المُباع</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">المُرتجع</th>
+                                <th class="px-3 py-2.5 font-semibold text-center text-red-500">الملغي</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">الحالي معه</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">الوحدة</th>
                                 <th class="px-3 py-2.5 font-semibold text-center">سعر البيع</th>
@@ -417,6 +435,16 @@
                                 <td class="px-3 py-2.5 text-center text-gray-600">{{ $fmtQty($prod['dispatched_qty']) }}</td>
                                 <td class="px-3 py-2.5 text-center text-primary-600 font-semibold">{{ $fmtQty($prod['sold_qty']) }}</td>
                                 <td class="px-3 py-2.5 text-center text-blue-600 font-semibold">{{ $fmtQty($prod['returned_qty']) }}</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    @if($prod['cancelled_qty'] > 0)
+                                    <span class="inline-flex items-center gap-1 text-red-600 font-semibold text-xs bg-red-50 border border-red-200 px-2.5 py-1 rounded-md">
+                                        {{ $fmtQty($prod['cancelled_qty']) }}
+                                        <span class="text-gray-400">{{ $prod['unit'] }}</span>
+                                    </span>
+                                    @else
+                                    <span class="text-gray-300 text-xs">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-3 py-2.5 text-center">
                                     <span class="inline-block font-extrabold text-sm px-2.5 py-1 rounded-lg {{ $currentQty > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-green-50 text-green-700 border border-green-200' }}">
                                         {{ $fmtQty($currentQty) }}
@@ -438,6 +466,7 @@
                                 <td class="px-3 py-2.5 text-center text-xs font-bold text-gray-600">{{ $fmtQty($dispatchedProducts->sum('dispatched_qty')) }}</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-bold text-primary-600">{{ $fmtQty($dispatchedProducts->sum('sold_qty')) }}</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-bold text-blue-600">{{ $fmtQty($dispatchedProducts->sum('returned_qty')) }}</td>
+                                <td class="px-3 py-2.5 text-center text-xs font-bold text-red-600">{{ $fmtQty($dispatchedProducts->sum('cancelled_qty')) }}</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-extrabold text-amber-700">
                                     {{ $fmtQty($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - max(0, $p['sold_qty'] - $p['returned_qty'])))) }}
                                 </td>

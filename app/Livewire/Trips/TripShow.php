@@ -332,16 +332,17 @@ class TripShow extends Component
     public function render()
     {
         $dispatches     = $this->trip->dispatches()->with(['branch', 'items.product.unit', 'items.unit'])->latest()->get();
-        $saleOrders     = $this->trip->saleOrders()->whereNotIn('status', ['cancelled'])->with(['customer', 'items.product.unit', 'items.unit', 'payments'])->latest()->get();
-        $viewingOrder   = $this->viewingOrderId ? $saleOrders->firstWhere('id', $this->viewingOrderId) : null;
-        $collections    = $this->trip->collections()->with('customer')->latest()->get();
-        $saleReturns    = $this->trip->saleReturns()->whereNotIn('status', ['cancelled'])->with(['customer', 'items.product.unit', 'items.unit'])->latest()->get();
-        $viewingReturn  = $this->viewingReturnId ? $saleReturns->firstWhere('id', $this->viewingReturnId) : null;
+        $saleOrders      = $this->trip->saleOrders()->whereNotIn('status', ['cancelled'])->with(['customer', 'items.product.unit', 'items.unit', 'payments'])->latest()->get();
+        $cancelledOrders = $this->trip->saleOrders()->where('status', 'cancelled')->with(['items.product.unit', 'items.unit'])->get();
+        $viewingOrder    = $this->viewingOrderId ? $saleOrders->firstWhere('id', $this->viewingOrderId) : null;
+        $collections     = $this->trip->collections()->with('customer')->latest()->get();
+        $saleReturns     = $this->trip->saleReturns()->whereNotIn('status', ['cancelled'])->with(['customer', 'items.product.unit', 'items.unit'])->latest()->get();
+        $viewingReturn   = $this->viewingReturnId ? $saleReturns->firstWhere('id', $this->viewingReturnId) : null;
         $bookingRequests = $this->trip->bookingRequests()->with(['delegate', 'items.product.unit', 'items.unit'])->latest()->get();
-        $treasuries     = Treasury::where('is_active', true)->orderBy('name')->get(['id', 'name', 'balance']);
+        $treasuries      = Treasury::where('is_active', true)->orderBy('name')->get(['id', 'name', 'balance']);
 
         return view('livewire.trips.trip-show', compact(
-            'dispatches', 'saleOrders', 'collections', 'saleReturns', 'bookingRequests', 'treasuries', 'viewingOrder', 'viewingReturn'
+            'dispatches', 'saleOrders', 'cancelledOrders', 'collections', 'saleReturns', 'bookingRequests', 'treasuries', 'viewingOrder', 'viewingReturn'
         ));
     }
 }
