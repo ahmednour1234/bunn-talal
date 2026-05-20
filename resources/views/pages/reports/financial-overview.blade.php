@@ -106,9 +106,19 @@
             </div>
             <div class="divide-y divide-gray-50">
                 <div class="flex items-center justify-between px-5 py-3">
-                    <span class="text-sm text-gray-600">ذمم مبيعات غير محصلة</span>
-                    <span class="text-sm font-bold text-gray-800">{{ $fmt($customerReceivables) }}</span>
+                    <span class="text-sm text-gray-600">رصيد افتتاحي على العملاء</span>
+                    <span class="text-sm font-bold text-gray-800">{{ $fmt($customerOpeningBalance) }}</span>
                 </div>
+                <div class="flex items-center justify-between px-5 py-3">
+                    <span class="text-sm text-gray-600">ذمم فواتير آجل (غير محصل)</span>
+                    <span class="text-sm font-bold text-gray-800">{{ $fmt($activeOrdersOutstanding) }}</span>
+                </div>
+                @if($customerReturnsTotal > 0)
+                <div class="flex items-center justify-between px-5 py-3">
+                    <span class="text-sm text-gray-600">مرتجعات مبيعات (خصم)</span>
+                    <span class="text-sm font-bold text-green-600">− {{ $fmt($customerReturnsTotal) }}</span>
+                </div>
+                @endif
                 <div class="flex items-center justify-between px-5 py-3">
                     <span class="text-sm text-gray-600">أقساط متبقية</span>
                     <span class="text-sm font-bold text-gray-800">{{ $fmt($installmentReceivables) }}</span>

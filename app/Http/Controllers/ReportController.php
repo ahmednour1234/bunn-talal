@@ -58,9 +58,23 @@ class ReportController extends Controller
         // ══════════════════════════════════════════════════════════
         // 2. RECEIVABLES — فلوس عند العملاء
         // ══════════════════════════════════════════════════════════
-        $customerReceivables = SaleOrder::whereIn('status', ['confirmed', 'partial_paid'])
-            ->get()
-            ->sum(fn($o) => max(0, (float)$o->total - (float)$o->paid_amount));
+
+        // رصيد الافتتاحي على العملاء
+        $customerOpeningBalance = (float) Customer::sum('opening_balance');
+
+        // ذمم الطلبات النشطة (confirmed/partial_paid فقط، بدون فلتر تاريخ)
+        $activeOrdersOutstanding = (float) (SaleOrder::whereIn('status', ['confirmed', 'partial_paid'])
+            ->selectRaw('COALESCE(SUM(total - paid_amount), 0) as outstanding')
+            ->value('outstanding') ?? 0);
+
+        // المرتجعات المؤكدة تُخصم من الذمم
+        $customerReturnsTotal = (float) SaleReturn::whereIn('status', ['confirmed', 'refunded'])
+            ->whereNull('deleted_at')
+            ->sum('refund_amount');
+
+        $customerReceivables = max(0,
+            $customerOpeningBalance + $activeOrdersOutstanding - $customerReturnsTotal
+        );
 
         $installmentReceivables = InstallmentPlan::where('party_type', 'customer')
             ->where('status', 'active')
@@ -158,9 +172,8 @@ class ReportController extends Controller
         // 10. OPENING BALANCES — الأرصدة الافتتاحية
         // ══════════════════════════════════════════════════════════
 
-        // Customers — ذمم افتتاحية على العملاء
-        $customerOpeningBalance = Customer::sum('opening_balance');
         // Customers — رصيد العملاء الجاري (balance column)
+        // $customerOpeningBalance already computed in section 2
         $customerCurrentBalance = Customer::sum('balance');
 
         // Suppliers — ذمم افتتاحية للموردين
@@ -193,9 +206,9 @@ class ReportController extends Controller
         // ══════════════════════════════════════════════════════════
         // 11. TOTAL NET WORTH — صافي الوضع المالي
         // ══════════════════════════════════════════════════════════
+        // $totalReceivables already includes $customerOpeningBalance
         $totalAssets = $totalCash
             + $totalReceivables
-            + $customerOpeningBalance
             + $delegateCashCustody
             + $delegateNetReceivable
             + $inventoryValue;
@@ -208,6 +221,7 @@ class ReportController extends Controller
             // Cash
             'treasuries', 'totalCash',
             // Receivables
+            'customerOpeningBalance', 'activeOrdersOutstanding', 'customerReturnsTotal',
             'customerReceivables', 'installmentReceivables', 'totalReceivables',
             // Inventory
             'inventoryValue', 'inventoryCount',

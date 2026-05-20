@@ -196,23 +196,28 @@ class Dashboard extends Component
             ->get();
 
         // ── At-risk customers (high outstanding, unpaid orders) ───────
+        // Returns subquery reused in multiple expressions
+        $returnsSubquery = '(SELECT COALESCE(SUM(sr.refund_amount), 0) FROM sale_returns sr WHERE sr.customer_id = customers.id AND sr.status IN ("confirmed","refunded") AND sr.deleted_at IS NULL)';
+
         $atRiskCustomers = Customer::select(
                 'customers.id',
                 'customers.name',
                 'customers.phone',
                 'customers.credit_limit',
+                'customers.opening_balance',
                 DB::raw('SUM(sale_orders.total) as total_sales'),
                 DB::raw('SUM(sale_orders.paid_amount) as total_paid'),
-                DB::raw('(SUM(sale_orders.total) - SUM(sale_orders.paid_amount)) as outstanding'),
+                DB::raw("{$returnsSubquery} as total_returns"),
+                DB::raw("(customers.opening_balance + SUM(sale_orders.total) - SUM(sale_orders.paid_amount) - {$returnsSubquery}) as outstanding"),
                 DB::raw('COUNT(sale_orders.id) as orders_count'),
                 DB::raw('(SELECT COUNT(*) FROM sale_orders s2 WHERE s2.customer_id = customers.id AND s2.status = "cancelled" AND s2.deleted_at IS NULL) as cancelled_count')
             )
             ->join('sale_orders', 'sale_orders.customer_id', '=', 'customers.id')
             ->whereNull('sale_orders.deleted_at')
             ->whereIn('sale_orders.status', ['confirmed', 'partial_paid'])
-            ->groupBy('customers.id', 'customers.name', 'customers.phone', 'customers.credit_limit')
-            ->havingRaw('(SUM(sale_orders.total) - SUM(sale_orders.paid_amount)) > 0')
-            ->orderByDesc('outstanding')
+            ->groupBy('customers.id', 'customers.name', 'customers.phone', 'customers.credit_limit', 'customers.opening_balance')
+            ->havingRaw("(customers.opening_balance + SUM(sale_orders.total) - SUM(sale_orders.paid_amount) - {$returnsSubquery}) > 0")
+            ->orderByRaw("(customers.opening_balance + SUM(sale_orders.total) - SUM(sale_orders.paid_amount) - {$returnsSubquery}) DESC")
             ->take(8)
             ->get();
 

@@ -664,7 +664,9 @@
                     <tbody>
                         @forelse($atRiskCustomers as $i => $customer)
                         @php
-                            $payRate = $customer->total_sales > 0 ? (($customer->total_paid / $customer->total_sales) * 100) : 0;
+                            $gross   = (float)$customer->opening_balance + (float)$customer->total_sales;
+                            $settled = (float)$customer->total_paid + (float)$customer->total_returns;
+                            $payRate = $gross > 0 ? min(100, ($settled / $gross) * 100) : 0;
                             $riskLevel = $payRate < 25 ? ['عالي', 'bg-red-100 text-red-600'] : ($payRate < 60 ? ['متوسط', 'bg-amber-100 text-amber-700'] : ['منخفض', 'bg-yellow-50 text-yellow-700']);
                             $creditUtil = $customer->credit_limit > 0 ? min(100, ($customer->outstanding / $customer->credit_limit) * 100) : 0;
                         @endphp
