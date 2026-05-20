@@ -35,6 +35,21 @@ class BookingRequestService
     public function create(array $data, int $delegateId): TripBookingRequest
     {
         return DB::transaction(function () use ($data, $delegateId) {
+            // Duplicate guard: if a booking was already created in the last 60 seconds
+            // by this delegate, return it instead of creating a duplicate.
+            $recent = TripBookingRequest::where('delegate_id', $delegateId)
+                ->where('created_at', '>=', now()->subMinute())
+                ->latest()
+                ->first();
+
+            if ($recent) {
+                return $recent->load([
+                    'items.product:id,name,image',
+                    'items.unit:id,name,symbol',
+                    'trip:id,trip_number,status',
+                ]);
+            }
+
             // Resolve trip: prefer explicit trip_id → then active trip → null
             $tripId = $data['trip_id'] ?? null;
             if (!$tripId) {
