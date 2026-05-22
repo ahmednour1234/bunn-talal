@@ -3,10 +3,13 @@
 namespace App\Livewire\SaleOrders;
 
 use App\Models\Branch;
+use App\Models\Collection;
 use App\Models\Customer;
 use App\Models\Delegate;
 use App\Models\DelegateLoan;
 use App\Models\Product;
+use App\Models\SaleOrder;
+use App\Models\SaleReturn;
 use App\Models\Treasury;
 use App\Models\Unit;
 use App\Services\SaleOrderService;
@@ -16,6 +19,7 @@ class SaleOrderForm extends Component
 {
     public ?int $orderId = null;
     public ?int $customer_id = null;
+    public ?array $customerCredit = null;
     public ?int $branch_id = null;
     public ?int $delegate_id = null;
     public ?int $treasury_id = null;
@@ -66,6 +70,8 @@ class SaleOrderForm extends Component
         if (empty($this->items)) {
             $this->addItem();
         }
+
+        $this->computeCustomerCredit();
     }
 
     public function addItem()
@@ -83,6 +89,94 @@ class SaleOrderForm extends Component
             'available_units'   => [],
             'stock_unit_factor' => '1',
         ];
+    }
+
+    public function updatedCustomerId(): void
+    {
+        $this->computeCustomerCredit();
+    }
+
+    public function computeCustomerCredit(): void
+    {
+        if (!$this->customer_id) {
+            $this->customerCredit = null;
+            return;
+        }
+
+        $customer = Customer::find($this->customer_id);
+        if (!$customer) {
+            $this->customerCredit = null;
+            return;
+        }
+
+        // Active unpaid credit/partial invoices (not cancelled)
+        $activeUnpaidCredit = SaleOrder::where('customer_id', $this->customer_id)
+            ->whereNotIn('status', ['cancelled', 'cancellation_pending'])
+            ->whereIn('payment_method', ['credit', 'partial'])
+            ->when($this->orderId, fn($q) => $q->where('id', '!=', $this->orderId))
+            ->selectRaw('COALESCE(SUM(total - paid_amount), 0) as remaining')
+            ->value('remaining') ?? 0;
+
+        // Sale returns (reduce credit exposure)
+        $saleReturnsTotal = SaleReturn::where('customer_id', $this->customer_id)
+            ->whereNotIn('status', ['cancelled'])
+            ->sum('refund_amount') ?? 0;
+
+        // Cancelled sale orders (informational)
+        $cancelledOrders = SaleOrder::where('customer_id', $this->customer_id)
+            ->where('status', 'cancelled')
+            ->get(['order_number', 'date', 'total', 'payment_method']);
+
+        // Cancelled collections (informational)
+        $cancelledCollections = Collection::where('customer_id', $this->customer_id)
+            ->where('status', 'cancelled')
+            ->get(['collection_number', 'collection_date', 'total_amount']);
+
+        $netCreditBalance = max(0, (float) $activeUnpaidCredit - (float) $saleReturnsTotal);
+        $creditLimit      = (float) ($customer->credit_limit ?? 0);
+        $availableCredit  = max(0, $creditLimit - $netCreditBalance);
+
+        $this->customerCredit = [
+            'credit_limit'              => $creditLimit,
+            'active_unpaid_credit'      => (float) $activeUnpaidCredit,
+            'sale_returns_total'        => (float) $saleReturnsTotal,
+            'net_credit_balance'        => $netCreditBalance,
+            'available_credit'          => $availableCredit,
+            'cancelled_orders'          => $cancelledOrders->map(fn($o) => [
+                'number' => $o->order_number,
+                'date'   => $o->date?->format('Y-m-d'),
+                'total'  => (float) $o->total,
+                'method' => $o->payment_method_label,
+            ])->toArray(),
+            'cancelled_collections'     => $cancelledCollections->map(fn($c) => [
+                'number' => $c->collection_number,
+                'date'   => $c->collection_date?->format('Y-m-d'),
+                'total'  => (float) $c->total_amount,
+            ])->toArray(),
+        ];
+    }
+
+    public function getNewOrderCreditAmountProperty(): float
+    {
+        if (!$this->customerCredit) return 0;
+
+        $total = (float) ($this->calculatedTotals['total'] ?? 0);
+
+        return match ($this->payment_method) {
+            'credit'  => $total,
+            'partial' => max(0, $total - (float) $this->initial_payment),
+            default   => 0,
+        };
+    }
+
+    public function getCreditExceedsLimitProperty(): bool
+    {
+        if (!$this->customerCredit) return false;
+        $limit = (float) $this->customerCredit['credit_limit'];
+        if ($limit <= 0) return false;
+
+        $newBalance = $this->customerCredit['net_credit_balance'] + $this->newOrderCreditAmount;
+        return $newBalance > $limit;
     }
 
     public function removeItem(int $index)
@@ -258,6 +352,13 @@ class SaleOrderForm extends Component
     public function save(SaleOrderService $service)
     {
         $this->validate();
+
+        // Credit limit check for credit/partial orders
+        $this->computeCustomerCredit();
+        if ($this->creditExceedsLimit) {
+            $this->addError('general', 'لا يمكن إتمام الطلب: المبلغ الآجل يتجاوز الحد الائتماني المسموح به للعميل.');
+            return;
+        }
 
         $admin = auth('admin')->user();
 

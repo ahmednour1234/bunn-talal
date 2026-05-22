@@ -95,11 +95,133 @@
             </div>
         </div>
 
+        {{-- Credit Limit Info --}}
+        @if($customerCredit)
+        @php
+            $cc = $customerCredit;
+            $newCreditAmt = $this->newOrderCreditAmount;
+            $projectedBalance = $cc['net_credit_balance'] + $newCreditAmt;
+            $exceedsLimit = $cc['credit_limit'] > 0 && $projectedBalance > $cc['credit_limit'];
+        @endphp
+        <div class="bg-card rounded-2xl shadow-sm border {{ $exceedsLimit ? 'border-red-300' : 'border-primary-100' }} p-6 mb-4">
+            <h2 class="text-lg font-semibold {{ $exceedsLimit ? 'text-red-700' : 'text-primary-700' }} mb-4 pb-3 border-b border-gray-100">
+                الوضع الائتماني للعميل
+            </h2>
+
+            {{-- Main credit stats --}}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div class="bg-blue-50 rounded-xl p-4 text-center">
+                    <div class="text-xs text-blue-500 mb-1">الحد الائتماني</div>
+                    <div class="text-lg font-bold text-blue-700">{{ number_format($cc['credit_limit'], 2) }}</div>
+                </div>
+                <div class="bg-orange-50 rounded-xl p-4 text-center">
+                    <div class="text-xs text-orange-500 mb-1">الرصيد الآجل الحالي</div>
+                    <div class="text-lg font-bold text-orange-700">{{ number_format($cc['net_credit_balance'], 2) }}</div>
+                </div>
+                <div class="bg-green-50 rounded-xl p-4 text-center">
+                    <div class="text-xs text-green-500 mb-1">الائتمان المتاح</div>
+                    <div class="text-lg font-bold text-green-700">{{ number_format($cc['available_credit'], 2) }}</div>
+                </div>
+                <div class="bg-purple-50 rounded-xl p-4 text-center">
+                    <div class="text-xs text-purple-500 mb-1">مرتجعات البيع</div>
+                    <div class="text-lg font-bold text-purple-700">{{ number_format($cc['sale_returns_total'], 2) }}</div>
+                </div>
+            </div>
+
+            {{-- New order credit portion --}}
+            @if(in_array($payment_method, ['credit', 'partial']) && $newCreditAmt > 0)
+            <div class="rounded-xl p-4 mb-4 {{ $exceedsLimit ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200' }}">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                    <div>
+                        <span class="text-gray-500">الجزء الآجل من هذا الطلب:</span>
+                        <span class="font-bold text-gray-800 mr-2">{{ number_format($newCreditAmt, 2) }}</span>
+                    </div>
+                    @if($payment_method === 'partial')
+                    <div>
+                        <span class="text-gray-500">الجزء النقدي:</span>
+                        <span class="font-bold text-green-700 mr-2">{{ number_format(max(0, (float)($this->calculatedTotals['total'] ?? 0) - $newCreditAmt), 2) }}</span>
+                    </div>
+                    @endif
+                    <div>
+                        <span class="text-gray-500">الرصيد الآجل المتوقع بعد الطلب:</span>
+                        <span class="font-bold {{ $exceedsLimit ? 'text-red-700' : 'text-gray-800' }} mr-2">{{ number_format($projectedBalance, 2) }}</span>
+                    </div>
+                </div>
+                @if($exceedsLimit)
+                <div class="mt-2 flex items-center gap-2 text-red-700 font-semibold text-sm">
+                    <x-icon name="exclamation-triangle" class="w-5 h-5 flex-shrink-0" />
+                    تحذير: هذا الطلب سيتجاوز الحد الائتماني المسموح به للعميل ({{ number_format($cc['credit_limit'], 2) }})
+                </div>
+                @endif
+            </div>
+            @endif
+
+            {{-- Cancelled orders --}}
+            @if(count($cc['cancelled_orders']) > 0)
+            <details class="mb-3">
+                <summary class="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-800 mb-2 select-none">
+                    فواتير البيع الملغية ({{ count($cc['cancelled_orders']) }})
+                </summary>
+                <div class="overflow-x-auto mt-2">
+                    <table class="w-full text-xs border border-gray-100 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-right font-semibold text-gray-600">رقم الفاتورة</th>
+                                <th class="px-3 py-2 text-right font-semibold text-gray-600">التاريخ</th>
+                                <th class="px-3 py-2 text-right font-semibold text-gray-600">طريقة الدفع</th>
+                                <th class="px-3 py-2 text-right font-semibold text-gray-600">الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 bg-white">
+                            @foreach($cc['cancelled_orders'] as $co)
+                            <tr>
+                                <td class="px-3 py-2 text-gray-700">{{ $co['number'] }}</td>
+                                <td class="px-3 py-2 text-gray-500">{{ $co['date'] }}</td>
+                                <td class="px-3 py-2 text-gray-500">{{ $co['method'] }}</td>
+                                <td class="px-3 py-2 font-medium text-red-600">{{ number_format($co['total'], 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+            @endif
+
+            {{-- Cancelled collections --}}
+            @if(count($cc['cancelled_collections']) > 0)
+            <details>
+                <summary class="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-800 mb-2 select-none">
+                    التحصيلات الملغية ({{ count($cc['cancelled_collections']) }})
+                </summary>
+                <div class="overflow-x-auto mt-2">
+                    <table class="w-full text-xs border border-gray-100 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-right font-semibold text-gray-600">رقم التحصيل</th>
+                                <th class="px-3 py-2 text-right font-semibold text-gray-600">التاريخ</th>
+                                <th class="px-3 py-2 text-right font-semibold text-gray-600">المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 bg-white">
+                            @foreach($cc['cancelled_collections'] as $col)
+                            <tr>
+                                <td class="px-3 py-2 text-gray-700">{{ $col['number'] }}</td>
+                                <td class="px-3 py-2 text-gray-500">{{ $col['date'] }}</td>
+                                <td class="px-3 py-2 font-medium text-red-600">{{ number_format($col['total'], 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+            @endif
+        </div>
+        @endif
+
         {{-- Items --}}
         <div class="bg-card rounded-2xl shadow-sm border border-primary-100 p-6 mb-4">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
                 <h2 class="text-lg font-semibold text-primary-700">المنتجات</h2>
-                <button type="button" wire:click="addItem" class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 text-sm font-medium">
                     <x-icon name="plus" class="w-4 h-4" />
                     إضافة منتج
                 </button>
