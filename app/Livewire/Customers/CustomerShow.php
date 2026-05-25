@@ -74,8 +74,8 @@ class CustomerShow extends Component
                 'notes'       => $this->paymentNotes ?: null,
             ]);
 
-            // Reduce customer balance (we paid them → their debt to us decreases)
-            Customer::where('id', $this->customerId)->decrement('balance', (float) $this->paymentAmount);
+            // Increment customer balance to offset credit (we settled our debt to them)
+            Customer::where('id', $this->customerId)->increment('balance', (float) $this->paymentAmount);
 
             // Reduce treasury balance if a treasury was selected
             if ($this->paymentTreasuryId) {
@@ -219,8 +219,8 @@ class CustomerShow extends Component
                 'type'        => 'customer_payment',
                 'reference'   => $cp->payment_number,
                 'description' => 'دفعة للعميل' . ($cp->treasury ? ' - ' . $cp->treasury->name : ''),
-                'debit'       => 0,
-                'credit'      => (float) $cp->amount,
+                'debit'       => (float) $cp->amount,
+                'credit'      => 0,
             ]);
         }
 

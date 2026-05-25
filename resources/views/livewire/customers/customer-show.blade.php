@@ -539,7 +539,7 @@
                         </tr>
                         @php
                         $typeIcon  = ['invoice'=>'🧾','payment'=>'💵','return'=>'↩️','collection'=>'📥','cancellation'=>'🚫','customer_payment'=>'💸'];
-                        $typeColor = ['invoice'=>'text-gray-800','payment'=>'text-green-600','return'=>'text-blue-600','collection'=>'text-green-700','cancellation'=>'text-red-400','customer_payment'=>'text-emerald-600'];
+                        $typeColor = ['invoice'=>'text-gray-800','payment'=>'text-green-600','return'=>'text-blue-600','collection'=>'text-green-700','cancellation'=>'text-red-400','customer_payment'=>'text-emerald-700 font-semibold'];
                         @endphp
                         @forelse($ledger as $row)
                         <tr class="hover:bg-gray-50/50 {{ ($row['cancelled'] ?? false) ? 'opacity-60' : '' }}">
