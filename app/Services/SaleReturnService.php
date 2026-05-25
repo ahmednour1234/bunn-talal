@@ -51,13 +51,13 @@ class SaleReturnService
             ->toArray();
 
         return [
-            'count'   => (int) ($totals->count ?? 0),
+            'count' => (int) ($totals->count ?? 0),
             'subtotal' => (float) ($totals->subtotal ?? 0),
-            'refund'  => (float) ($totals->refund ?? 0),
+            'refund' => (float) ($totals->refund ?? 0),
             'status_counts' => [
-                'pending'   => (int) ($statusCounts['pending'] ?? 0),
+                'pending' => (int) ($statusCounts['pending'] ?? 0),
                 'confirmed' => (int) ($statusCounts['confirmed'] ?? 0),
-                'refunded'  => (int) ($statusCounts['refunded'] ?? 0),
+                'refunded' => (int) ($statusCounts['refunded'] ?? 0),
                 'cancelled' => (int) ($statusCounts['cancelled'] ?? 0),
             ],
         ];
@@ -70,8 +70,8 @@ class SaleReturnService
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('return_number', 'like', "%{$search}%")
-                    ->orWhereHas('customer', fn($c) => $c->where('name', 'like', "%{$search}%"))
-                    ->orWhereHas('order', fn($o) => $o->where('order_number', 'like', "%{$search}%"));
+                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('order', fn ($o) => $o->where('order_number', 'like', "%{$search}%"));
             });
         }
 
@@ -92,42 +92,57 @@ class SaleReturnService
             $subtotal = 0;
 
             foreach ($items as &$item) {
-                // Use pre-calculated refund_amount (proportional with discount+tax) if provided,
-                // otherwise fall back to simple qty * unit_price
-                if (!isset($item['refund_amount']) || $item['refund_amount'] === null) {
-                    $item['refund_amount'] = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
-                }
-                $subtotal += (float) $item['refund_amount'];
+                $quantity = (float) ($item['quantity'] ?? 0);
+
+                /*
+                 * مهم:
+                 * unit_price هنا لازم يكون السعر بعد توزيع خصم الفاتورة
+                 * وده إحنا عملناه في Livewire SaleReturnForm.
+                 */
+                $unitPriceAfterDiscount = (float) ($item['unit_price'] ?? 0);
+
+                $refundAmount = round($quantity * $unitPriceAfterDiscount, 2);
+
+                $item['quantity'] = $quantity;
+                $item['unit_price'] = round($unitPriceAfterDiscount, 6);
+                $item['refund_amount'] = $refundAmount;
+
+                $subtotal += $refundAmount;
             }
 
+            unset($item);
+
             $return = $this->returnRepository->create(array_merge($data, [
-                'subtotal'      => round($subtotal, 2),
+                'subtotal' => round($subtotal, 2),
                 'refund_amount' => round($subtotal, 2),
-                'status'        => 'pending',
+                'status' => 'pending',
             ]));
 
             foreach ($items as $item) {
                 $return->items()->create([
                     'sale_order_item_id' => $item['sale_order_item_id'] ?? null,
-                    'product_id'         => $item['product_id'],
-                    'unit_id'            => $item['unit_id'] ?? null,
-                    'quantity'           => $item['quantity'],
-                    'unit_price'         => $item['unit_price'],
-                    'refund_amount'      => $item['refund_amount'],
-                    'reason'             => $item['reason'] ?? null,
+                    'product_id' => $item['product_id'],
+                    'unit_id' => $item['unit_id'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'refund_amount' => $item['refund_amount'],
+                    'reason' => $item['reason'] ?? null,
                 ]);
             }
 
-            // If linked to a trip, add returned qty back to delegate stock
             if (!empty($data['trip_id'])) {
                 $trip = \App\Models\Trip::find($data['trip_id']);
+
                 if ($trip && $trip->delegate_id) {
                     foreach ($items as $item) {
                         DB::table('delegate_product')->updateOrInsert(
-                            ['delegate_id' => $trip->delegate_id, 'product_id' => $item['product_id']],
                             [
-                                'quantity'   => DB::raw('COALESCE(quantity, 0) + ' . (float) $item['quantity']),
-                                'unit_id'    => $item['unit_id'] ?? null,
+                                'delegate_id' => $trip->delegate_id,
+                                'product_id' => $item['product_id'],
+                            ],
+                            [
+                                'quantity' => DB::raw('COALESCE(quantity, 0) + ' . (float) $item['quantity']),
+                                'unit_id' => $item['unit_id'] ?? null,
                                 'updated_at' => now(),
                                 'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
                             ]
@@ -149,8 +164,6 @@ class SaleReturnService
                 throw new \Exception('لا يمكن تأكيد هذا المرتجع');
             }
 
-            // Add stock back — delegate returns already updated delegate_product in createReturn()
-            // Only update branch stock for non-delegate (direct branch) returns
             if (!$return->trip_id) {
                 foreach ($return->items as $item) {
                     $current = DB::table('branch_product')
@@ -161,7 +174,6 @@ class SaleReturnService
                     $returnUnit = $item->unit_id ? Unit::find($item->unit_id) : null;
 
                     if (!$returnUnit || !$current) {
-                        // Simple increment
                         if ($current) {
                             DB::table('branch_product')
                                 ->where('branch_id', $return->branch_id)
@@ -169,14 +181,15 @@ class SaleReturnService
                                 ->increment('quantity', (float) $item->quantity);
                         } else {
                             DB::table('branch_product')->insert([
-                                'branch_id'  => $return->branch_id,
+                                'branch_id' => $return->branch_id,
                                 'product_id' => $item->product_id,
-                                'quantity'   => (float) $item->quantity,
-                                'unit_id'    => $item->unit_id,
+                                'quantity' => (float) $item->quantity,
+                                'unit_id' => $item->unit_id,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
                         }
+
                         continue;
                     }
 
@@ -187,10 +200,10 @@ class SaleReturnService
                             ->where('branch_id', $return->branch_id)
                             ->where('product_id', $item->product_id)
                             ->increment('quantity', (float) $item->quantity);
+
                         continue;
                     }
 
-                    // Convert returned qty to stock unit
                     $qtyInStockUnit = ((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $stockUnit->conversion_factor;
 
                     if (abs($qtyInStockUnit - round($qtyInStockUnit)) < 0.000001) {
@@ -198,44 +211,47 @@ class SaleReturnService
                             ->where('branch_id', $return->branch_id)
                             ->where('product_id', $item->product_id)
                             ->increment('quantity', (int) round($qtyInStockUnit));
+
                         continue;
                     }
 
-                    // Convert everything to base unit
                     $baseUnitId = $this->resolveBaseUnitId($stockUnit);
                     $baseUnit = Unit::find($baseUnitId);
+
                     if (!$baseUnit) {
                         continue;
                     }
 
                     $currentQtyInBase = (int) round(((float) $current->quantity * (float) $stockUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
-                    $returnQtyInBase  = (int) round(((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
+                    $returnQtyInBase = (int) round(((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
 
                     DB::table('branch_product')
                         ->where('id', $current->id)
                         ->update([
-                            'unit_id'    => $baseUnit->id,
-                            'quantity'   => $currentQtyInBase + $returnQtyInBase,
+                            'unit_id' => $baseUnit->id,
+                            'quantity' => $currentQtyInBase + $returnQtyInBase,
                             'updated_at' => now(),
                         ]);
                 }
             }
 
-            // Reduce customer balance (they returned goods, so they owe less)
-            Customer::where('id', $return->customer_id)->decrement('balance', (float) $return->refund_amount);
+            Customer::where('id', $return->customer_id)
+                ->decrement('balance', (float) $return->refund_amount);
 
-            // Deposit refund to treasury if specified
             if ($return->treasury_id && (float) $return->refund_amount > 0) {
-                Treasury::where('id', $return->treasury_id)->decrement('balance', (float) $return->refund_amount);
+                Treasury::where('id', $return->treasury_id)
+                    ->decrement('balance', (float) $return->refund_amount);
+
                 TreasuryTransaction::create([
-                    'treasury_id'      => $return->treasury_id,
-                    'type'             => 'withdrawal',
-                    'amount'           => (float) $return->refund_amount,
-                    'description'      => 'مرتجع مبيعات #' . $return->id,
+                    'treasury_id' => $return->treasury_id,
+                    'type' => 'withdrawal',
+                    'amount' => (float) $return->refund_amount,
+                    'description' => 'مرتجع مبيعات #' . $return->id,
                     'reference_number' => (string) $return->id,
-                    'date'             => now()->toDateString(),
-                    'admin_id'         => auth('admin')->id(),
+                    'date' => now()->toDateString(),
+                    'admin_id' => auth('admin')->id(),
                 ]);
+
                 $return->update(['status' => 'refunded']);
             } else {
                 $return->update(['status' => 'confirmed']);
@@ -261,11 +277,14 @@ class SaleReturnService
     protected function resolveBaseUnitId(Unit $unit): int
     {
         $current = $unit;
+
         while ($current->base_unit_id) {
             $parent = Unit::find($current->base_unit_id);
+
             if (!$parent) {
                 break;
             }
+
             $current = $parent;
         }
 
