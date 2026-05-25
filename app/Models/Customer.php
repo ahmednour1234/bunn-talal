@@ -61,6 +61,11 @@ class Customer extends Model
         return $this->belongsToMany(Delegate::class, 'customer_delegate');
     }
 
+    public function customerPayments()
+    {
+        return $this->hasMany(CustomerPayment::class);
+    }
+
     public static function classificationLabels(): array
     {
         return [

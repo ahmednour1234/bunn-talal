@@ -4,15 +4,26 @@ namespace App\Livewire\Customers;
 
 use App\Models\Collection;
 use App\Models\Customer;
+use App\Models\CustomerPayment;
 use App\Models\InstallmentPlan;
 use App\Models\SaleOrder;
 use App\Models\SaleReturn;
+use App\Models\Treasury;
+use App\Models\TreasuryTransaction;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class CustomerShow extends Component
 {
     public int $customerId;
     public string $activeTab = 'overview';
+
+    // Payment modal
+    public bool $showPaymentModal = false;
+    public string $paymentAmount = '';
+    public ?int $paymentTreasuryId = null;
+    public string $paymentDate = '';
+    public string $paymentNotes = '';
 
     public function mount(int $id): void
     {
@@ -22,6 +33,62 @@ class CustomerShow extends Component
     public function setTab(string $tab): void
     {
         $this->activeTab = $tab;
+    }
+
+    public function openPaymentModal(): void
+    {
+        $this->paymentAmount = '';
+        $this->paymentTreasuryId = null;
+        $this->paymentDate = now()->format('Y-m-d');
+        $this->paymentNotes = '';
+        $this->showPaymentModal = true;
+    }
+
+    public function closePaymentModal(): void
+    {
+        $this->showPaymentModal = false;
+    }
+
+    public function savePayment(): void
+    {
+        $this->validate([
+            'paymentAmount'     => 'required|numeric|min:0.01',
+            'paymentDate'       => 'required|date',
+            'paymentTreasuryId' => 'nullable|exists:treasuries,id',
+            'paymentNotes'      => 'nullable|string|max:500',
+        ]);
+
+        DB::transaction(function () {
+            $payment = CustomerPayment::create([
+                'customer_id' => $this->customerId,
+                'treasury_id' => $this->paymentTreasuryId ?: null,
+                'admin_id'    => auth('admin')->id(),
+                'amount'      => (float) $this->paymentAmount,
+                'date'        => $this->paymentDate,
+                'notes'       => $this->paymentNotes ?: null,
+            ]);
+
+            // Reduce customer balance (we paid them → their debt to us decreases)
+            Customer::where('id', $this->customerId)->decrement('balance', (float) $this->paymentAmount);
+
+            // Reduce treasury balance if a treasury was selected
+            if ($this->paymentTreasuryId) {
+                Treasury::where('id', $this->paymentTreasuryId)->decrement('balance', (float) $this->paymentAmount);
+
+                TreasuryTransaction::create([
+                    'treasury_id'      => $this->paymentTreasuryId,
+                    'type'             => 'withdrawal',
+                    'amount'           => (float) $this->paymentAmount,
+                    'description'      => 'دفعة للعميل - ' . $payment->payment_number,
+                    'reference_number' => $payment->payment_number,
+                    'date'             => $this->paymentDate,
+                    'admin_id'         => auth('admin')->id(),
+                ]);
+            }
+        });
+
+        $this->showPaymentModal = false;
+        session()->flash('success', 'تم تسجيل الدفعة للعميل بنجاح');
     }
 
     public function render()
@@ -55,6 +122,13 @@ class CustomerShow extends Component
             ->orderByDesc('collection_date')
             ->get();
         $totalCollected = $collections->where('status', 'completed')->sum('total_amount');
+
+        // ── Customer Payments (outgoing: we pay the customer) ──────
+        $customerPayments = CustomerPayment::where('customer_id', $this->customerId)
+            ->with('treasury')
+            ->orderByDesc('date')
+            ->get();
+        $totalCustomerPayments = $customerPayments->sum('amount');
 
         // ── Installment Plans ─────────────────────────────────────
         $installmentPlans = InstallmentPlan::where('party_type', 'customer')
@@ -133,6 +207,17 @@ class CustomerShow extends Component
             ]);
         }
 
+        foreach ($customerPayments as $cp) {
+            $ledger->push([
+                'date'        => $cp->date,
+                'type'        => 'customer_payment',
+                'reference'   => $cp->payment_number,
+                'description' => 'دفعة للعميل' . ($cp->treasury ? ' - ' . $cp->treasury->name : ''),
+                'debit'       => 0,
+                'credit'      => (float) $cp->amount,
+            ]);
+        }
+
         $ledger = $ledger->sortBy('date')->values();
 
         // Running balance
@@ -164,6 +249,8 @@ class CustomerShow extends Component
             'totalReturns'           => $totalReturns,
             'collections'            => $collections,
             'totalCollected'         => $totalCollected,
+            'customerPayments'       => $customerPayments,
+            'totalCustomerPayments'  => $totalCustomerPayments,
             'installmentPlans'       => $installmentPlans,
             'totalInstallmentAmount' => $totalInstallmentAmount,
             'totalInstallmentPaid'   => $totalInstallmentPaid,
@@ -171,6 +258,7 @@ class CustomerShow extends Component
             'ledger'                 => $ledgerWithBalance,
             'currentBalance'         => $currentBalance,
             'analysis'               => $analysis,
+            'treasuries'             => Treasury::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 

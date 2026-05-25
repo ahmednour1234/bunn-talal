@@ -16,6 +16,7 @@ class SaleReturnForm extends Component
     public ?int $treasury_id = null;
     public string $date = '';
     public string $notes = '';
+    public string $orderSearch = '';
     public array $items = [];
 
     public ?int $loaded_customer_id = null;
@@ -383,11 +384,20 @@ class SaleReturnForm extends Component
 
     public function render()
     {
+        $ordersQuery = SaleOrder::whereIn('status', ['confirmed', 'partial_paid', 'paid'])
+            ->with('customer')
+            ->orderByDesc('created_at');
+
+        if (!empty($this->orderSearch)) {
+            $search = $this->orderSearch;
+            $ordersQuery->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$search}%"));
+            });
+        }
+
         return view('livewire.sale-returns.sale-return-form', [
-            'orders' => SaleOrder::whereIn('status', ['confirmed', 'partial_paid', 'paid'])
-                ->with('customer')
-                ->orderByDesc('created_at')
-                ->get(),
+            'orders' => $ordersQuery->get(),
 
             'treasuries' => Treasury::where('is_active', true)
                 ->orderBy('name')

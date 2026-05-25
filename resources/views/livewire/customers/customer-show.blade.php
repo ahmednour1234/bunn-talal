@@ -25,11 +25,114 @@
                 </div>
             </div>
         </div>
-        <a href="{{ route('customers.index') }}" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-700 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
-            العودة للقائمة
-        </a>
+        <div class="flex items-center gap-3">
+            <button
+                wire:click="openPaymentModal"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-sm"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75" /></svg>
+                دفعة للعميل
+            </button>
+            <a href="{{ route('customers.index') }}" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
+                العودة للقائمة
+            </a>
+        </div>
+
+    @if(session('success'))
+        <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    {{-- ─── Payment Modal ──────────────────────────────────────────── --}}
+    @if($showPaymentModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6" dir="rtl">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-bold text-gray-800">دفعة للعميل</h2>
+                <button wire:click="closePaymentModal" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        المبلغ <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        wire:model="paymentAmount"
+                        placeholder="0.00"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-300 @error('paymentAmount') border-red-400 @enderror"
+                    >
+                    @error('paymentAmount')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        التاريخ <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        wire:model="paymentDate"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-300 @error('paymentDate') border-red-400 @enderror"
+                    >
+                    @error('paymentDate')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        الخزينة (اختياري)
+                    </label>
+                    <select
+                        wire:model="paymentTreasuryId"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-300"
+                    >
+                        <option value="">بدون خزينة (من الحساب)</option>
+                        @foreach($treasuries as $treasury)
+                            <option value="{{ $treasury->id }}">{{ $treasury->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        ملاحظات
+                    </label>
+                    <input
+                        type="text"
+                        wire:model="paymentNotes"
+                        placeholder="سبب الدفعة..."
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-300"
+                    >
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 mt-6">
+                <button
+                    wire:click="savePayment"
+                    class="flex-1 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors"
+                >
+                    تأكيد الدفعة
+                </button>
+                <button
+                    wire:click="closePaymentModal"
+                    class="flex-1 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                    إلغاء
+                </button>
+            </div>
+        </div>
     </div>
+    @endif
 
     {{-- ─── KPI Cards ───────────────────────────────────────────────── --}}
     @php
@@ -135,6 +238,7 @@
                                 ['label' => 'إجمالي المدفوع', 'value' => number_format($totalPaid, 2), 'color' => 'text-green-600'],
                                 ['label' => 'التحصيلات', 'value' => number_format($totalCollected, 2) . ' (' . $collections->where('status','completed')->count() . ' تحصيل)', 'color' => 'text-green-600'],
                                 ['label' => 'المرتجعات', 'value' => number_format($totalReturns, 2), 'color' => 'text-red-500'],
+                                ['label' => 'دفعات للعميل', 'value' => number_format($totalCustomerPayments, 2) . ' (' . $customerPayments->count() . ' دفعة)', 'color' => 'text-emerald-600'],
                                 ['label' => 'أقساط معلقة', 'value' => number_format($totalInstallmentDue, 2), 'color' => 'text-amber-600'],
                                 ['label' => 'الرصيد الحالي', 'value' => number_format($currentBalance, 2) . ($currentBalance > 0 ? ' (مدين)' : ' (دائن)'), 'color' => $currentBalance > 0 ? 'text-amber-600' : 'text-green-600'],
                             ];
@@ -433,8 +537,8 @@
                             </td>
                         </tr>
                         @php
-                            $typeIcon  = ['invoice'=>'🧾','payment'=>'💵','return'=>'↩️','collection'=>'📥','cancellation'=>'🚫'];
-                            $typeColor = ['invoice'=>'text-gray-800','payment'=>'text-green-600','return'=>'text-blue-600','collection'=>'text-green-700','cancellation'=>'text-red-400'];
+                        $typeIcon  = ['invoice'=>'🧾','payment'=>'💵','return'=>'↩️','collection'=>'📥','cancellation'=>'🚫','customer_payment'=>'💸'];
+                        $typeColor = ['invoice'=>'text-gray-800','payment'=>'text-green-600','return'=>'text-blue-600','collection'=>'text-green-700','cancellation'=>'text-red-400','customer_payment'=>'text-emerald-600'];
                         @endphp
                         @forelse($ledger as $row)
                         <tr class="hover:bg-gray-50/50 {{ ($row['cancelled'] ?? false) ? 'opacity-60' : '' }}">
