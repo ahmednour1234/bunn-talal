@@ -381,29 +381,17 @@ class SaleReturnForm extends Component
         }
     }
 
-public function render()
-{
-    $orders = SaleOrder::whereIn('status', ['confirmed', 'partial_paid', 'paid'])
-        ->with('customer')
-        ->when($this->orderSearch, function ($query) {
-            $search = trim($this->orderSearch);
+    public function render()
+    {
+        return view('livewire.sale-returns.sale-return-form', [
+            'orders' => SaleOrder::whereIn('status', ['confirmed', 'partial_paid', 'paid'])
+                ->with('customer')
+                ->orderByDesc('created_at')
+                ->get(),
 
-            $query->where(function ($q) use ($search) {
-                $q->where('order_number', 'like', "%{$search}%")
-                    ->orWhereHas('customer', function ($customerQuery) use ($search) {
-                        $customerQuery->where('name', 'like', "%{$search}%");
-                    });
-            });
-        })
-        ->orderByDesc('created_at')
-        ->limit(30)
-        ->get();
-
-    return view('livewire.sale-returns.sale-return-form', [
-        'orders' => $orders,
-        'treasuries' => Treasury::where('is_active', true)
-            ->orderBy('name')
-            ->get(),
-    ]);
-}
+            'treasuries' => Treasury::where('is_active', true)
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
 }
