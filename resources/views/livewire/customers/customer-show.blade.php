@@ -38,6 +38,7 @@
                 العودة للقائمة
             </a>
         </div>
+    </div>
 
     @if(session('success'))
         <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
