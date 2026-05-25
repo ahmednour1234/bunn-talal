@@ -56,6 +56,12 @@ class CustomerShow extends Component
             'paymentDate'       => 'required|date',
             'paymentTreasuryId' => 'nullable|exists:treasuries,id',
             'paymentNotes'      => 'nullable|string|max:500',
+        ], [
+            'paymentAmount.required' => 'المبلغ مطلوب',
+            'paymentAmount.numeric'  => 'المبلغ يجب أن يكون رقماً',
+            'paymentAmount.min'      => 'المبلغ يجب أن يكون أكبر من صفر',
+            'paymentDate.required'   => 'التاريخ مطلوب',
+            'paymentDate.date'       => 'التاريخ غير صحيح',
         ]);
 
         DB::transaction(function () {
