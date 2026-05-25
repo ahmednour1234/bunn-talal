@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Customers;
 
+use App\Models\Account;
 use App\Models\Collection;
 use App\Models\Customer;
 use App\Models\CustomerPayment;
+use App\Models\FinancialTransaction;
 use App\Models\InstallmentPlan;
 use App\Models\SaleOrder;
 use App\Models\SaleReturn;
@@ -22,6 +24,7 @@ class CustomerShow extends Component
     public bool $showPaymentModal = false;
     public string $paymentAmount = '';
     public ?int $paymentTreasuryId = null;
+    public ?int $paymentAccountId = null;
     public string $paymentDate = '';
     public string $paymentNotes = '';
 
@@ -39,6 +42,7 @@ class CustomerShow extends Component
     {
         $this->paymentAmount = '';
         $this->paymentTreasuryId = null;
+        $this->paymentAccountId = null;
         $this->paymentDate = now()->format('Y-m-d');
         $this->paymentNotes = '';
         $this->showPaymentModal = true;
@@ -55,6 +59,7 @@ class CustomerShow extends Component
             'paymentAmount'     => 'required|numeric|min:0.01',
             'paymentDate'       => 'required|date',
             'paymentTreasuryId' => 'nullable|exists:treasuries,id',
+            'paymentAccountId'  => 'nullable|exists:accounts,id',
             'paymentNotes'      => 'nullable|string|max:500',
         ], [
             'paymentAmount.required' => 'المبلغ مطلوب',
@@ -89,6 +94,19 @@ class CustomerShow extends Component
                     'reference_number' => $payment->payment_number,
                     'date'             => $this->paymentDate,
                     'admin_id'         => auth('admin')->id(),
+                ]);
+            }
+
+            // Record in financial transactions (expense) if an account was selected
+            if ($this->paymentAccountId) {
+                FinancialTransaction::create([
+                    'type'        => 'expense',
+                    'account_id'  => $this->paymentAccountId,
+                    'treasury_id' => $this->paymentTreasuryId ?: null,
+                    'amount'      => (float) $this->paymentAmount,
+                    'description' => 'دفعة للعميل - ' . $payment->payment_number,
+                    'date'        => $this->paymentDate,
+                    'admin_id'    => auth('admin')->id(),
                 ]);
             }
         });
@@ -265,6 +283,7 @@ class CustomerShow extends Component
             'currentBalance'         => $currentBalance,
             'analysis'               => $analysis,
             'treasuries'             => Treasury::where('is_active', true)->orderBy('name')->get(),
+            'accounts'               => Account::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
