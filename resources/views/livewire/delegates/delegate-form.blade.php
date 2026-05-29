@@ -159,6 +159,14 @@
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الحد الأقصى للخصم % <span class="text-red-500">*</span></label>
+                        <input type="number" wire:model="max_discount_percentage" step="0.01" min="0" max="100"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm" placeholder="0">
+                        <p class="text-xs text-gray-400 mt-1">0 = بدون حد أقصى للخصم</p>
+                        @error('max_discount_percentage') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الراتب الأساسي <span class="text-red-500">*</span></label>
                         <input type="number" wire:model="basic_salary" step="0.01" min="0"
                             class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm" placeholder="0.00">

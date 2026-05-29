@@ -360,6 +360,22 @@ class SaleOrderForm extends Component
             return;
         }
 
+        // Delegate max discount check
+        if ($this->delegate_id) {
+            $delegate = Delegate::find($this->delegate_id);
+            if ($delegate && (float) $delegate->max_discount_percentage > 0) {
+                $maxPct     = (float) $delegate->max_discount_percentage;
+                $subtotal   = (float) ($this->calculatedTotals['subtotal'] ?? 0);
+                $totals     = $this->calculatedTotals;
+                $discountPct = $subtotal > 0 ? (((float) $totals['discount']) / $subtotal * 100) : 0;
+
+                if ($discountPct > $maxPct + 0.001) {
+                    $this->addError('discount_amount', "نسبة الخصم الكلية ({$discountPct}%) تتجاوز الحد المسموح به للمندوب ({$maxPct}%).");
+                    return;
+                }
+            }
+        }
+
         $admin = auth('admin')->user();
 
         $data = [

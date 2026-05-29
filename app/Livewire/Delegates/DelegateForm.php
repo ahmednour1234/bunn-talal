@@ -27,6 +27,7 @@ class DelegateForm extends Component
     public string $total_collected = '0';
     public string $total_due = '0';
     public string $sales_commission_rate = '0';
+    public string $max_discount_percentage = '0';
     public string $basic_salary = '0';
     public ?string $current_latitude = null;
     public ?string $current_longitude = null;
@@ -52,6 +53,7 @@ class DelegateForm extends Component
             $this->total_collected = (string) ($delegate->total_collected * 1);
             $this->total_due = (string) ($delegate->total_due * 1);
             $this->sales_commission_rate = (string) ($delegate->sales_commission_rate * 1);
+            $this->max_discount_percentage = (string) ($delegate->max_discount_percentage * 1);
             $this->basic_salary = (string) ($delegate->basic_salary * 1);
             $this->current_latitude = $delegate->current_latitude;
             $this->current_longitude = $delegate->current_longitude;
@@ -76,6 +78,7 @@ class DelegateForm extends Component
             'total_collected' => 'required|numeric|min:0',
             'total_due' => 'required|numeric|min:0',
             'sales_commission_rate' => 'required|numeric|min:0|max:100',
+            'max_discount_percentage' => 'required|numeric|min:0|max:100',
             'basic_salary' => 'required|numeric|min:0',
             'current_latitude' => 'nullable|numeric|between:-90,90',
             'current_longitude' => 'nullable|numeric|between:-180,180',
@@ -106,6 +109,7 @@ class DelegateForm extends Component
             'national_id_image.image' => 'يجب أن يكون الملف صورة',
             'national_id_image.max' => 'حجم الصورة يجب أن لا يتجاوز 2 ميجا',
             'sales_commission_rate.max' => 'نسبة العمولة يجب أن لا تتجاوز 100%',
+            'max_discount_percentage.max' => 'الحد الأقصى للخصم يجب أن لا يتجاوز 100%',
         ];
     }
 
@@ -123,6 +127,7 @@ class DelegateForm extends Component
             'total_collected' => $this->total_collected,
             'total_due' => $this->total_due,
             'sales_commission_rate' => $this->sales_commission_rate,
+            'max_discount_percentage' => $this->max_discount_percentage,
             'basic_salary' => $this->basic_salary,
             'current_latitude' => $this->current_latitude ?: null,
             'current_longitude' => $this->current_longitude ?: null,

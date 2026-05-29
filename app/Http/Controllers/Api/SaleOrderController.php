@@ -265,6 +265,39 @@ class SaleOrderController extends Controller
         unset($item);
         // ── End product discount override ────────────────────────────────────
 
+        // ── Delegate max discount check ──────────────────────────────────────
+        if ((float) $delegate->max_discount_percentage > 0) {
+            $maxPct = (float) $delegate->max_discount_percentage;
+
+            // Calculate subtotal from items (after item-level discounts)
+            $subtotal = 0.0;
+            foreach ($validated['items'] as $item) {
+                $lineTotal = (float) $item['quantity'] * (float) $item['unit_price'];
+                $itemDisc  = (float) ($item['discount'] ?? 0);
+                if ($itemDisc > 0) {
+                    $lineTotal -= ($item['discount_type'] ?? 'fixed') === 'percentage'
+                        ? $lineTotal * $itemDisc / 100
+                        : $itemDisc;
+                }
+                $lineTotal += (float) ($item['tax_amount'] ?? 0);
+                $subtotal  += $lineTotal;
+            }
+
+            $orderDiscAmt = (float) ($validated['discount_amount'] ?? 0);
+            if ($orderDiscAmt > 0 && ($validated['discount_type'] ?? 'fixed') === 'percentage') {
+                $orderDiscAmt = $subtotal * $orderDiscAmt / 100;
+            }
+
+            $effectivePct = $subtotal > 0 ? ($orderDiscAmt / $subtotal * 100) : 0;
+
+            if ($effectivePct > $maxPct + 0.001) {
+                return $this->errorResponse(
+                    "نسبة الخصم ({$effectivePct}%) تتجاوز الحد المسموح به للمندوب ({$maxPct}%)"
+                );
+            }
+        }
+        // ── End delegate max discount check ─────────────────────────────────
+
         $order = $this->saleOrderService->createOrder($orderData, $validated['items'], $initialPayment);
 
         // Add collected cash to delegate's عهدة

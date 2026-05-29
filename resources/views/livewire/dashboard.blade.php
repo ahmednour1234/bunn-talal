@@ -1,6 +1,6 @@
 ﻿<div>
     @php
-        $netProfit = $saleOrdersTotal - $saleReturnsTotal - $purchaseTotal + $purchaseReturnsTotal;
+        $netProfit = $saleOrdersTotal - $saleReturnsTotal - $purchaseTotal + $purchaseReturnsTotal - $accountsExpense;
         $today = \Carbon\Carbon::now()->locale('ar')->isoFormat('dddd، D MMMM YYYY');
     @endphp
 
