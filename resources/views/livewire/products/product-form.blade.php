@@ -73,6 +73,8 @@
                     name="cost_price"
                     type="number"
                     wire:model="cost_price"
+                    step="any"
+                    min="0"
                     placeholder="0.00"
                     required
                     :error="$errors->first('cost_price')"
@@ -84,6 +86,8 @@
                     name="selling_price"
                     type="number"
                     wire:model="selling_price"
+                    step="any"
+                    min="0"
                     placeholder="0.00"
                     required
                     :error="$errors->first('selling_price')"
