@@ -426,12 +426,13 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1.5">الخزنة</label>
-                        <select wire:model="loanTreasuryId" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-purple-300 focus:border-transparent">
+                        <select wire:model="loanTreasuryId" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-purple-300 focus:border-transparent @error('loanTreasuryId') border-red-400 @enderror">
                             <option value="">-- بدون خزنة --</option>
                             @foreach($treasuries as $t)
-                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                            <option value="{{ $t->id }}">{{ $t->name }} — الرصيد: {{ number_format($t->balance, 2) }} ج.م</option>
                             @endforeach
                         </select>
+                        @error('loanTreasuryId')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1.5">ملاحظة</label>

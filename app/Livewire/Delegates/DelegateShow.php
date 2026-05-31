@@ -5,6 +5,8 @@ namespace App\Livewire\Delegates;
 use App\Models\Delegate;
 use App\Models\DelegateLoan;
 use App\Models\Treasury;
+use App\Models\TreasuryTransaction;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class DelegateShow extends Component
@@ -35,25 +37,43 @@ class DelegateShow extends Component
     public function saveLoan(): void
     {
         $this->validate([
-            'loanAmount'    => 'required|numeric|min:0.01',
-            'loanDueDate'   => 'nullable|date',
-            'loanNote'      => 'nullable|string|max:500',
+            'loanAmount'     => 'required|numeric|min:0.01',
+            'loanDueDate'    => 'nullable|date',
+            'loanNote'       => 'nullable|string|max:500',
             'loanTreasuryId' => 'nullable|exists:treasuries,id',
         ]);
 
-        DelegateLoan::create([
-            'delegate_id' => $this->delegateId,
-            'treasury_id' => $this->loanTreasuryId,
-            'admin_id'    => auth('admin')->id(),
-            'amount'      => $this->loanAmount,
-            'paid_amount' => 0,
-            'due_date'    => $this->loanDueDate ?: null,
-            'note'        => $this->loanNote ?: null,
-            'is_paid'     => false,
-        ]);
+        DB::transaction(function () {
+            $loan = DelegateLoan::create([
+                'delegate_id' => $this->delegateId,
+                'treasury_id' => $this->loanTreasuryId,
+                'admin_id'    => auth('admin')->id(),
+                'amount'      => $this->loanAmount,
+                'paid_amount' => 0,
+                'due_date'    => $this->loanDueDate ?: null,
+                'note'        => $this->loanNote ?: null,
+                'is_paid'     => false,
+            ]);
+
+            // Deduct from treasury balance only if a treasury was selected
+            if ($this->loanTreasuryId) {
+                Treasury::where('id', $this->loanTreasuryId)
+                    ->decrement('balance', (float) $this->loanAmount);
+
+                TreasuryTransaction::create([
+                    'treasury_id'      => $this->loanTreasuryId,
+                    'type'             => 'withdrawal',
+                    'amount'           => (float) $this->loanAmount,
+                    'description'      => 'عهدة مندوب: ' . $this->delegate->name,
+                    'reference_number' => 'LOAN-' . $loan->id,
+                    'date'             => now()->toDateString(),
+                    'admin_id'         => auth('admin')->id(),
+                ]);
+            }
+        });
 
         $this->reset('loanAmount', 'loanDueDate', 'loanNote', 'loanTreasuryId', 'showLoanForm');
-        session()->flash('success', 'تم تسجيل السلفة بنجاح');
+        session()->flash('success', 'تم تسجيل السلفة وخصمها من الخزنة بنجاح');
     }
 
     public function openPayModal(int $loanId): void
