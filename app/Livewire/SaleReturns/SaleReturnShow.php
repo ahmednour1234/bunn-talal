@@ -44,6 +44,21 @@ class SaleReturnShow extends Component
         }
     }
 
+    public function recalculateRefund(SaleReturnService $service)
+    {
+        $admin = auth('admin')->user();
+        if (!$admin->hasPermission('sale-returns.create')) {
+            session()->flash('error', 'ليس لديك صلاحية');
+            return;
+        }
+        try {
+            $service->recalculateReturnRefund($this->returnId);
+            session()->flash('success', 'تم إعادة حساب مبلغ المرتجع وتحديث رصيد العميل');
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+        }
+    }
+
     public function render(SaleReturnService $service)
     {
         $return = $service->getById($this->returnId);

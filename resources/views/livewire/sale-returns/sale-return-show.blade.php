@@ -149,10 +149,29 @@
                     <x-icon name="check-circle" class="w-4 h-4" />
                     تأكيد المرتجع
                 </button>
+                <button type="button"
+                    wire:click="recalculateRefund"
+                    wire:confirm="سيتم إعادة حساب مبلغ المرتجع بعد تطبيق خصم الطلب الأصلي. هل تريد المتابعة؟"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-200">
+                    <x-icon name="calculator" class="w-4 h-4" />
+                    إعادة حساب الخصم
+                </button>
                 <button type="button" wire:click="cancelReturn" wire:confirm="هل تريد إلغاء هذا المرتجع؟"
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors text-sm font-medium border border-red-200">
                     <x-icon name="x-circle" class="w-4 h-4" />
                     إلغاء المرتجع
+                </button>
+            @endif
+        </div>
+    @elseif(in_array($return->status, ['confirmed', 'refunded']))
+        <div class="flex items-center gap-3 mt-2">
+            @if(auth('admin')->user()?->hasPermission('sale-returns.create'))
+                <button type="button"
+                    wire:click="recalculateRefund"
+                    wire:confirm="سيتم إعادة حساب مبلغ المرتجع بعد تطبيق خصم الطلب الأصلي وتعديل رصيد العميل تلقائياً. هل تريد المتابعة؟"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-200">
+                    <x-icon name="calculator" class="w-4 h-4" />
+                    إعادة حساب الخصم
                 </button>
             @endif
         </div>

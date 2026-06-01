@@ -274,6 +274,95 @@ class SaleReturnService
         return $return;
     }
 
+    /**
+     * إعادة حساب مبلغ المرتجع بعد تطبيق خصم الطلب الأصلي.
+     *
+     * - يحسب نسبة الخصم من الطلب الأصلي بناءً على إجمالي بنود الطلب.
+     * - يحدّث unit_price وrefund_amount لكل بند مرتجع.
+     * - يحدّث subtotal وrefund_amount للمرتجع.
+     * - إذا كان المرتجع مؤكداً/مستردّاً: يعكس أثر رصيد العميل القديم ويطبّق الجديد.
+     */
+    public function recalculateReturnRefund(int $id): SaleReturn
+    {
+        return DB::transaction(function () use ($id) {
+            $return = $this->returnRepository->getById($id);
+
+            if (!in_array($return->status, ['pending', 'confirmed', 'refunded'])) {
+                throw new \Exception('لا يمكن إعادة حساب مرتجع ملغي');
+            }
+
+            $order = $return->order()->with('items')->first();
+
+            if (!$order) {
+                throw new \Exception('لم يتم العثور على الطلب الأصلي');
+            }
+
+            // ── حساب نسبة الخصم من إجمالي بنود الطلب (gross) ──────────────
+            $grossSubtotal = (float) $order->items->sum(
+                fn ($i) => (float) $i->quantity * (float) $i->unit_price
+            );
+
+            $discountAmount = (float) ($order->discount_amount ?? 0);
+            $discountType   = strtolower((string) ($order->discount_type ?? ''));
+
+            if ($discountAmount > 0 && $grossSubtotal > 0) {
+                $discountValue = in_array($discountType, ['percentage', 'percent', '%'])
+                    ? $grossSubtotal * ($discountAmount / 100)
+                    : min($discountAmount, $grossSubtotal);
+            } else {
+                $discountValue = 0;
+            }
+
+            $discountRatio = $grossSubtotal > 0 ? $discountValue / $grossSubtotal : 0;
+
+            // ── إعادة حساب كل بند ────────────────────────────────────────────
+            $return->load('items.orderItem');
+            $newSubtotal = 0;
+
+            foreach ($return->items as $item) {
+                // السعر الأصلي: من بند الطلب إذا كان متاحاً، وإلا من unit_price المخزّن
+                $originalUnitPrice = $item->orderItem
+                    ? (float) $item->orderItem->unit_price
+                    : ((float) $item->unit_price / max(1 - $discountRatio, 0.000001));
+
+                $netUnitPrice  = max(0, $originalUnitPrice * (1 - $discountRatio));
+                $newRefundAmt  = round((float) $item->quantity * $netUnitPrice, 2);
+
+                $item->update([
+                    'unit_price'    => round($netUnitPrice, 6),
+                    'refund_amount' => $newRefundAmt,
+                ]);
+
+                $newSubtotal += $newRefundAmt;
+            }
+
+            $newSubtotal = round($newSubtotal, 2);
+            $oldRefund   = (float) $return->refund_amount;
+
+            $return->update([
+                'subtotal'      => $newSubtotal,
+                'refund_amount' => $newSubtotal,
+            ]);
+
+            // ── تعديل رصيد العميل إذا كان المرتجع مؤكداً/مستردّاً ───────────
+            if (in_array($return->status, ['confirmed', 'refunded'])) {
+                $diff = $newSubtotal - $oldRefund;
+
+                if (abs($diff) >= 0.01) {
+                    if ($diff < 0) {
+                        // المبلغ الجديد أقل → نرجع للعميل مبلغ أقل → نزيد رصيده (نرجع الفرق)
+                        Customer::where('id', $return->customer_id)->increment('balance', abs($diff));
+                    } else {
+                        // المبلغ الجديد أكبر → نحسم أكثر من رصيده
+                        Customer::where('id', $return->customer_id)->decrement('balance', $diff);
+                    }
+                }
+            }
+
+            return $return->fresh();
+        });
+    }
+
     protected function resolveBaseUnitId(Unit $unit): int
     {
         $current = $unit;
