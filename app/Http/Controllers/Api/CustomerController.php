@@ -82,6 +82,8 @@ class CustomerController extends Controller
             ->withSum(['collections as total_paid' => fn ($q) => $q
                 ->whereNotIn('status', ['cancelled'])
             ], 'total_amount')
+            // دفعات للعميل (مرتجعات نقدية)
+            ->withSum('customerPayments as total_customer_payments', 'amount')
             ->get();
 
         return $this->successResponse(CustomerResource::collection($customers)->resolve(), 'تم جلب العملاء بنجاح');

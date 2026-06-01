@@ -13,8 +13,9 @@ class CustomerResource extends JsonResource
         $totalOrderPaid = (float) ($this->total_order_paid ?? 0);  // مدفوع عند إنشاء الفاتورة
         $totalReturned  = (float) ($this->total_returned ?? 0);    // مرتجعات مؤكدة
         $totalPaid      = (float) ($this->total_paid ?? 0);        // تحصيلات
-        // صافي المديونية = رصيد افتتاحي + (إجمالي الفواتير الآجلة - ما دُفع منها) - المرتجعات - التحصيلات
-        $netBalance     = $openingBalance + ($totalInvoiced - $totalOrderPaid) - $totalReturned - $totalPaid;
+        $totalCustomerPayments = (float) ($this->total_customer_payments ?? 0); // دفعات للعميل
+        // صافي المديونية = رصيد افتتاحي + (إجمالي الفواتير الآجلة - ما دُفع منها) - المرتجعات - التحصيلات + دفعات للعميل
+        $netBalance     = $openingBalance + ($totalInvoiced - $totalOrderPaid) - $totalReturned - $totalPaid + $totalCustomerPayments;
 
         return [
             'id'                   => $this->id,
@@ -32,6 +33,7 @@ class CustomerResource extends JsonResource
             'total_order_paid'     => $totalOrderPaid,
             'total_returned'       => $totalReturned,
             'total_paid'           => $totalPaid,
+            'total_customer_payments' => $totalCustomerPayments,
             'net_balance'          => $netBalance,
             'balance'              => (float) $this->balance,
             'debt'                 => (float) $this->balance,
