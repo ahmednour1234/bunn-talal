@@ -37,8 +37,10 @@ class TreasuryTransaction extends Model
     public static function typeLabels(): array
     {
         return [
-            'deposit' => 'إيداع',
-            'withdrawal' => 'سحب',
+            'deposit'      => 'إيداع',
+            'withdrawal'   => 'سحب',
+            'transfer_out' => 'تحويل صادر',
+            'transfer_in'  => 'تحويل وارد',
         ];
     }
 }

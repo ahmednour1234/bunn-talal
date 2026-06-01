@@ -15,6 +15,10 @@
                 PDF
             </x-button>
             @if(auth('admin')->user()?->hasPermission('treasury-transactions.create'))
+                <x-button variant="secondary" href="{{ route('treasury-transactions.transfer') }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                    تحويل بين الخزن
+                </x-button>
                 <x-button variant="primary" href="{{ route('treasury-transactions.create') }}">
                     <x-icon name="plus" class="w-4 h-4" />
                     إضافة حركة
@@ -87,13 +91,23 @@
                 <td class="px-6 py-4 text-gray-500">{{ $tx->id }}</td>
                 <td class="px-6 py-4 font-medium text-gray-800">{{ $tx->treasury?->name ?? '—' }}</td>
                 <td class="px-6 py-4">
-                    @if($tx->type === 'deposit')
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">إيداع</span>
-                    @else
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">سحب</span>
-                    @endif
+                    @php
+                        $badge = match($tx->type) {
+                            'deposit'      => 'bg-green-100 text-green-700',
+                            'withdrawal'   => 'bg-red-100 text-red-700',
+                            'transfer_in'  => 'bg-blue-100 text-blue-700',
+                            'transfer_out' => 'bg-orange-100 text-orange-700',
+                            default        => 'bg-gray-100 text-gray-600',
+                        };
+                    @endphp
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $badge }}">
+                        {{ $typeLabels[$tx->type] ?? $tx->type }}
+                    </span>
                 </td>
-                <td class="px-6 py-4 text-sm font-mono text-center {{ $tx->type === 'deposit' ? 'text-green-700' : 'text-red-700' }}" dir="ltr">{{ number_format($tx->amount, 2) }}</td>
+                @php
+                    $amountColor = in_array($tx->type, ['deposit', 'transfer_in']) ? 'text-green-700' : 'text-red-700';
+                @endphp
+                <td class="px-6 py-4 text-sm font-mono text-center {{ $amountColor }}" dir="ltr">{{ number_format($tx->amount, 2) }}</td>
                 <td class="px-6 py-4 text-gray-600 text-sm">{{ Str::limit($tx->description, 40) ?? '—' }}</td>
                 <td class="px-6 py-4 text-gray-600 text-sm" dir="ltr">{{ $tx->date->format('Y-m-d') }}</td>
                 <td class="px-6 py-4 text-gray-600 text-sm font-mono" dir="ltr">{{ $tx->reference_number ?? '—' }}</td>

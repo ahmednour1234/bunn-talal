@@ -216,6 +216,7 @@ Route::middleware('auth:admin')->group(function () {
     });
     Route::middleware('permission:treasury-transactions.create')->group(function () {
         Route::get('/treasury-transactions/create', [TreasuryTransactionController::class, 'create'])->name('treasury-transactions.create');
+        Route::get('/treasury-transactions/transfer', [TreasuryTransactionController::class, 'transfer'])->name('treasury-transactions.transfer');
     });
 
     // Financial Transactions

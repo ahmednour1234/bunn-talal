@@ -161,9 +161,9 @@
                     {{ $showReturnForm ? 'إخفاء نموذج المرتجع' : 'تسجيل مرتجعات' }}
                 </x-button>
             @endif
-            @if(in_array($dispatch->status, ['dispatched', 'partial_return', 'returned']))
+            @if(in_array($dispatch->status, ['dispatched', 'partial_return', 'returned', 'settled']))
                 <x-button type="button" variant="success" wire:click="toggleSettleForm">
-                    {{ $showSettleForm ? 'إخفاء نموذج التسوية' : 'تسوية الحساب' }}
+                    {{ $showSettleForm ? 'إخفاء نموذج التسوية' : ($dispatch->status === 'settled' ? 'إعادة التسوية' : 'تسوية الحساب') }}
                 </x-button>
             @endif
         </div>
@@ -227,8 +227,20 @@
         {{-- Settle Form --}}
         @if($showSettleForm)
             <div class="bg-green-50 rounded-2xl border border-green-200 p-6 mb-6">
-                <h3 class="text-lg font-bold text-green-700 mb-4">تسوية الحساب</h3>
-                <div class="max-w-md">
+                <h3 class="text-lg font-bold text-green-700 mb-4">
+                    {{ $dispatch->status === 'settled' ? 'إعادة تسوية الحساب' : 'تسوية الحساب' }}
+                </h3>
+
+                @if($dispatch->status === 'settled')
+                <div class="bg-amber-50 border border-amber-300 rounded-xl p-3 mb-4 flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                    <p class="text-sm text-amber-700">
+                        هذا الأمر مسوّى مسبقاً. إعادة التسوية ستلغي التسوية السابقة (الخزنة والكميات) وتطبّق التسوية الجديدة.
+                    </p>
+                </div>
+                @endif
+
+                <div class="max-w-md space-y-4">
                     <x-form-input
                         label="المبيعات الفعلية"
                         name="actualSales"
@@ -238,9 +250,28 @@
                         required
                         :error="$errors->first('actualSales')"
                     />
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">الخزنة (اختياري)</label>
+                        <select wire:model="settleTreasuryId"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
+                            <option value="">— بدون خزنة —</option>
+                            @foreach($treasuries as $treasury)
+                                <option value="{{ $treasury->id }}">{{ $treasury->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('settleTreasuryId')
+                            <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
+
                 <div class="mt-4">
-                    <x-button type="button" variant="success" wire:click="submitSettle">
+                    <x-button type="button" variant="success" wire:click="submitSettle"
+                        @if($dispatch->status === 'settled')
+                            wire:confirm="هل أنت متأكد؟ سيتم إلغاء تأثير التسوية السابقة (خزنة وكميات) وتطبيق التسوية الجديدة."
+                        @endif
+                    >
                         تأكيد التسوية
                     </x-button>
                 </div>

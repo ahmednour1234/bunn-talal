@@ -18,6 +18,7 @@ class InventoryDispatch extends Model
         'total_cost',
         'expected_sales',
         'actual_sales',
+        'treasury_transaction_id',
         'notes',
         'date',
     ];

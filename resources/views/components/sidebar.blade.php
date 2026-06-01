@@ -23,6 +23,7 @@
         ['route' => 'accounts.index', 'icon' => 'banknotes', 'label' => 'الحسابات', 'permission' => 'accounts.view'],
         ['route' => 'treasuries.index', 'icon' => 'lock-closed', 'label' => 'الخزن', 'permission' => 'treasuries.view'],
         ['route' => 'treasury-transactions.index', 'icon' => 'arrows-right-left', 'label' => 'حركات الخزن', 'permission' => 'treasury-transactions.view'],
+        ['route' => 'treasury-transactions.transfer', 'icon' => 'arrows-right-left', 'label' => 'تحويل بين الخزن', 'permission' => 'treasury-transactions.create'],
         ['route' => 'financial-transactions.index', 'icon' => 'calculator', 'label' => 'المصروفات والإيرادات', 'permission' => 'financial-transactions.view'],
         ['route' => 'reports.index', 'icon' => 'chart-bar', 'label' => 'التقارير', 'permission' => 'reports.view'],
         ['route' => 'reports.income-statement', 'icon' => 'chart-bar', 'label' => 'قائمة الدخل', 'permission' => 'reports.view'],

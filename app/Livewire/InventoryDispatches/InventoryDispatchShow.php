@@ -2,6 +2,7 @@
 
 namespace App\Livewire\InventoryDispatches;
 
+use App\Models\Treasury;
 use App\Models\Unit;
 use App\Services\InventoryDispatchService;
 use Livewire\Component;
@@ -16,6 +17,7 @@ class InventoryDispatchShow extends Component
     public array $returnStockFactors  = [];
     public array $returnUnitSymbols   = [];
     public string $actualSales = '';
+    public ?int $settleTreasuryId = null;
     public bool $showReturnForm = false;
     public bool $showSettleForm = false;
 
@@ -125,13 +127,21 @@ class InventoryDispatchShow extends Component
         }
 
         $this->validate([
-            'actualSales' => 'required|numeric|min:0',
+            'actualSales'      => 'required|numeric|min:0',
+            'settleTreasuryId' => 'nullable|exists:treasuries,id',
         ], [
             'actualSales.required' => 'المبيعات الفعلية مطلوبة',
         ]);
 
+        $admin = auth('admin')->user();
+
         try {
-            $service->settleDispatch($this->dispatchId, (float) $this->actualSales);
+            $service->settleDispatch(
+                $this->dispatchId,
+                (float) $this->actualSales,
+                $this->settleTreasuryId,
+                $admin->id
+            );
             session()->flash('success', 'تمت تسوية أمر الصرف بنجاح');
             $this->showSettleForm = false;
         } catch (\Exception $e) {
@@ -193,7 +203,8 @@ class InventoryDispatchShow extends Component
     public function render(InventoryDispatchService $service)
     {
         return view('livewire.inventory-dispatches.inventory-dispatch-show', [
-            'dispatch' => $service->getById($this->dispatchId),
+            'dispatch'   => $service->getById($this->dispatchId),
+            'treasuries' => Treasury::where('is_active', true)->get(['id', 'name']),
         ]);
     }
 }

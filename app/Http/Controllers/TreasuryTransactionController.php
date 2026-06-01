@@ -13,4 +13,9 @@ class TreasuryTransactionController extends Controller
     {
         return view('pages.treasury-transactions.create');
     }
+
+    public function transfer()
+    {
+        return view('pages.treasury-transactions.transfer');
+    }
 }
