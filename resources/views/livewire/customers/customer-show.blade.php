@@ -296,6 +296,7 @@
             {{-- ══ Invoices Tab ══════════════════════════════════════ --}}
             @if($activeTab === 'invoices')
             <div class="overflow-x-auto">
+                {{-- Status badges --}}
                 <div class="flex gap-4 mb-4">
                     @php
                         $statusSummary = [
@@ -313,7 +314,13 @@
                     </span>
                     @endif
                     @endforeach
+                    @if($totalReturns > 0)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-50 text-red-600 mr-auto">
+                        إجمالي المرتجعات: {{ number_format($totalReturns, 2) }}
+                    </span>
+                    @endif
                 </div>
+
                 <table class="w-full text-sm text-right">
                     <thead>
                         <tr class="bg-primary-700 text-white">
@@ -321,22 +328,33 @@
                             <th class="px-4 py-2.5 font-semibold">التاريخ</th>
                             <th class="px-4 py-2.5 font-semibold">الإجمالي</th>
                             <th class="px-4 py-2.5 font-semibold">المدفوع</th>
+                            <th class="px-4 py-2.5 font-semibold">المرتجع</th>
                             <th class="px-4 py-2.5 font-semibold">المتبقي</th>
                             <th class="px-4 py-2.5 font-semibold">الحالة</th>
                             <th class="px-4 py-2.5 font-semibold">المندوب</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-50">
+                    <tbody class="divide-y divide-gray-100">
                         @forelse($orders as $order)
                         @php
                             $sc = ['paid'=>'bg-green-100 text-green-700','partial_paid'=>'bg-amber-100 text-amber-700','confirmed'=>'bg-blue-100 text-blue-700','cancelled'=>'bg-red-100 text-red-600','draft'=>'bg-gray-100 text-gray-500'];
                             $slabels = ['paid'=>'مدفوع','partial_paid'=>'جزئي','confirmed'=>'مؤكد','cancelled'=>'ملغي','draft'=>'مسودة'];
+                            $orderReturns = $returnsByOrder[$order->id] ?? collect();
+                            $orderReturnTotal = $orderReturns->sum('refund_amount');
                         @endphp
-                        <tr class="hover:bg-gray-50/50">
-                            <td class="px-4 py-2.5 font-mono text-xs text-primary-600 font-semibold">{{ $order->order_number }}</td>
+                        <tr class="hover:bg-gray-50/50 {{ $orderReturnTotal > 0 ? 'border-r-2 border-r-red-300' : '' }}">
+                            <td class="px-4 py-2.5 font-mono text-xs text-primary-600 font-semibold">
+                                <a href="{{ route('sale-orders.show', $order->id) }}" class="hover:underline">{{ $order->order_number }}</a>
+                            </td>
                             <td class="px-4 py-2.5 text-gray-600">{{ $order->date?->format('Y-m-d') }}</td>
                             <td class="px-4 py-2.5 font-semibold">{{ number_format($order->total, 2) }}</td>
                             <td class="px-4 py-2.5 text-green-600 font-semibold">{{ number_format($order->paid_amount, 2) }}</td>
+                            <td class="px-4 py-2.5 font-semibold {{ $orderReturnTotal > 0 ? 'text-red-500' : 'text-gray-300' }}">
+                                {{ $orderReturnTotal > 0 ? number_format($orderReturnTotal, 2) : '—' }}
+                                @if($orderReturns->count() > 0)
+                                    <span class="text-xs text-red-400">({{ $orderReturns->count() }})</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-2.5 font-semibold {{ $order->remaining_amount > 0 ? 'text-amber-600' : 'text-gray-400' }}">{{ number_format($order->remaining_amount, 2) }}</td>
                             <td class="px-4 py-2.5">
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $sc[$order->status] ?? 'bg-gray-100 text-gray-500' }}">
@@ -345,8 +363,29 @@
                             </td>
                             <td class="px-4 py-2.5 text-gray-500 text-xs">{{ $order->delegate?->name ?? '—' }}</td>
                         </tr>
+                        {{-- Inline return rows --}}
+                        @foreach($orderReturns as $ret)
+                        @php
+                            $rsl = ['pending'=>'معلق','confirmed'=>'مؤكد','refunded'=>'مستردّ','cancelled'=>'ملغي'];
+                            $rsc = ['pending'=>'bg-amber-100 text-amber-700','confirmed'=>'bg-blue-100 text-blue-700','refunded'=>'bg-green-100 text-green-700','cancelled'=>'bg-red-100 text-red-600'];
+                        @endphp
+                        <tr class="bg-red-50/60 text-xs">
+                            <td class="px-4 py-2 pr-8 font-mono text-red-500 font-semibold">
+                                ↩ <a href="{{ route('sale-returns.show', $ret->id) }}" class="hover:underline">{{ $ret->return_number }}</a>
+                            </td>
+                            <td class="px-4 py-2 text-gray-500">{{ $ret->date?->format('Y-m-d') }}</td>
+                            <td class="px-4 py-2 text-gray-400">—</td>
+                            <td class="px-4 py-2 text-gray-400">—</td>
+                            <td class="px-4 py-2 text-red-500 font-bold">{{ number_format($ret->refund_amount, 2) }}</td>
+                            <td class="px-4 py-2 text-gray-400">—</td>
+                            <td class="px-4 py-2">
+                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $rsc[$ret->status] ?? '' }}">{{ $rsl[$ret->status] ?? $ret->status }}</span>
+                            </td>
+                            <td class="px-4 py-2 text-gray-400">مرتجع</td>
+                        </tr>
+                        @endforeach
                         @empty
-                        <tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">لا توجد فواتير</td></tr>
+                        <tr><td colspan="8" class="px-4 py-10 text-center text-gray-400">لا توجد فواتير</td></tr>
                         @endforelse
                     </tbody>
                     @if($orders->count())
@@ -355,6 +394,7 @@
                             <td colspan="2" class="px-4 py-2.5 text-gray-600">الإجمالي</td>
                             <td class="px-4 py-2.5">{{ number_format($totalInvoiced, 2) }}</td>
                             <td class="px-4 py-2.5 text-green-600">{{ number_format($totalPaid, 2) }}</td>
+                            <td class="px-4 py-2.5 text-red-500">{{ number_format($totalReturns, 2) }}</td>
                             <td class="px-4 py-2.5 text-amber-600">{{ number_format($totalRemaining, 2) }}</td>
                             <td colspan="2"></td>
                         </tr>

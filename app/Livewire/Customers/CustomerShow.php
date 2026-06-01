@@ -140,6 +140,10 @@ class CustomerShow extends Component
             ->get();
         $totalReturns = $returns->whereIn('status', ['confirmed', 'refunded'])->sum('refund_amount');
 
+        // Returns grouped by sale_order_id for the invoices tab
+        $returnsByOrder = $returns->whereIn('status', ['confirmed', 'refunded'])
+            ->groupBy('sale_order_id');
+
         // ── Collections ───────────────────────────────────────────
         $collections = Collection::where('customer_id', $this->customerId)
             ->with('branch', 'delegate', 'treasury')
@@ -271,6 +275,7 @@ class CustomerShow extends Component
             'totalRemaining'         => $totalRemaining,
             'returns'                => $returns,
             'totalReturns'           => $totalReturns,
+            'returnsByOrder'         => $returnsByOrder,
             'collections'            => $collections,
             'totalCollected'         => $totalCollected,
             'customerPayments'       => $customerPayments,
