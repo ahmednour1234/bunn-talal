@@ -38,6 +38,8 @@ class Trip extends Model
         'cash_custody_treasury_id',
         'cash_custody_note',
         'settlement_treasury_id',
+        'settlement_items',
+        'settlement_treasury_transaction_id',
     ];
 
     protected function casts(): array
@@ -56,8 +58,10 @@ class Trip extends Model
             'settlement_cash_deficit' => 'decimal:2',
             'settlement_product_deficit' => 'decimal:2',
             'cash_custody_amount'     => 'decimal:2',
-            'settlement_approved_at'  => 'datetime',
-            'settlement_treasury_id'  => 'integer',
+            'settlement_approved_at'              => 'datetime',
+            'settlement_treasury_id'               => 'integer',
+            'settlement_items'                     => 'array',
+            'settlement_treasury_transaction_id'   => 'integer',
         ];
     }
 

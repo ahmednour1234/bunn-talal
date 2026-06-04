@@ -252,6 +252,7 @@ class TripShow extends Component
                 ->where('quantity', '>', 0)
                 ->get();
 
+            $settlementSnapshot = [];
             foreach ($delegateStocks as $stock) {
                 DB::table('branch_product')->updateOrInsert(
                     ['branch_id' => $branchId, 'product_id' => $stock->product_id],
@@ -261,6 +262,11 @@ class TripShow extends Component
                         'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
                     ]
                 );
+                $settlementSnapshot[] = [
+                    'product_id'      => $stock->product_id,
+                    'actual_received' => (float) $stock->quantity,
+                    'branch_added'    => (float) $stock->quantity,
+                ];
             }
 
             // Zero out delegate stock for this delegate
@@ -270,6 +276,27 @@ class TripShow extends Component
 
             // Mark all linked dispatches as settled
             $trip->dispatches()->update(['status' => 'settled']);
+
+            // Save snapshot for future reversal (if no auto-approve snapshot exists yet)
+            if (empty($trip->settlement_items)) {
+                $trip->update(['settlement_items' => $settlementSnapshot]);
+            }
+
+            // Handle cash deposit to treasury if not yet done
+            if ($trip->settlement_treasury_id && !$trip->settlement_treasury_transaction_id && $trip->settlement_cash_actual > 0) {
+                \App\Models\Treasury::where('id', $trip->settlement_treasury_id)
+                    ->increment('balance', $trip->settlement_cash_actual);
+                $tx = \App\Models\TreasuryTransaction::create([
+                    'treasury_id'      => $trip->settlement_treasury_id,
+                    'type'             => 'deposit',
+                    'amount'           => $trip->settlement_cash_actual,
+                    'description'      => 'تسوية رحلة #' . $trip->id,
+                    'reference_number' => (string) $trip->id,
+                    'date'             => now()->toDateString(),
+                    'admin_id'         => $admin->id,
+                ]);
+                $trip->update(['settlement_treasury_transaction_id' => $tx->id]);
+            }
         });
 
         session()->flash('success', 'تمت الموافقة على التسوية واعتمادها');
@@ -310,22 +337,115 @@ class TripShow extends Component
             return;
         }
 
-        $this->trip->update([
-            'status'                      => 'active',
-            'settlement_status'           => null,
-            'settlement_rejection_reason' => null,
-            'settlement_approved_by'      => null,
-            'settlement_approved_at'      => null,
-            'settled_by'                  => null,
-            'settled_at'                  => null,
-            'settlement_cash_deficit'     => 0,
-            'settlement_product_deficit'  => 0,
-        ]);
+        DB::transaction(function () {
+            $wasApproved = $this->trip->status === 'settled'
+                && in_array($this->trip->settlement_status, ['approved', null]);
 
-        // Re-open dispatches to their previous state
-        $this->trip->dispatches()->where('status', 'settled')->update(['status' => 'dispatched']);
+            if ($wasApproved) {
+                $branchId   = $this->trip->branch_id;
+                $delegateId = $this->trip->delegate_id;
 
-        session()->flash('success', 'تمت إعادة فتح الرحلة للتسوية من جديد');
+                // ── 1. Reverse stock: move branch_added quantities back to delegate ──
+                $snapshot = $this->trip->settlement_items ?? [];
+
+                if (!empty($snapshot)) {
+                    // Use stored snapshot (accurate)
+                    foreach ($snapshot as $row) {
+                        $qty = (float) ($row['branch_added'] ?? $row['actual_received'] ?? 0);
+                        if ($qty <= 0) continue;
+
+                        DB::table('branch_product')
+                            ->where('branch_id', $branchId)
+                            ->where('product_id', $row['product_id'])
+                            ->decrement('quantity', $qty);
+
+                        DB::table('delegate_product')->updateOrInsert(
+                            ['delegate_id' => $delegateId, 'product_id' => $row['product_id']],
+                            [
+                                'quantity'   => DB::raw("COALESCE(quantity, 0) + {$qty}"),
+                                'updated_at' => now(),
+                                'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
+                            ]
+                        );
+                    }
+                } else {
+                    // Fallback: recalculate from dispatches − sales (no snapshot stored)
+                    $rows = [];
+                    foreach ($this->trip->dispatches()->with('items')->get() as $dispatch) {
+                        foreach ($dispatch->items as $item) {
+                            $rows[$item->product_id] = ($rows[$item->product_id] ?? 0) + (float) $item->quantity;
+                        }
+                    }
+                    foreach ($this->trip->saleOrders()->whereNotIn('status', ['cancelled'])->with('items')->get() as $order) {
+                        foreach ($order->items as $item) {
+                            if (isset($rows[$item->product_id])) {
+                                $rows[$item->product_id] -= (float) $item->quantity;
+                            }
+                        }
+                    }
+                    foreach ($this->trip->saleReturns()->whereNotIn('status', ['cancelled'])->with('items')->get() as $return) {
+                        foreach ($return->items as $item) {
+                            if (isset($rows[$item->product_id])) {
+                                $rows[$item->product_id] += (float) $item->quantity;
+                            }
+                        }
+                    }
+                    foreach ($rows as $pid => $qty) {
+                        $qty = max(0, $qty);
+                        if ($qty <= 0) continue;
+
+                        DB::table('branch_product')
+                            ->where('branch_id', $branchId)
+                            ->where('product_id', $pid)
+                            ->decrement('quantity', $qty);
+
+                        DB::table('delegate_product')->updateOrInsert(
+                            ['delegate_id' => $delegateId, 'product_id' => $pid],
+                            [
+                                'quantity'   => DB::raw("COALESCE(quantity, 0) + {$qty}"),
+                                'updated_at' => now(),
+                                'created_at' => DB::raw("COALESCE(created_at, '" . now() . "')"),
+                            ]
+                        );
+                    }
+                }
+
+                // ── 2. Reverse cash: remove from treasury and delete transaction ──
+                $txId = $this->trip->settlement_treasury_transaction_id;
+                if ($txId) {
+                    $tx = \App\Models\TreasuryTransaction::find($txId);
+                    if ($tx) {
+                        \App\Models\Treasury::where('id', $tx->treasury_id)
+                            ->decrement('balance', $tx->amount);
+                        $tx->delete();
+                    }
+                }
+            }
+
+            // ── 3. Clear all settlement data ──
+            $this->trip->update([
+                'status'                               => 'active',
+                'settlement_status'                    => null,
+                'settlement_rejection_reason'          => null,
+                'settlement_approved_by'               => null,
+                'settlement_approved_at'               => null,
+                'settled_by'                           => null,
+                'settled_at'                           => null,
+                'settlement_cash_expected'             => 0,
+                'settlement_cash_actual'               => null,
+                'settlement_cash_deficit'              => 0,
+                'settlement_product_deficit'           => 0,
+                'settlement_notes'                     => null,
+                'settlement_treasury_id'               => null,
+                'settlement_items'                     => null,
+                'settlement_treasury_transaction_id'   => null,
+            ]);
+
+            // Re-open dispatches
+            $this->trip->dispatches()->where('status', 'settled')->update(['status' => 'dispatched']);
+        });
+
+        session()->flash('success', 'تمت إعادة فتح الرحلة وعُكس تأثير التسوية على المخزون والخزينة');
         $this->loadTrip();
     }
 

@@ -185,7 +185,8 @@ class TripSettle extends Component
      */
     public function finalizeSettlement(): void
     {
-        $branchId = $this->trip->branch_id;
+        $branchId      = $this->trip->branch_id;
+        $settlementSnapshot = [];
 
         // Return actual_received quantities back to branch stock
         foreach ($this->productItems as $item) {
@@ -200,16 +201,29 @@ class TripSettle extends Component
                     ]
                 );
             }
+
+            // Save snapshot for potential reversal
+            $settlementSnapshot[] = [
+                'product_id'     => $item['product_id'],
+                'actual_received' => $qty,
+                'branch_added'   => $qty > 0 && $branchId ? $qty : 0,
+            ];
         }
 
         // Mark all linked dispatches as settled
         $this->trip->dispatches()->update(['status' => 'settled']);
 
+        // Zero out delegate stock for this delegate (products handed back)
+        DB::table('delegate_product')
+            ->where('delegate_id', $this->trip->delegate_id)
+            ->update(['quantity' => 0, 'updated_at' => now()]);
+
         // Deposit actual cash handed over into the selected treasury
+        $txId = null;
         if ($this->settlementTreasuryId && $this->cashActual > 0) {
             Treasury::where('id', $this->settlementTreasuryId)
                 ->increment('balance', $this->cashActual);
-            TreasuryTransaction::create([
+            $tx = TreasuryTransaction::create([
                 'treasury_id'      => $this->settlementTreasuryId,
                 'type'             => 'deposit',
                 'amount'           => $this->cashActual,
@@ -218,7 +232,14 @@ class TripSettle extends Component
                 'date'             => now()->toDateString(),
                 'admin_id'         => auth('admin')->id(),
             ]);
+            $txId = $tx->id;
         }
+
+        // Persist snapshot and treasury transaction reference for future reversal
+        $this->trip->update([
+            'settlement_items'                   => $settlementSnapshot,
+            'settlement_treasury_transaction_id' => $txId,
+        ]);
     }
 
     public function render()
