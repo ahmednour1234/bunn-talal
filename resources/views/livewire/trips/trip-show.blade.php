@@ -426,7 +426,7 @@
                         <tbody class="divide-y divide-gray-50">
                             @foreach($dispatchedProducts as $pid => $prod)
                             @php
-                                $netSold      = max(0, $prod['sold_qty'] - $prod['returned_qty'] - $prod['cancelled_qty']);
+                                $netSold      = max(0, $prod['sold_qty'] - $prod['returned_qty']);
                                 $currentQty   = max(0, $prod['dispatched_qty'] - $netSold);
                                 $currentValue = $currentQty * $prod['selling_price'];
                             @endphp
@@ -477,11 +477,11 @@
                                 <td class="px-3 py-2.5 text-center text-xs font-bold text-blue-600">{{ $fmtQty($dispatchedProducts->sum('returned_qty')) }}</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-bold text-red-600">{{ $fmtQty($dispatchedProducts->sum('cancelled_qty')) }}</td>
                                 <td class="px-3 py-2.5 text-center text-xs font-extrabold text-amber-700">
-                                    {{ $fmtQty($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - max(0, $p['sold_qty'] - $p['returned_qty'] - $p['cancelled_qty'])))) }}
+                                    {{ $fmtQty($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - max(0, $p['sold_qty'] - $p['returned_qty'])))) }}
                                 </td>
                                 <td colspan="2"></td>
                                 <td class="px-3 py-2.5 text-center text-xs font-extrabold text-amber-700">
-                                    {{ number_format($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - max(0, $p['sold_qty'] - $p['returned_qty'] - $p['cancelled_qty'])) * $p['selling_price']), 2) }} ج.م
+                                    {{ number_format($dispatchedProducts->sum(fn($p) => max(0, $p['dispatched_qty'] - max(0, $p['sold_qty'] - $p['returned_qty'])) * $p['selling_price']), 2) }} ج.م
                                 </td>
                             </tr>
                         </tfoot>

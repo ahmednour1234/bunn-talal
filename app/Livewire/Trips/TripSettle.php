@@ -87,9 +87,12 @@ class TripSettle extends Component
             }
         }
 
-        // expected_remaining = dispatched - sold + cancelled - already_returned
+        // expected_remaining = dispatched - sold - already_returned
+        // cancelled_qty is displayed for info but does NOT reduce remaining:
+        // cancelled orders were never delivered to customers, so products are still with the delegate.
+        // sold_qty already excludes cancelled orders, so adding +cancelled would double-count.
         foreach ($rows as $pid => &$row) {
-            $row['expected_remaining'] = max(0, $row['dispatched'] - $row['sold'] + $row['cancelled'] - $row['already_returned']);
+            $row['expected_remaining'] = max(0, $row['dispatched'] - $row['sold'] - $row['already_returned']);
             $row['actual_received']    = (string)round($row['expected_remaining'], 3);
         }
         unset($row);
