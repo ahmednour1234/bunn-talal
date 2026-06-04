@@ -8,16 +8,12 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * Note: settlement_items column was considered but not needed —
+     * reversal is computed live from trip relationships (dispatches/saleOrders/saleReturns).
      */
     public function up(): void
     {
-        Schema::table('trips', function (Blueprint $table) {
-            // Stores per-product snapshot at settlement time:
-            // [{product_id, actual_received, branch_added}]
-            $table->json('settlement_items')->nullable()->after('settlement_notes');
-            // Stores the treasury transaction ID created at settlement for reversal
-            $table->unsignedBigInteger('settlement_treasury_transaction_id')->nullable()->after('settlement_items');
-        });
+        // No columns needed — reversal uses live trip data
     }
 
     /**
@@ -25,8 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('trips', function (Blueprint $table) {
-            $table->dropColumn(['settlement_items', 'settlement_treasury_transaction_id']);
-        });
+        // Nothing to drop
     }
 };
