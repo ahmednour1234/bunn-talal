@@ -4,5 +4,5 @@ namespace App\Repositories\Contracts;
 
 interface PurchaseReturnRepositoryInterface extends BaseRepositoryInterface
 {
-    public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $supplierId);
+    public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $supplierId, ?int $branchId = null);
 }

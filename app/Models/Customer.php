@@ -17,6 +17,7 @@ class Customer extends Model
         'address',
         'latitude',
         'longitude',
+        'branch_id',
         'credit_limit',
         'opening_balance',
         'balance',
@@ -39,6 +40,11 @@ class Customer extends Model
     public function area()
     {
         return $this->belongsTo(Area::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function saleOrders()

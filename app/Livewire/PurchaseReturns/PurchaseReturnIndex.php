@@ -2,6 +2,7 @@
 
 namespace App\Livewire\PurchaseReturns;
 
+use App\Models\Branch;
 use App\Models\PurchaseReturn;
 use App\Models\Supplier;
 use App\Services\PurchaseReturnService;
@@ -15,10 +16,12 @@ class PurchaseReturnIndex extends Component
     public string $search = '';
     public string $statusFilter = '';
     public string $supplierFilter = '';
+    public string $branchFilter = '';
 
     public function updatingSearch() { $this->resetPage(); }
     public function updatingStatusFilter() { $this->resetPage(); }
     public function updatingSupplierFilter() { $this->resetPage(); }
+    public function updatingBranchFilter() { $this->resetPage(); }
 
     public function confirmReturn(int $id, PurchaseReturnService $service)
     {
@@ -49,20 +52,24 @@ class PurchaseReturnIndex extends Component
     public function render(PurchaseReturnService $service)
     {
         $supplierId = $this->supplierFilter ? (int) $this->supplierFilter : null;
+        $branchId = $this->branchFilter ? (int) $this->branchFilter : null;
 
         return view('livewire.purchase-returns.purchase-return-index', [
             'returns' => $service->paginateWithFilters(
                 10,
                 $this->search ?: null,
                 $this->statusFilter ?: null,
-                $supplierId
+                $supplierId,
+                $branchId
             ),
             'suppliers' => Supplier::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
             'statusLabels' => PurchaseReturn::statusLabels(),
             'summaryStats' => $service->getSummaryStats(
                 $this->search ?: null,
                 $this->statusFilter ?: null,
-                $supplierId
+                $supplierId,
+                $branchId
             ),
         ]);
     }

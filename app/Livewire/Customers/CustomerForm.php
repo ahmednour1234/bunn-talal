@@ -3,6 +3,7 @@
 namespace App\Livewire\Customers;
 
 use App\Models\Area;
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Delegate;
 use App\Services\CustomerService;
@@ -15,6 +16,7 @@ class CustomerForm extends Component
     public string $phone = '';
     public string $email = '';
     public ?int $area_id = null;
+    public ?int $branch_id = null;
     public string $address = '';
     public ?string $latitude = null;
     public ?string $longitude = null;
@@ -33,6 +35,7 @@ class CustomerForm extends Component
             $this->phone = $customer->phone ?? '';
             $this->email = $customer->email ?? '';
             $this->area_id = $customer->area_id;
+            $this->branch_id = $customer->branch_id;
             $this->address = $customer->address ?? '';
             $this->latitude = $customer->latitude;
             $this->longitude = $customer->longitude;
@@ -51,6 +54,7 @@ class CustomerForm extends Component
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'area_id' => 'nullable|exists:areas,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'address' => 'nullable|string|max:500',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
@@ -82,6 +86,7 @@ class CustomerForm extends Component
             'phone' => $this->phone ?: null,
             'email' => $this->email ?: null,
             'area_id' => $this->area_id ?: null,
+            'branch_id' => $this->branch_id ?: null,
             'address' => $this->address ?: null,
             'latitude' => $this->latitude ?: null,
             'longitude' => $this->longitude ?: null,
@@ -109,6 +114,7 @@ class CustomerForm extends Component
         return view('livewire.customers.customer-form', [
             'classificationLabels' => Customer::classificationLabels(),
             'areas' => Area::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
             'delegates' => Delegate::where('is_active', true)->orderBy('name')->get(),
         ]);
     }

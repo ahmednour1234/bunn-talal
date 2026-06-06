@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Customers;
 
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Services\CustomerService;
 use Livewire\Component;
@@ -14,6 +15,7 @@ class CustomerIndex extends Component
     public string $search = '';
     public string $classificationFilter = '';
     public string $areaFilter = '';
+    public string $branchFilter = '';
 
     protected CustomerService $customerService;
 
@@ -33,6 +35,11 @@ class CustomerIndex extends Component
     }
 
     public function updatingAreaFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingBranchFilter()
     {
         $this->resetPage();
     }
@@ -67,7 +74,7 @@ class CustomerIndex extends Component
 
     public function render()
     {
-        $query = Customer::query()->with('area');
+        $query = Customer::query()->with(['area', 'branch']);
 
         if ($this->search) {
             $search = $this->search;
@@ -86,10 +93,15 @@ class CustomerIndex extends Component
             $query->where('area_id', $this->areaFilter);
         }
 
+        if ($this->branchFilter) {
+            $query->where('branch_id', $this->branchFilter);
+        }
+
         return view('livewire.customers.customer-index', [
             'customers' => $query->latest()->paginate(10),
             'classificationLabels' => Customer::classificationLabels(),
             'areas' => \App\Models\Area::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 }

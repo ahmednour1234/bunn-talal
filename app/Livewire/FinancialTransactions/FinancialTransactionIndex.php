@@ -3,6 +3,7 @@
 namespace App\Livewire\FinancialTransactions;
 
 use App\Models\Account;
+use App\Models\Branch;
 use App\Models\FinancialTransaction;
 use App\Services\FinancialTransactionService;
 use Livewire\Component;
@@ -15,6 +16,7 @@ class FinancialTransactionIndex extends Component
     public string $search = '';
     public string $typeFilter = '';
     public string $accountFilter = '';
+    public string $branchFilter = '';
 
     public function updatingSearch()
     {
@@ -27,6 +29,11 @@ class FinancialTransactionIndex extends Component
     }
 
     public function updatingAccountFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingBranchFilter()
     {
         $this->resetPage();
     }
@@ -45,7 +52,7 @@ class FinancialTransactionIndex extends Component
 
     public function render()
     {
-        $query = FinancialTransaction::query()->with(['account', 'treasury', 'admin']);
+        $query = FinancialTransaction::query()->with(['account', 'treasury', 'branch', 'admin']);
 
         if ($this->search) {
             $query->where('description', 'like', "%{$this->search}%");
@@ -59,9 +66,14 @@ class FinancialTransactionIndex extends Component
             $query->where('account_id', $this->accountFilter);
         }
 
+        if ($this->branchFilter) {
+            $query->where('branch_id', $this->branchFilter);
+        }
+
         return view('livewire.financial-transactions.financial-transaction-index', [
             'transactions' => $query->latest()->paginate(10),
             'accounts' => Account::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
             'typeLabels' => FinancialTransaction::typeLabels(),
         ]);
     }

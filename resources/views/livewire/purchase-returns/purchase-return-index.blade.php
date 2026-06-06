@@ -137,6 +137,14 @@
                     @endforeach
                 </select>
             </div>
+            <div class="filter-item">
+                <select wire:model.live="branchFilter" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm">
+                    <option value="">كل الفروع</option>
+                    @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
 

@@ -230,6 +230,7 @@
                         <span class="text-gray-500">الهاتف</span><span class="font-semibold text-gray-800" dir="ltr">{{ $customer->phone ?? '—' }}</span>
                         <span class="text-gray-500">البريد</span><span class="font-semibold text-gray-800" dir="ltr">{{ $customer->email ?? '—' }}</span>
                         <span class="text-gray-500">المنطقة</span><span class="font-semibold text-gray-800">{{ $customer->area?->name ?? '—' }}</span>
+                        <span class="text-gray-500">الفرع</span><span class="font-semibold text-gray-800">{{ $customer->branch?->name ?? '—' }}</span>
                         <span class="text-gray-500">العنوان</span><span class="font-semibold text-gray-800">{{ $customer->address ?? '—' }}</span>
                         <span class="text-gray-500">التصنيف</span><span class="font-semibold text-gray-800">{{ $customer->classification_label }}</span>
                         <span class="text-gray-500">الرصيد الافتتاحي</span><span class="font-semibold text-gray-800">{{ number_format($customer->opening_balance, 2) }}</span>

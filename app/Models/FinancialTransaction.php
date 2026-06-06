@@ -13,6 +13,7 @@ class FinancialTransaction extends Model
         'type',
         'account_id',
         'treasury_id',
+        'branch_id',
         'treasury_transaction_id',
         'amount',
         'description',
@@ -36,6 +37,11 @@ class FinancialTransaction extends Model
     public function treasury()
     {
         return $this->belongsTo(Treasury::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function treasuryTransaction()

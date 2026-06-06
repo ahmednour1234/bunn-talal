@@ -3,6 +3,7 @@
 namespace App\Livewire\FinancialTransactions;
 
 use App\Models\Account;
+use App\Models\Branch;
 use App\Models\FinancialTransaction;
 use App\Models\Treasury;
 use App\Services\FinancialTransactionService;
@@ -14,6 +15,7 @@ class FinancialTransactionForm extends Component
     public string $type = 'expense';
     public ?int $account_id = null;
     public ?int $treasury_id = null;
+    public ?int $branch_id = null;
     public string $amount = '';
     public string $description = '';
     public string $date = '';
@@ -28,6 +30,7 @@ class FinancialTransactionForm extends Component
             $this->type = $tx->type;
             $this->account_id = $tx->account_id;
             $this->treasury_id = $tx->treasury_id;
+            $this->branch_id = $tx->branch_id;
             $this->amount = (string) ($tx->amount * 1);
             $this->description = $tx->description ?? '';
             $this->date = $tx->date->format('Y-m-d');
@@ -40,6 +43,7 @@ class FinancialTransactionForm extends Component
             'type' => 'required|in:expense,revenue',
             'account_id' => 'required|exists:accounts,id',
             'treasury_id' => 'nullable|exists:treasuries,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:1000',
             'date' => 'required|date',
@@ -65,6 +69,7 @@ class FinancialTransactionForm extends Component
             'type' => $this->type,
             'account_id' => $this->account_id,
             'treasury_id' => $this->treasury_id ?: null,
+            'branch_id' => $this->branch_id ?: null,
             'amount' => $this->amount,
             'description' => $this->description ?: null,
             'date' => $this->date,
@@ -87,6 +92,7 @@ class FinancialTransactionForm extends Component
         return view('livewire.financial-transactions.financial-transaction-form', [
             'accounts' => Account::where('is_active', true)->orderBy('name')->get(),
             'treasuries' => Treasury::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
             'typeLabels' => FinancialTransaction::typeLabels(),
         ]);
     }

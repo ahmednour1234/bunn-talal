@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Delegates;
 
+use App\Models\Branch;
 use App\Models\Delegate;
 use App\Services\DelegateService;
 use Livewire\Component;
@@ -12,8 +13,14 @@ class DelegateIndex extends Component
     use WithPagination;
 
     public string $search = '';
+    public string $branchFilter = '';
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingBranchFilter()
     {
         $this->resetPage();
     }
@@ -55,8 +62,14 @@ class DelegateIndex extends Component
             });
         }
 
+        if ($this->branchFilter) {
+            $branchId = (int) $this->branchFilter;
+            $query->whereHas('branches', fn($q) => $q->where('branches.id', $branchId));
+        }
+
         return view('livewire.delegates.delegate-index', [
             'delegates' => $query->latest()->paginate(10),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 }

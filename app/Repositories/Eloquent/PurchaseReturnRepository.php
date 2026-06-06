@@ -12,7 +12,7 @@ class PurchaseReturnRepository extends BaseRepository implements PurchaseReturnR
         parent::__construct($model);
     }
 
-    public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $supplierId)
+    public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $supplierId, ?int $branchId = null)
     {
         $query = $this->model->with(['invoice', 'supplier', 'branch', 'admin']);
 
@@ -30,6 +30,10 @@ class PurchaseReturnRepository extends BaseRepository implements PurchaseReturnR
 
         if ($supplierId) {
             $query->where('supplier_id', $supplierId);
+        }
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
         }
 
         return $query->latest()->paginate($perPage);

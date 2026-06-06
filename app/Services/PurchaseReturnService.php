@@ -22,26 +22,26 @@ class PurchaseReturnService
         return $this->returnRepository->getById($id);
     }
 
-    public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $supplierId)
+    public function paginateWithFilters(int $perPage, ?string $search, ?string $status, ?int $supplierId, ?int $branchId = null)
     {
-        return $this->returnRepository->paginateWithFilters($perPage, $search, $status, $supplierId);
+        return $this->returnRepository->paginateWithFilters($perPage, $search, $status, $supplierId, $branchId);
     }
 
-    public function getFilteredReturns(?string $search, ?string $status, ?int $supplierId)
+    public function getFilteredReturns(?string $search, ?string $status, ?int $supplierId, ?int $branchId = null)
     {
-        return $this->buildFilteredQuery($search, $status, $supplierId)
+        return $this->buildFilteredQuery($search, $status, $supplierId, $branchId)
             ->with(['invoice', 'supplier', 'branch', 'admin'])
             ->latest()
             ->get();
     }
 
-    public function getSummaryStats(?string $search, ?string $status, ?int $supplierId): array
+    public function getSummaryStats(?string $search, ?string $status, ?int $supplierId, ?int $branchId = null): array
     {
-        $baseQuery = $this->buildFilteredQuery($search, $status, $supplierId);
+        $baseQuery = $this->buildFilteredQuery($search, $status, $supplierId, $branchId);
 
         $totals = (clone $baseQuery)->selectRaw('COUNT(*) as count, COALESCE(SUM(subtotal),0) as subtotal, COALESCE(SUM(loss_amount),0) as loss, COALESCE(SUM(refund_amount),0) as refund')->first();
 
-        $statusCounts = (clone $this->buildFilteredQuery($search, null, $supplierId))
+        $statusCounts = (clone $this->buildFilteredQuery($search, null, $supplierId, $branchId))
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
@@ -61,7 +61,7 @@ class PurchaseReturnService
         ];
     }
 
-    protected function buildFilteredQuery(?string $search, ?string $status, ?int $supplierId)
+    protected function buildFilteredQuery(?string $search, ?string $status, ?int $supplierId, ?int $branchId = null)
     {
         $query = PurchaseReturn::query();
 
@@ -79,6 +79,10 @@ class PurchaseReturnService
 
         if ($supplierId) {
             $query->where('supplier_id', $supplierId);
+        }
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
         }
 
         return $query;

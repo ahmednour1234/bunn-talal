@@ -71,6 +71,21 @@
                     @enderror
                 </div>
 
+                {{-- Branch --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الفرع</label>
+                    <select wire:model="branch_id"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
+                        <option value="">بدون فرع</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('branch_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 {{-- Active --}}
                 <div class="flex items-end pb-1">
                     <label class="flex items-center gap-3 cursor-pointer">
