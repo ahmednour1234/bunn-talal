@@ -320,6 +320,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::get('/purchase-returns', [PurchaseReturnController::class, 'index'])->name('purchase-returns.index');
         Route::get('/purchase-returns/export/pdf', [PurchaseReturnController::class, 'exportPdf'])->name('purchase-returns.export.pdf');
         Route::get('/purchase-returns/create', [PurchaseReturnController::class, 'create'])->name('purchase-returns.create')->middleware('permission:purchase-returns.create');
+        Route::get('/purchase-returns/{id}', [PurchaseReturnController::class, 'show'])->name('purchase-returns.show');
         Route::get('/purchase-returns/{id}/pdf', [PurchaseReturnController::class, 'showPdf'])->name('purchase-returns.show.pdf');
     });
 

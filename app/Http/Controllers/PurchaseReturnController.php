@@ -19,6 +19,11 @@ class PurchaseReturnController extends Controller
         return view('pages.purchase-returns.create');
     }
 
+    public function show(int $id)
+    {
+        return view('pages.purchase-returns.show', compact('id'));
+    }
+
     public function showPdf(int $id): \Illuminate\Http\Response
     {
         $return = PurchaseReturn::with([

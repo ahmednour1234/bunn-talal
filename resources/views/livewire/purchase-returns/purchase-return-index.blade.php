@@ -211,6 +211,10 @@
                             </td>
                             <td class="px-6 py-5 text-center">
                                 <div class="flex items-center justify-center gap-1">
+                                    <a href="{{ route('purchase-returns.show', $return->id) }}"
+                                       class="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg" title="عرض التفاصيل">
+                                        <x-icon name="eye" class="w-4 h-4" />
+                                    </a>
                                     <a href="{{ route('purchase-returns.show.pdf', $return->id) }}" target="_blank"
                                        class="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg" title="PDF الفاتورة">
                                         <x-icon name="document-arrow-down" class="w-4 h-4" />
