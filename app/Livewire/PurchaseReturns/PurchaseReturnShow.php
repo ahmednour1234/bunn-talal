@@ -44,6 +44,21 @@ class PurchaseReturnShow extends Component
         }
     }
 
+    public function reverseReturn(PurchaseReturnService $service): void
+    {
+        $admin = auth('admin')->user();
+        if (!$admin->hasPermission('purchase-returns.create')) {
+            session()->flash('error', 'ليس لديك صلاحية');
+            return;
+        }
+        try {
+            $service->reverseReturn($this->returnId);
+            session()->flash('success', 'تم عكس المرتجع وإرجاع الكميات والأرصدة');
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+        }
+    }
+
     public function render(PurchaseReturnService $service)
     {
         $return = $service->getById($this->returnId);

@@ -244,12 +244,12 @@ class PurchaseReturnService
                 }
             }
 
-            // ── If treasury specified, withdraw refund from treasury ───────
+            // ── If treasury specified, deposit refund INTO treasury ────────
             if ($return->treasury_id && $return->refund_amount > 0) {
-                Treasury::where('id', $return->treasury_id)->decrement('balance', $return->refund_amount);
+                Treasury::where('id', $return->treasury_id)->increment('balance', $return->refund_amount);
                 TreasuryTransaction::create([
                     'treasury_id'      => $return->treasury_id,
-                    'type'             => 'withdrawal',
+                    'type'             => 'deposit',
                     'amount'           => $return->refund_amount,
                     'description'      => 'مرتجع مشتريات #' . $return->return_number,
                     'reference_number' => $return->return_number,
@@ -275,6 +275,107 @@ class PurchaseReturnService
 
         $return->update(['status' => 'cancelled']);
         return $return;
+    }
+
+    public function reverseReturn(int $id): PurchaseReturn
+    {
+        return DB::transaction(function () use ($id) {
+            $return = $this->returnRepository->getById($id);
+
+            if (!in_array($return->status, ['confirmed', 'refunded'])) {
+                throw new \Exception('لا يمكن عكس هذا المرتجع — الحالة يجب أن تكون مؤكد أو مستردّ');
+            }
+
+            // ── Restore stock to branch ───────────────────────────────────
+            foreach ($return->items as $item) {
+                $current = DB::table('branch_product')
+                    ->where('branch_id', $return->branch_id)
+                    ->where('product_id', $item->product_id)
+                    ->first();
+
+                $returnUnit = $item->unit_id ? Unit::find($item->unit_id) : null;
+
+                if (!$current) {
+                    DB::table('branch_product')->insert([
+                        'branch_id'  => $return->branch_id,
+                        'product_id' => $item->product_id,
+                        'quantity'   => (float) $item->quantity,
+                        'unit_id'    => $item->unit_id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    continue;
+                }
+
+                $stockUnit = $current->unit_id ? Unit::find($current->unit_id) : null;
+
+                if (!$returnUnit || !$stockUnit) {
+                    DB::table('branch_product')
+                        ->where('branch_id', $return->branch_id)
+                        ->where('product_id', $item->product_id)
+                        ->increment('quantity', (float) $item->quantity);
+                    continue;
+                }
+
+                $qtyInStockUnit = ((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $stockUnit->conversion_factor;
+
+                if (abs($qtyInStockUnit - round($qtyInStockUnit)) < 0.000001) {
+                    DB::table('branch_product')
+                        ->where('branch_id', $return->branch_id)
+                        ->where('product_id', $item->product_id)
+                        ->increment('quantity', (int) round($qtyInStockUnit));
+                    continue;
+                }
+
+                $baseUnitId = $this->resolveBaseUnitId($stockUnit);
+                $baseUnit   = Unit::find($baseUnitId);
+                if (!$baseUnit) {
+                    continue;
+                }
+
+                $currentQtyInBase = (int) round(((float) $current->quantity * (float) $stockUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
+                $returnQtyInBase  = (int) round(((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
+
+                DB::table('branch_product')
+                    ->where('id', $current->id)
+                    ->update([
+                        'unit_id'    => $baseUnit->id,
+                        'quantity'   => $currentQtyInBase + $returnQtyInBase,
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            // ── Restore supplier balance ──────────────────────────────────
+            Supplier::where('id', $return->supplier_id)->increment('balance', $return->refund_amount);
+
+            // ── Reverse invoice paid_amount and status ────────────────────
+            if ($return->purchase_invoice_id && $return->refund_amount > 0) {
+                $invoice = PurchaseInvoice::find($return->purchase_invoice_id);
+                if ($invoice && $invoice->status !== 'cancelled') {
+                    $newPaid = max(0, (float) $invoice->paid_amount - (float) $return->refund_amount);
+                    $total   = (float) $invoice->total;
+                    $status  = $newPaid >= $total ? 'paid' : ($newPaid > 0 ? 'partial_paid' : 'confirmed');
+                    $invoice->update(['paid_amount' => $newPaid, 'status' => $status]);
+                }
+            }
+
+            // ── Reverse treasury deposit ──────────────────────────────────
+            if ($return->treasury_id && $return->refund_amount > 0) {
+                Treasury::where('id', $return->treasury_id)->decrement('balance', $return->refund_amount);
+                TreasuryTransaction::create([
+                    'treasury_id'      => $return->treasury_id,
+                    'type'             => 'withdrawal',
+                    'amount'           => $return->refund_amount,
+                    'description'      => 'عكس مرتجع مشتريات #' . $return->return_number,
+                    'reference_number' => $return->return_number,
+                    'date'             => now()->toDateString(),
+                    'admin_id'         => auth('admin')->id(),
+                ]);
+            }
+
+            $return->update(['status' => 'cancelled']);
+            return $return;
+        });
     }
 
     protected function resolveBaseUnitId(Unit $unit): int

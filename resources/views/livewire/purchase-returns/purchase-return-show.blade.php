@@ -168,4 +168,17 @@
             @endif
         </div>
     @endif
+
+    @if(in_array($return->status, ['confirmed', 'refunded']))
+        <div class="mt-4 flex items-center gap-3">
+            @if(auth('admin')->user()?->hasPermission('purchase-returns.create'))
+                <button wire:click="reverseReturn"
+                    wire:confirm="تحذير: سيتم عكس هذا المرتجع — ستُضاف الكميات للفرع مجدداً وتُعاد أرصدة المورد والخزينة. هل أنت متأكد؟"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors text-sm font-medium">
+                    <x-icon name="arrow-uturn-right" class="w-4 h-4" />
+                    عكس المرتجع
+                </button>
+            @endif
+        </div>
+    @endif
 </div>
