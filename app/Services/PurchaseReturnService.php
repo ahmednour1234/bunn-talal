@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\PurchaseInvoice;
 use App\Models\PurchaseReturn;
 use App\Models\Supplier;
 use App\Models\Treasury;
@@ -226,6 +227,22 @@ class PurchaseReturnService
 
             // ── Reduce supplier balance by refund amount ──────────────────
             Supplier::where('id', $return->supplier_id)->decrement('balance', $return->refund_amount);
+
+            // ── Update purchase invoice paid_amount and status ────────────
+            if ($return->purchase_invoice_id && $return->refund_amount > 0) {
+                $invoice = PurchaseInvoice::find($return->purchase_invoice_id);
+                if ($invoice && !in_array($invoice->status, ['paid', 'cancelled'])) {
+                    $invoice->increment('paid_amount', $return->refund_amount);
+                    $invoice->refresh();
+                    $newPaid = (float) $invoice->paid_amount;
+                    $total   = (float) $invoice->total;
+                    if ($newPaid >= $total) {
+                        $invoice->update(['status' => 'paid']);
+                    } elseif ($newPaid > 0) {
+                        $invoice->update(['status' => 'partial_paid']);
+                    }
+                }
+            }
 
             // ── If treasury specified, withdraw refund from treasury ───────
             if ($return->treasury_id && $return->refund_amount > 0) {
