@@ -158,6 +158,7 @@ Route::middleware('auth:admin')->group(function () {
     // Suppliers
     Route::middleware('permission:suppliers.view')->group(function () {
         Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+        Route::get('/suppliers/{id}', [SupplierController::class, 'show'])->name('suppliers.show');
     });
     Route::middleware('permission:suppliers.create')->group(function () {
         Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');

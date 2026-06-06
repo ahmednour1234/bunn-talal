@@ -14,6 +14,11 @@ class SupplierController extends Controller
         return view('pages.suppliers.create');
     }
 
+    public function show(int $id)
+    {
+        return view('pages.suppliers.show', compact('id'));
+    }
+
     public function edit(int $id)
     {
         return view('pages.suppliers.edit', compact('id'));

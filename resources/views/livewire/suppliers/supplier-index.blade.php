@@ -76,6 +76,10 @@
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-1.5 justify-center">
+                            <a href="{{ route('suppliers.show', $supplier) }}"
+                                class="w-8 h-8 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 flex items-center justify-center transition-colors flex-shrink-0" title="كشف الحساب">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                            </a>
                             @if(auth('admin')->user()?->hasPermission('suppliers.edit'))
                                 <button wire:click="toggleActive({{ $supplier->id }})"
                                     class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200 flex items-center justify-center transition-colors flex-shrink-0"

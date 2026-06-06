@@ -129,7 +129,52 @@ class PurchaseReturnService
                 throw new \Exception('لا يمكن تأكيد هذا المرتجع');
             }
 
-            // Deduct stock from branch
+            // ── Validate stock availability before any deduction ──────────
+            foreach ($return->items as $item) {
+                $current = DB::table('branch_product')
+                    ->where('branch_id', $return->branch_id)
+                    ->where('product_id', $item->product_id)
+                    ->first();
+
+                if (!$current) {
+                    throw new \Exception("المنتج [{$item->product->name}] غير موجود في الفرع");
+                }
+
+                $returnUnit = $item->unit_id ? Unit::find($item->unit_id) : null;
+                $stockUnit  = $current->unit_id ? Unit::find($current->unit_id) : null;
+
+                if (!$returnUnit || !$stockUnit) {
+                    if ((float) $current->quantity < (float) $item->quantity) {
+                        throw new \Exception("الكمية المتاحة في الفرع غير كافية للمنتج [{$item->product->name}]");
+                    }
+                    continue;
+                }
+
+                $qtyInStockUnit = ((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $stockUnit->conversion_factor;
+
+                if (abs($qtyInStockUnit - round($qtyInStockUnit)) < 0.000001) {
+                    $deductQty = (int) round($qtyInStockUnit);
+                    if ((int) $current->quantity < $deductQty) {
+                        throw new \Exception("الكمية المتاحة في الفرع غير كافية للمنتج [{$item->product->name}]");
+                    }
+                    continue;
+                }
+
+                $baseUnitId = $this->resolveBaseUnitId($stockUnit);
+                $baseUnit   = Unit::find($baseUnitId);
+                if (!$baseUnit) {
+                    continue;
+                }
+
+                $currentQtyInBase = (int) round(((float) $current->quantity * (float) $stockUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
+                $returnQtyInBase  = (int) round(((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
+
+                if ($currentQtyInBase < $returnQtyInBase) {
+                    throw new \Exception("الكمية المتاحة في الفرع غير كافية للمنتج [{$item->product->name}]");
+                }
+            }
+
+            // ── Deduct stock from branch ──────────────────────────────────
             foreach ($return->items as $item) {
                 $current = DB::table('branch_product')
                     ->where('branch_id', $return->branch_id)
@@ -141,68 +186,56 @@ class PurchaseReturnService
                 }
 
                 $returnUnit = $item->unit_id ? Unit::find($item->unit_id) : null;
-                $stockUnit = $current->unit_id ? Unit::find($current->unit_id) : null;
+                $stockUnit  = $current->unit_id ? Unit::find($current->unit_id) : null;
 
                 if (!$returnUnit || !$stockUnit) {
-                    if ($current->quantity >= $item->quantity) {
-                        DB::table('branch_product')
-                            ->where('branch_id', $return->branch_id)
-                            ->where('product_id', $item->product_id)
-                            ->decrement('quantity', $item->quantity);
-                    }
+                    DB::table('branch_product')
+                        ->where('branch_id', $return->branch_id)
+                        ->where('product_id', $item->product_id)
+                        ->decrement('quantity', $item->quantity);
                     continue;
                 }
 
                 $qtyInStockUnit = ((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $stockUnit->conversion_factor;
 
                 if (abs($qtyInStockUnit - round($qtyInStockUnit)) < 0.000001) {
-                    $deductQty = (int) round($qtyInStockUnit);
-                    if ((int) $current->quantity >= $deductQty) {
-                        DB::table('branch_product')
-                            ->where('branch_id', $return->branch_id)
-                            ->where('product_id', $item->product_id)
-                            ->decrement('quantity', $deductQty);
-                    }
+                    DB::table('branch_product')
+                        ->where('branch_id', $return->branch_id)
+                        ->where('product_id', $item->product_id)
+                        ->decrement('quantity', (int) round($qtyInStockUnit));
                     continue;
                 }
 
                 $baseUnitId = $this->resolveBaseUnitId($stockUnit);
-                $baseUnit = Unit::find($baseUnitId);
+                $baseUnit   = Unit::find($baseUnitId);
                 if (!$baseUnit) {
                     continue;
                 }
 
-                $currentQtyInBase = ((float) $current->quantity * (float) $stockUnit->conversion_factor) / (float) $baseUnit->conversion_factor;
-                $returnQtyInBase = ((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $baseUnit->conversion_factor;
-
-                $currentQtyInBaseInt = (int) round($currentQtyInBase);
-                $returnQtyInBaseInt = (int) round($returnQtyInBase);
-
-                if ($currentQtyInBaseInt < $returnQtyInBaseInt) {
-                    continue;
-                }
+                $currentQtyInBase = (int) round(((float) $current->quantity * (float) $stockUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
+                $returnQtyInBase  = (int) round(((float) $item->quantity * (float) $returnUnit->conversion_factor) / (float) $baseUnit->conversion_factor);
 
                 DB::table('branch_product')
                     ->where('id', $current->id)
                     ->update([
-                        'unit_id' => $baseUnit->id,
-                        'quantity' => $currentQtyInBaseInt - $returnQtyInBaseInt,
+                        'unit_id'    => $baseUnit->id,
+                        'quantity'   => $currentQtyInBase - $returnQtyInBase,
                         'updated_at' => now(),
                     ]);
             }
 
-            // Reduce supplier balance by refund amount
+            // ── Reduce supplier balance by refund amount ──────────────────
             Supplier::where('id', $return->supplier_id)->decrement('balance', $return->refund_amount);
 
-            // If treasury specified, deposit refund
+            // ── If treasury specified, withdraw refund from treasury ───────
             if ($return->treasury_id && $return->refund_amount > 0) {
-                Treasury::where('id', $return->treasury_id)->increment('balance', $return->refund_amount);
+                Treasury::where('id', $return->treasury_id)->decrement('balance', $return->refund_amount);
                 TreasuryTransaction::create([
                     'treasury_id'      => $return->treasury_id,
-                    'type'             => 'deposit',
+                    'type'             => 'withdrawal',
                     'amount'           => $return->refund_amount,
-                    'description'      => 'مرتجع مشتريات #' . $return->id,
-                    'reference_number' => (string) $return->id,
+                    'description'      => 'مرتجع مشتريات #' . $return->return_number,
+                    'reference_number' => $return->return_number,
                     'date'             => now()->toDateString(),
                     'admin_id'         => auth('admin')->id(),
                 ]);
