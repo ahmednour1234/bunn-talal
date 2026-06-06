@@ -2,8 +2,12 @@
 
 namespace App\Livewire\PurchaseInvoices;
 
+use App\Models\PurchaseInvoicePayment;
+use App\Models\PurchaseReturn;
+use App\Models\Supplier;
 use App\Models\Treasury;
 use App\Services\PurchaseInvoiceService;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class PurchaseInvoiceShow extends Component
@@ -69,6 +73,70 @@ class PurchaseInvoiceShow extends Component
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }
+    }
+
+    public function recalculateStatus(): void
+    {
+        DB::transaction(function () {
+            $invoice = \App\Models\PurchaseInvoice::findOrFail($this->invoiceId);
+
+            if (in_array($invoice->status, ['cancelled', 'draft'])) {
+                return;
+            }
+
+            // Sum actual payments
+            $paidViaPayments = PurchaseInvoicePayment::where('purchase_invoice_id', $this->invoiceId)
+                ->sum('amount');
+
+            // Sum confirmed/refunded returns applied to this invoice
+            $paidViaReturns = PurchaseReturn::where('purchase_invoice_id', $this->invoiceId)
+                ->whereIn('status', ['confirmed', 'refunded'])
+                ->sum('refund_amount');
+
+            $totalPaid = round((float) $paidViaPayments + (float) $paidViaReturns, 2);
+            $total     = (float) $invoice->total;
+
+            if ($totalPaid >= $total) {
+                $status = 'paid';
+            } elseif ($totalPaid > 0) {
+                $status = 'partial_paid';
+            } else {
+                $status = 'confirmed';
+            }
+
+            $invoice->update([
+                'paid_amount' => $totalPaid,
+                'status'      => $status,
+            ]);
+
+            // Also sync supplier balance
+            $supplierId = $invoice->supplier_id;
+            if ($supplierId) {
+                $allInvoicesTotal = \App\Models\PurchaseInvoice::where('supplier_id', $supplierId)
+                    ->whereNotIn('status', ['cancelled', 'draft'])
+                    ->sum('total');
+
+                $allPayments = PurchaseInvoicePayment::whereHas(
+                    'invoice',
+                    fn ($q) => $q->where('supplier_id', $supplierId)
+                )->sum('amount');
+
+                $allReturns = PurchaseReturn::where('supplier_id', $supplierId)
+                    ->whereIn('status', ['confirmed', 'refunded'])
+                    ->sum('refund_amount');
+
+                $supplier = \App\Models\Supplier::find($supplierId);
+                if ($supplier) {
+                    $correctBalance = (float) $supplier->opening_balance
+                        + (float) $allInvoicesTotal
+                        - (float) $allPayments
+                        - (float) $allReturns;
+                    $supplier->update(['balance' => round($correctBalance, 2)]);
+                }
+            }
+        });
+
+        session()->flash('success', 'تم إعادة حساب حالة الفاتورة ورصيد المورد بنجاح');
     }
 
     public function render(PurchaseInvoiceService $service)
