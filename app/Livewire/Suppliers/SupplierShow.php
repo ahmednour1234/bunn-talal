@@ -116,6 +116,38 @@ class SupplierShow extends Component
         session()->flash('success', 'تم تسجيل الدفعة للمورد بنجاح');
     }
 
+    public function recalculateBalance(): void
+    {
+        DB::transaction(function () {
+            $supplier = Supplier::findOrFail($this->supplierId);
+
+            // Sum all active invoices
+            $totalInvoices = PurchaseInvoice::where('supplier_id', $this->supplierId)
+                ->whereNotIn('status', ['cancelled', 'draft'])
+                ->sum('total');
+
+            // Sum all actual payments made via PurchaseInvoicePayment
+            $totalPayments = PurchaseInvoicePayment::whereHas(
+                'invoice',
+                fn ($q) => $q->where('supplier_id', $this->supplierId)
+            )->sum('amount');
+
+            // Sum all confirmed/refunded returns
+            $totalReturns = PurchaseReturn::where('supplier_id', $this->supplierId)
+                ->whereIn('status', ['confirmed', 'refunded'])
+                ->sum('refund_amount');
+
+            $correctBalance = (float) $supplier->opening_balance
+                + (float) $totalInvoices
+                - (float) $totalPayments
+                - (float) $totalReturns;
+
+            $supplier->update(['balance' => round($correctBalance, 2)]);
+        });
+
+        session()->flash('success', 'تم إعادة حساب رصيد المورد بنجاح');
+    }
+
     public function render()
     {
         $supplier = Supplier::findOrFail($this->supplierId);
@@ -141,7 +173,7 @@ class SupplierShow extends Component
         $returnsByInvoice = $returns->whereIn('status', ['confirmed', 'refunded'])
             ->groupBy('purchase_invoice_id');
 
-        // ── Payments made to supplier ─────────────────────────────
+        // ── Payments made to supplier (actual payment records) ────
         $payments = PurchaseInvoicePayment::whereHas(
             'invoice',
             fn ($q) => $q->where('supplier_id', $this->supplierId)
@@ -156,6 +188,7 @@ class SupplierShow extends Component
         $currentBalance = (float) $supplier->balance;
 
         // ── Account Statement Ledger ──────────────────────────────
+        // Use actual payment records (not paid_amount) to avoid double-counting with returns
         $ledger = collect();
 
         foreach ($invoices->whereNotIn('status', ['draft']) as $inv) {
@@ -171,18 +204,6 @@ class SupplierShow extends Component
                 'cancelled'   => $isCancelled,
             ]);
 
-            if (!$isCancelled && (float) $inv->paid_amount > 0) {
-                $ledger->push([
-                    'date'        => $inv->date,
-                    'type'        => 'payment',
-                    'reference'   => $inv->invoice_number,
-                    'description' => 'دفعة على فاتورة',
-                    'debit'       => 0,
-                    'credit'      => (float) $inv->paid_amount,
-                    'cancelled'   => false,
-                ]);
-            }
-
             if ($isCancelled) {
                 $ledger->push([
                     'date'        => $inv->date,
@@ -194,6 +215,19 @@ class SupplierShow extends Component
                     'cancelled'   => true,
                 ]);
             }
+        }
+
+        // Add each actual payment separately
+        foreach ($payments as $pay) {
+            $ledger->push([
+                'date'        => $pay->payment_date,
+                'type'        => 'payment',
+                'reference'   => $pay->invoice?->invoice_number ?? '—',
+                'description' => 'دفعة للمورد',
+                'debit'       => 0,
+                'credit'      => (float) $pay->amount,
+                'cancelled'   => false,
+            ]);
         }
 
         foreach ($returns->whereIn('status', ['confirmed', 'refunded']) as $ret) {
@@ -212,9 +246,9 @@ class SupplierShow extends Component
         $ledger = $ledger->sortBy([['date', 'asc'], ['type', 'asc']])->values();
 
         // Running balance
-        $running        = (float) $supplier->opening_balance;
-        $totalDebit     = 0;
-        $totalCredit    = 0;
+        $running           = (float) $supplier->opening_balance;
+        $totalDebit        = 0;
+        $totalCredit       = 0;
         $ledgerWithBalance = $ledger->map(function ($row) use (&$running, &$totalDebit, &$totalCredit) {
             if (!$row['cancelled']) {
                 $running     += $row['debit'] - $row['credit'];
@@ -228,22 +262,22 @@ class SupplierShow extends Component
         $treasuries = Treasury::where('is_active', true)->orderBy('name')->get();
 
         return view('livewire.suppliers.supplier-show', [
-            'supplier'          => $supplier,
-            'invoices'          => $invoices,
-            'returns'           => $returns,
-            'returnsByInvoice'  => $returnsByInvoice,
-            'payments'          => $payments,
-            'totalInvoiced'     => $totalInvoiced,
-            'totalPaid'         => $totalPaid,
-            'totalRemaining'    => $totalRemaining,
-            'totalReturns'      => $totalReturns,
-            'totalPayments'     => $totalPayments,
-            'currentBalance'    => $currentBalance,
-            'ledger'            => $ledgerWithBalance,
-            'totalDebit'        => $totalDebit,
-            'totalCredit'       => $totalCredit,
-            'runningBalance'    => $running,
-            'treasuries'        => $treasuries,
+            'supplier'         => $supplier,
+            'invoices'         => $invoices,
+            'returns'          => $returns,
+            'returnsByInvoice' => $returnsByInvoice,
+            'payments'         => $payments,
+            'totalInvoiced'    => $totalInvoiced,
+            'totalPaid'        => $totalPaid,
+            'totalRemaining'   => $totalRemaining,
+            'totalReturns'     => $totalReturns,
+            'totalPayments'    => $totalPayments,
+            'currentBalance'   => $currentBalance,
+            'ledger'           => $ledgerWithBalance,
+            'totalDebit'       => $totalDebit,
+            'totalCredit'      => $totalCredit,
+            'runningBalance'   => $running,
+            'treasuries'       => $treasuries,
         ]);
     }
 }
