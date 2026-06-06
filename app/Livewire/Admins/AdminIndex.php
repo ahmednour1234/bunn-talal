@@ -38,6 +38,7 @@ class AdminIndex extends Component
     {
         return view('livewire.admins.admin-index', [
             'admins' => $adminService->paginateAdmins(10, $this->search ?: null),
+            'typeLabels' => \App\Models\Admin::typeLabels(),
         ]);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Products;
 
+use App\Models\Branch;
+use App\Models\Product;
 use App\Services\ProductService;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,8 +13,14 @@ class ProductIndex extends Component
     use WithPagination;
 
     public string $search = '';
+    public string $branchFilter = '';
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingBranchFilter()
     {
         $this->resetPage();
     }
@@ -43,8 +51,23 @@ class ProductIndex extends Component
 
     public function render(ProductService $productService)
     {
+        $query = Product::with(['category', 'unit', 'tax', 'branches']);
+
+        if ($this->search) {
+            $s = $this->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")
+                  ->orWhereHas('category', fn($c) => $c->where('name', 'like', "%{$s}%"));
+            });
+        }
+
+        if ($this->branchFilter) {
+            $query->whereHas('branches', fn($q) => $q->where('branch_id', $this->branchFilter));
+        }
+
         return view('livewire.products.product-index', [
-            'products' => $productService->paginateProducts(10, $this->search ?: null),
+            'products' => $query->latest()->paginate(10),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 }

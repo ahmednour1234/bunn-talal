@@ -21,14 +21,22 @@
 
     {{-- Search --}}
     <div class="bg-card rounded-2xl shadow-sm border border-primary-100 p-4 mb-6">
-        <div class="relative">
-            <x-icon name="search" class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
-            <input
-                type="text"
-                wire:model.live.debounce.300ms="search"
-                placeholder="بحث بالاسم أو التصنيف..."
-                class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm"
-            >
+        <div class="flex gap-3 flex-wrap">
+            <div class="relative flex-1 min-w-[200px]">
+                <x-icon name="search" class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="بحث بالاسم أو التصنيف..."
+                    class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm"
+                >
+            </div>
+            <select wire:model.live="branchFilter" class="border border-gray-200 rounded-lg bg-gray-50 text-sm px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-primary-300 transition-all">
+                <option value="">كل الفروع</option>
+                @foreach($branches as $branch)
+                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                @endforeach
+            </select>
         </div>
     </div>
 

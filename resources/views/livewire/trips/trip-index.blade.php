@@ -20,7 +20,7 @@
 
     {{-- Filters --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
             <div class="md:col-span-2">
                 <input type="text" wire:model.live.debounce.300ms="search" placeholder="بحث برقم الرحلة..."
                     class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-right focus:ring-2 focus:ring-primary-300">
@@ -35,6 +35,12 @@
                 <option value="">كل المناديب</option>
                 @foreach($delegates as $d)
                 <option value="{{ $d->id }}">{{ $d->name }}</option>
+                @endforeach
+            </select>
+            <select wire:model.live="branchFilter" class="border border-gray-200 rounded-xl px-3 py-2 text-sm text-right focus:ring-2 focus:ring-primary-300">
+                <option value="">كل الفروع</option>
+                @foreach($branches as $b)
+                <option value="{{ $b->id }}">{{ $b->name }}</option>
                 @endforeach
             </select>
             <div class="flex gap-2">

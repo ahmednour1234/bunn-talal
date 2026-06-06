@@ -54,6 +54,39 @@
                     :required="!$adminId"
                     :error="$errors->first('password_confirmation')"
                 />
+
+                {{-- Admin Type --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">نوع المدير <span class="text-red-500">*</span></label>
+                    <select wire:model.live="type"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
+                        @foreach($typeLabels as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-gray-400 mt-1">
+                        @if($type === 'super') مدير عام — صلاحية كاملة على جميع الفروع
+                        @elseif($type === 'branches_manager') مدير فروع — يشرف على جميع الفروع
+                        @else مدير فرع — مرتبط بفرع محدد
+                        @endif
+                    </p>
+                </div>
+
+                {{-- Branch (only for branch_manager) --}}
+                @if($type === 'branch_manager')
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الفرع المسؤول عنه <span class="text-red-500">*</span></label>
+                    <select wire:model="branch_id"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
+                        <option value="">اختر الفرع</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('branch_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                @endif
             </div>
 
             {{-- Roles --}}

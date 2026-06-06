@@ -19,4 +19,15 @@ class AdminRepository extends BaseRepository implements AdminRepositoryInterface
               ->orWhere('email', 'like', "%{$search}%");
         });
     }
+
+    public function paginate(int $perPage = 15, ?string $search = null)
+    {
+        $query = $this->model->with(['roles', 'branch']);
+
+        if ($search) {
+            $query = $this->applySearch($query, $search);
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
 }

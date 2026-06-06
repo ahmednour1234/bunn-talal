@@ -24,10 +24,11 @@
         <table class="w-full text-sm text-right table-fixed">
             <colgroup>
                 <col class="w-10">
-                <col class="w-[28%]">
-                <col class="w-[25%]">
+                <col class="w-[22%]">
                 <col class="w-[20%]">
-                <col class="w-[13%]">
+                <col class="w-[17%]">
+                <col class="w-[16%]">
+                <col class="w-[11%]">
                 <col class="w-[14%]">
             </colgroup>
             <thead>
@@ -36,6 +37,7 @@
                     <th class="px-4 py-3 text-xs font-bold text-white">المدير</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">البريد الإلكتروني</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">الأدوار</th>
+                    <th class="px-4 py-3 text-xs font-bold text-white">نوع المدير</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">تاريخ الإنشاء</th>
                     <th class="px-4 py-3 text-xs font-bold text-white text-center">الإجراءات</th>
                 </tr>
@@ -62,6 +64,22 @@
                                 <span class="text-xs text-gray-400">بدون أدوار</span>
                             @endif
                         </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        @php
+                            $typeColors = [
+                                'super'            => 'bg-purple-100 text-purple-700',
+                                'branches_manager' => 'bg-blue-100 text-blue-700',
+                                'branch_manager'   => 'bg-green-100 text-green-700',
+                            ];
+                            $typeColor = $typeColors[$adminItem->type ?? 'super'] ?? 'bg-gray-100 text-gray-700';
+                        @endphp
+                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold {{ $typeColor }} whitespace-nowrap">
+                            {{ $typeLabels[$adminItem->type ?? 'super'] ?? '—' }}
+                        </span>
+                        @if($adminItem->branch)
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $adminItem->branch->name }}</p>
+                        @endif
                     </td>
                     <td class="px-4 py-3 text-gray-500 text-xs">{{ $adminItem->created_at->format('Y/m/d') }}</td>
                     <td class="px-4 py-3">

@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Admins;
 
+use App\Models\Admin;
+use App\Models\Branch;
 use App\Services\AdminService;
 use App\Services\RoleService;
 use Livewire\Component;
@@ -14,6 +16,8 @@ class AdminForm extends Component
     public string $password = '';
     public string $password_confirmation = '';
     public array $selectedRoles = [];
+    public string $type = 'super';
+    public ?int $branch_id = null;
 
     public function mount(AdminService $adminService, ?int $id = null)
     {
@@ -23,6 +27,8 @@ class AdminForm extends Component
             $this->name = $admin->name;
             $this->email = $admin->email;
             $this->selectedRoles = $admin->roles->pluck('id')->toArray();
+            $this->type = $admin->type ?? 'super';
+            $this->branch_id = $admin->branch_id;
         }
     }
 
@@ -32,6 +38,8 @@ class AdminForm extends Component
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:admins,email,' . ($this->adminId ?? 'NULL'),
             'selectedRoles' => 'array',
+            'type' => 'required|in:super,branches_manager,branch_manager',
+            'branch_id' => 'nullable|exists:branches,id',
         ];
 
         if (!$this->adminId) {
@@ -64,6 +72,8 @@ class AdminForm extends Component
             'name' => $this->name,
             'email' => $this->email,
             'roles' => $this->selectedRoles,
+            'type' => $this->type,
+            'branch_id' => ($this->type === 'branch_manager') ? ($this->branch_id ?: null) : null,
         ];
 
         if ($this->password) {
@@ -85,6 +95,8 @@ class AdminForm extends Component
     {
         return view('livewire.admins.admin-form', [
             'roles' => $roleService->getAllRoles(),
+            'typeLabels' => Admin::typeLabels(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 }

@@ -17,6 +17,7 @@ class Admin extends Authenticatable
         'password',
         'is_active',
         'branch_id',
+        'type',
     ];
 
     protected $hidden = [
@@ -35,5 +36,19 @@ class Admin extends Authenticatable
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public static function typeLabels(): array
+    {
+        return [
+            'super'            => 'مدير عام',
+            'branches_manager' => 'مدير فروع',
+            'branch_manager'   => 'مدير فرع',
+        ];
+    }
+
+    public function getTypeLabelAttribute(): string
+    {
+        return static::typeLabels()[$this->type] ?? $this->type;
     }
 }
