@@ -53,7 +53,7 @@ class Dashboard extends Component
         $purchaseReturnsTotal = PurchaseReturn::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('refund_amount');
 
         // ── Treasury / Accounting stats ──────────────────────────────
-        $totalTreasuryBalance = Treasury::where('is_active', true)->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('balance');
+        $totalTreasuryBalance = Treasury::where('is_active', true)->sum('balance');
         $financialTransactionsCount = FinancialTransaction::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
         $accountsCount = Account::count();
 
@@ -317,7 +317,7 @@ class Dashboard extends Component
             ->whereDate('date', today())->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('amount');
 
         // ── Treasuries list ───────────────────────────────────────────
-        $treasuries = Treasury::where('is_active', true)->when($branchId, fn($q) => $q->where('branch_id', $branchId))->get(['id', 'name', 'balance']);
+        $treasuries = Treasury::where('is_active', true)->get(['id', 'name', 'balance']);
 
         return view('livewire.dashboard', [
             // legacy counts
