@@ -31,34 +31,43 @@ class Dashboard extends Component
 {
     public function render()
     {
+        // ── Branch filter ────────────────────────────────────────────
+        /** @var \App\Models\Admin $admin */
+        $admin    = auth('admin')->user();
+        $branchId = in_array($admin->type, ['super', 'branches_manager']) ? null : $admin->branch_id;
+
+        $branchFilter = fn($q) => $branchId ? $q->where('branch_id', $branchId) : $q;
+
         // ── Sales stats ─────────────────────────────────────────────
-        $saleOrdersTotal          = SaleOrder::whereNotIn('status', ['cancelled'])->sum('total');
-        $saleOrdersPaid           = SaleOrder::whereNotIn('status', ['cancelled'])->sum('paid_amount');
-        $saleOrdersCount          = SaleOrder::whereNotIn('status', ['cancelled'])->count();
-        $saleReturnsTotal         = SaleReturn::whereNotIn('status', ['cancelled'])->sum('refund_amount');
-        $cancelledSaleOrdersCount = SaleOrder::where('status', 'cancelled')->count();
-        $cancelledSaleOrdersTotal = SaleOrder::where('status', 'cancelled')->sum('total');
+        $saleOrdersTotal          = SaleOrder::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('total');
+        $saleOrdersPaid           = SaleOrder::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('paid_amount');
+        $saleOrdersCount          = SaleOrder::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $saleReturnsTotal         = SaleReturn::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('refund_amount');
+        $cancelledSaleOrdersCount = SaleOrder::where('status', 'cancelled')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $cancelledSaleOrdersTotal = SaleOrder::where('status', 'cancelled')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('total');
 
         // ── Purchase stats ───────────────────────────────────────────
-        $purchaseTotal      = PurchaseInvoice::whereNotIn('status', ['cancelled'])->sum('total');
-        $purchasePaid       = PurchaseInvoice::whereNotIn('status', ['cancelled'])->sum('paid_amount');
-        $purchaseCount      = PurchaseInvoice::whereNotIn('status', ['cancelled'])->count();
-        $purchaseReturnsTotal = PurchaseReturn::whereNotIn('status', ['cancelled'])->sum('refund_amount');
+        $purchaseTotal      = PurchaseInvoice::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('total');
+        $purchasePaid       = PurchaseInvoice::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('paid_amount');
+        $purchaseCount      = PurchaseInvoice::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $purchaseReturnsTotal = PurchaseReturn::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('refund_amount');
 
         // ── Treasury / Accounting stats ──────────────────────────────
-        $totalTreasuryBalance = Treasury::where('is_active', true)->sum('balance');
-        $financialTransactionsCount = FinancialTransaction::count();
+        $totalTreasuryBalance = Treasury::where('is_active', true)->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('balance');
+        $financialTransactionsCount = FinancialTransaction::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
         $accountsCount = Account::count();
 
         // ── Inventory stats ──────────────────────────────────────────
         $productsCount       = Product::where('is_active', true)->count();
         $lowStockCount       = DB::table('branch_product')
             ->select('product_id')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->groupBy('product_id')
             ->havingRaw('SUM(quantity) <= 5')
             ->get()->count();
         $totalStockValue     = DB::table('branch_product')
             ->join('products', 'products.id', '=', 'branch_product.product_id')
+            ->when($branchId, fn($q) => $q->where('branch_product.branch_id', $branchId))
             ->sum(DB::raw('branch_product.quantity * products.cost_price'));
 
         // ── Monthly chart data (last 6 months) ──────────────────────
@@ -68,12 +77,14 @@ class Dashboard extends Component
 
         $salesByMonth = SaleOrder::whereNotIn('status', ['cancelled'])
             ->where('date', '>=', now()->subMonths(5)->startOfMonth())
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(total) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
 
         $purchasesByMonth = PurchaseInvoice::whereNotIn('status', ['cancelled'])
             ->where('date', '>=', now()->subMonths(5)->startOfMonth())
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(total) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
@@ -84,18 +95,21 @@ class Dashboard extends Component
 
         // ── Recent sale orders ───────────────────────────────────────
         $recentSaleOrders = SaleOrder::with('customer', 'branch')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->latest()
             ->take(5)
             ->get();
 
         // ── Recent purchase invoices ─────────────────────────────────
         $recentPurchaseInvoices = PurchaseInvoice::with('supplier', 'branch')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->latest()
             ->take(5)
             ->get();
 
         // ── Sale orders by status ─────────────────────────────────────
         $saleStatusCounts = SaleOrder::selectRaw('status, COUNT(*) as count')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
@@ -109,27 +123,31 @@ class Dashboard extends Component
         $totalDelegatesCustody = Delegate::sum('cash_custody');
 
         // ── Pending / overdue helpers ────────────────────────────────
-        $pendingSaleOrdersCount  = SaleOrder::whereIn('status', ['draft', 'confirmed'])->count();
-        $unpaidPurchasesCount    = PurchaseInvoice::whereIn('status', ['confirmed', 'partial_paid'])->count();
+        $pendingSaleOrdersCount  = SaleOrder::whereIn('status', ['draft', 'confirmed'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $unpaidPurchasesCount    = PurchaseInvoice::whereIn('status', ['confirmed', 'partial_paid'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
         $saleOrdersRemaining     = $saleOrdersTotal - $saleOrdersPaid;
         $purchaseRemaining       = $purchaseTotal - $purchasePaid;
-        $confirmedSaleOrdersCount = SaleOrder::where('status', 'confirmed')->count();
+        $confirmedSaleOrdersCount = SaleOrder::where('status', 'confirmed')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
 
         // ── TODAY's sale orders ───────────────────────────────────────
         $todaySaleOrders = SaleOrder::with(['customer', 'delegate'])
             ->whereDate('date', today())
             ->whereNotIn('status', ['cancelled'])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->latest()
             ->take(8)
             ->get();
         $todaySaleOrdersTotal = SaleOrder::whereDate('date', today())
             ->whereNotIn('status', ['cancelled'])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('total');
         $todaySaleOrdersCount = SaleOrder::whereDate('date', today())
             ->whereNotIn('status', ['cancelled'])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->count();
         $todaySaleOrdersPaid = SaleOrder::whereDate('date', today())
             ->whereNotIn('status', ['cancelled'])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('paid_amount');
 
         // ── Best-selling products (by qty sold) ──────────────────────
@@ -137,7 +155,7 @@ class Dashboard extends Component
                 DB::raw('SUM(quantity) as total_qty'),
                 DB::raw('SUM(total) as total_revenue')
             )
-            ->whereHas('order', fn($q) => $q->whereNotIn('status', ['cancelled', 'draft']))
+            ->whereHas('order', fn($q) => $q->whereNotIn('status', ['cancelled', 'draft'])->when($branchId, fn($q2) => $q2->where('branch_id', $branchId)))
             ->with('product.category')
             ->groupBy('product_id')
             ->orderByDesc('total_qty')
@@ -155,6 +173,7 @@ class Dashboard extends Component
             )
             ->where('products.is_active', true)
             ->whereNull('products.deleted_at')
+            ->when($branchId, fn($q) => $q->where('branch_product.branch_id', $branchId))
             ->groupBy('products.id', 'products.name', 'products.selling_price')
             ->havingRaw('SUM(branch_product.quantity) <= 5')
             ->orderBy('total_qty')
@@ -164,12 +183,14 @@ class Dashboard extends Component
         // ── Monthly Revenue vs Expenses (last 6 months) ──────────────
         $revenueByMonth = FinancialTransaction::where('type', 'revenue')
             ->where('date', '>=', now()->subMonths(5)->startOfMonth())
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(amount) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
 
         $expenseByMonth = FinancialTransaction::where('type', 'expense')
             ->where('date', '>=', now()->subMonths(5)->startOfMonth())
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(amount) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
@@ -225,6 +246,7 @@ class Dashboard extends Component
         $supplierAlerts = PurchaseInvoice::with('supplier')
             ->whereIn('status', ['confirmed', 'partial_paid'])
             ->whereNull('deleted_at')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->orderByRaw("CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC")
             ->take(10)
             ->get();
@@ -249,15 +271,16 @@ class Dashboard extends Component
             ->get();
 
         // ── Trips statistics ─────────────────────────────────────────
-        $activeTripsCount     = Trip::whereIn('status', ['active'])->count();
-        $draftTripsCount      = Trip::where('status', 'draft')->count();
-        $settledTripsCount    = Trip::where('status', 'settled')->count();
-        $delegatesOnTrip      = Trip::where('status', 'active')->distinct('delegate_id')->count('delegate_id');
+        $activeTripsCount     = Trip::whereIn('status', ['active'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $draftTripsCount      = Trip::where('status', 'draft')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $settledTripsCount    = Trip::where('status', 'settled')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
+        $delegatesOnTrip      = Trip::where('status', 'active')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->distinct('delegate_id')->count('delegate_id');
         $tripsWithDeficit     = Trip::where('status', 'settled')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->where(fn($q) => $q->where('settlement_cash_deficit', '>', 0)->orWhere('settlement_product_deficit', '>', 0))
             ->count();
-        $totalTripCashDeficit    = Trip::where('status', 'settled')->sum('settlement_cash_deficit');
-        $totalTripProductDeficit = Trip::where('status', 'settled')->sum('settlement_product_deficit');
+        $totalTripCashDeficit    = Trip::where('status', 'settled')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('settlement_cash_deficit');
+        $totalTripProductDeficit = Trip::where('status', 'settled')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('settlement_product_deficit');
 
         // ── Delegate trip performance ────────────────────────────────
         $delegateTripPerformance = Delegate::select('delegates.*')
@@ -278,22 +301,23 @@ class Dashboard extends Component
             ->take(10)
             ->get();
 
-        $accountsRevenue = FinancialTransaction::where('type', 'revenue')->sum('amount');
-        $accountsExpense = FinancialTransaction::where('type', 'expense')->sum('amount');
+        $accountsRevenue = FinancialTransaction::where('type', 'revenue')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('amount');
+        $accountsExpense = FinancialTransaction::where('type', 'expense')->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('amount');
 
         // ── Today's financial transactions ────────────────────────────
         $todayTransactions = FinancialTransaction::with(['account', 'treasury'])
             ->whereDate('date', today())
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->latest()
             ->take(6)
             ->get();
         $todayTransactionsRevenue = FinancialTransaction::where('type', 'revenue')
-            ->whereDate('date', today())->sum('amount');
+            ->whereDate('date', today())->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('amount');
         $todayTransactionsExpense = FinancialTransaction::where('type', 'expense')
-            ->whereDate('date', today())->sum('amount');
+            ->whereDate('date', today())->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('amount');
 
         // ── Treasuries list ───────────────────────────────────────────
-        $treasuries = Treasury::where('is_active', true)->get(['id', 'name', 'balance']);
+        $treasuries = Treasury::where('is_active', true)->when($branchId, fn($q) => $q->where('branch_id', $branchId))->get(['id', 'name', 'balance']);
 
         return view('livewire.dashboard', [
             // legacy counts
