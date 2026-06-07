@@ -68,13 +68,14 @@
                     <p class="text-xs text-gray-400 mt-1">
                         @if($type === 'super') مدير عام — صلاحية كاملة على جميع الفروع
                         @elseif($type === 'branches_manager') مدير فروع — يشرف على جميع الفروع
+                        @elseif($type === 'statistics_only') مدير إحصائيات فرعي — يرى لوحة الإحصائيات لفرعه فقط ولا يصل لأي شاشة أخرى
                         @else مدير فرع — مرتبط بفرع محدد
                         @endif
                     </p>
                 </div>
 
-                {{-- Branch (only for branch_manager) --}}
-                @if($type === 'branch_manager')
+                {{-- Branch (for branch_manager & statistics_only) --}}
+                @if(in_array($type, ['branch_manager', 'statistics_only']))
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">الفرع المسؤول عنه <span class="text-red-500">*</span></label>
                     <select wire:model="branch_id"
@@ -90,6 +91,7 @@
             </div>
 
             {{-- Roles --}}
+            @if($type !== 'statistics_only')
             <div class="mt-6">
                 <label class="block text-sm font-medium text-gray-700 mb-3">الأدوار</label>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -109,6 +111,11 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
+            @else
+            <div class="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200">
+                <p class="text-sm text-amber-800">مدير الإحصائيات الفرعي لا يحتاج أدوار — يرى لوحة الإحصائيات لفرعه فقط ولا يصل لأي شاشة أخرى.</p>
+            </div>
+            @endif
 
             {{-- Actions --}}
             <div class="flex items-center gap-3 mt-6 pt-6 border-t border-gray-100">

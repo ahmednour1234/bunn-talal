@@ -210,6 +210,7 @@ class Dashboard extends Component
             )
             ->join('sale_orders', 'sale_orders.customer_id', '=', 'customers.id')
             ->whereNull('sale_orders.deleted_at')
+            ->when($branchId, fn($q) => $q->where('customers.branch_id', $branchId))
             ->groupBy('customers.id', 'customers.name', 'customers.phone')
             ->havingRaw('SUM(CASE WHEN sale_orders.status NOT IN ("cancelled","draft") THEN sale_orders.total ELSE 0 END) > 0')
             ->orderByDesc('total_sales')
@@ -236,6 +237,7 @@ class Dashboard extends Component
             ->join('sale_orders', 'sale_orders.customer_id', '=', 'customers.id')
             ->whereNull('sale_orders.deleted_at')
             ->whereIn('sale_orders.status', ['confirmed', 'partial_paid'])
+            ->when($branchId, fn($q) => $q->where('customers.branch_id', $branchId))
             ->groupBy('customers.id', 'customers.name', 'customers.phone', 'customers.credit_limit', 'customers.opening_balance')
             ->havingRaw("(customers.opening_balance + SUM(sale_orders.total) - SUM(sale_orders.paid_amount) - {$returnsSubquery}) > 0")
             ->orderByRaw("(customers.opening_balance + SUM(sale_orders.total) - SUM(sale_orders.paid_amount) - {$returnsSubquery}) DESC")
@@ -329,7 +331,7 @@ class Dashboard extends Component
             'rolesCount'                 => Role::count(),
             'permissionsCount'           => Permission::count(),
             'areasCount'                 => Area::count(),
-            'customersCount'             => Customer::count(),
+            'customersCount'             => Customer::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count(),
             'delegatesCount'             => Delegate::count(),
             'suppliersCount'             => Supplier::count(),
             'treasuriesCount'            => Treasury::count(),

@@ -44,6 +44,7 @@ class Admin extends Authenticatable
             'super'            => 'مدير عام',
             'branches_manager' => 'مدير فروع',
             'branch_manager'   => 'مدير فرع',
+            'statistics_only'  => 'مدير إحصائيات فرعي',
         ];
     }
 

@@ -38,7 +38,7 @@ class AdminForm extends Component
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:admins,email,' . ($this->adminId ?? 'NULL'),
             'selectedRoles' => 'array',
-            'type' => 'required|in:super,branches_manager,branch_manager',
+            'type' => 'required|in:super,branches_manager,branch_manager,statistics_only',
             'branch_id' => 'nullable|exists:branches,id',
         ];
 
@@ -71,9 +71,9 @@ class AdminForm extends Component
         $data = [
             'name' => $this->name,
             'email' => $this->email,
-            'roles' => $this->selectedRoles,
+            'roles' => $this->type === 'statistics_only' ? [] : $this->selectedRoles,
             'type' => $this->type,
-            'branch_id' => ($this->type === 'branch_manager') ? ($this->branch_id ?: null) : null,
+            'branch_id' => in_array($this->type, ['branch_manager', 'statistics_only']) ? ($this->branch_id ?: null) : null,
         ];
 
         if ($this->password) {
