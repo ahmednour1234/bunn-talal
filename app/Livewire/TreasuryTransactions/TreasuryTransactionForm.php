@@ -69,7 +69,9 @@ class TreasuryTransactionForm extends Component
     public function render()
     {
         return view('livewire.treasury-transactions.treasury-transaction-form', [
-            'treasuries' => Treasury::where('is_active', true)->orderBy('name')->get(),
+            'treasuries' => Treasury::where('is_active', true)
+                ->visibleToBranch(auth('admin')->user()?->scopedBranchId())
+                ->orderBy('name')->get(),
             'typeLabels' => TreasuryTransaction::typeLabels(),
         ]);
     }

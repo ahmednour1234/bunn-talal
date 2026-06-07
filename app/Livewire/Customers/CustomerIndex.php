@@ -74,6 +74,11 @@ class CustomerIndex extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $query = Customer::query()->with(['area', 'branch']);
 
         if ($this->search) {
@@ -102,6 +107,7 @@ class CustomerIndex extends Component
             'classificationLabels' => Customer::classificationLabels(),
             'areas' => \App\Models\Area::where('is_active', true)->orderBy('name')->get(),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

@@ -33,11 +33,12 @@
     </div>
 
     {{-- Table --}}
-    <x-data-table :headers="['#', 'اسم الخزنة', 'الرصيد', 'الحالة', 'الإجراءات']">
+    <x-data-table :headers="['#', 'اسم الخزنة', 'الفرع', 'الرصيد', 'الحالة', 'الإجراءات']">
         @forelse($treasuries as $treasury)
             <tr class="hover:bg-primary-50/50 transition-colors">
                 <td class="px-6 py-4 text-gray-500">{{ $treasury->id }}</td>
                 <td class="px-6 py-4 font-medium text-gray-800">{{ $treasury->name }}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">{{ $treasury->branch?->name ?? 'مشتركة' }}</td>
                 <td class="px-6 py-4 text-sm font-mono text-center {{ $treasury->balance >= 0 ? 'text-green-700' : 'text-red-700' }}" dir="ltr">{{ number_format($treasury->balance, 2) }}</td>
                 <td class="px-6 py-4">
                     @if($treasury->is_active)
@@ -72,7 +73,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                <td colspan="6" class="px-6 py-12 text-center text-gray-400">
                     <x-icon name="lock-closed" class="w-12 h-12 mx-auto mb-3 text-gray-300" />
                     <p>لا يوجد خزن مسجلة</p>
                 </td>

@@ -80,6 +80,11 @@ class StockTransferIndex extends Component
 
     public function render(StockTransferService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         return view('livewire.stock-transfers.stock-transfer-index', [
             'transfers' => $service->paginateWithFilters(
                 10,
@@ -88,6 +93,7 @@ class StockTransferIndex extends Component
                 $this->branchFilter ? (int) $this->branchFilter : null
             ),
             'branches' => Branch::where('is_active', true)->get(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

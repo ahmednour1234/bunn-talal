@@ -52,4 +52,22 @@ class Admin extends Authenticatable
     {
         return static::typeLabels()[$this->type] ?? $this->type;
     }
+
+    /**
+     * The branch id this admin is restricted to when viewing data/stats/reports.
+     * Returns null for admins who may see all branches (super / branches_manager),
+     * otherwise the admin's own branch_id.
+     */
+    public function scopedBranchId(): ?int
+    {
+        return in_array($this->type, ['super', 'branches_manager']) ? null : $this->branch_id;
+    }
+
+    /**
+     * Whether this admin is locked to a single branch (cannot pick other branches).
+     */
+    public function isBranchScoped(): bool
+    {
+        return $this->scopedBranchId() !== null;
+    }
 }

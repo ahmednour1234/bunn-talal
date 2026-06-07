@@ -24,7 +24,13 @@ class TreasuryTransactionIndex extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
         $query = TreasuryTransaction::query()->with(['treasury', 'admin']);
+
+        if ($scopedBranchId) {
+            $query->whereHas('treasury', fn($q) => $q->visibleToBranch($scopedBranchId));
+        }
 
         if ($this->search) {
             $search = $this->search;
@@ -42,7 +48,9 @@ class TreasuryTransactionIndex extends Component
             $query->where('type', $this->typeFilter);
         }
 
-        $treasuries = Treasury::where('is_active', true)->orderBy('name')->get();
+        $treasuries = Treasury::where('is_active', true)
+            ->visibleToBranch($scopedBranchId)
+            ->orderBy('name')->get();
 
         return view('livewire.treasury-transactions.treasury-transaction-index', [
             'transactions' => $query->latest()->paginate(10),

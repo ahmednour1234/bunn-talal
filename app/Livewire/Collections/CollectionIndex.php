@@ -45,6 +45,11 @@ class CollectionIndex extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $query = Collection::query()
             ->with(['delegate', 'customer', 'branch', 'treasury', 'admin'])
             ->when($this->search, fn($q) => $q->where(function ($q2) {
@@ -75,6 +80,7 @@ class CollectionIndex extends Component
             'branches'     => Branch::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'statusLabels' => Collection::statusLabels(),
             'summary'      => $summary,
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

@@ -53,7 +53,7 @@ class Dashboard extends Component
         $purchaseReturnsTotal = PurchaseReturn::whereNotIn('status', ['cancelled'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('refund_amount');
 
         // ── Treasury / Accounting stats ──────────────────────────────
-        $totalTreasuryBalance = Treasury::where('is_active', true)->sum('balance');
+        $totalTreasuryBalance = Treasury::where('is_active', true)->visibleToBranch($branchId)->sum('balance');
         $financialTransactionsCount = FinancialTransaction::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
         $accountsCount = Account::count();
 
@@ -116,11 +116,12 @@ class Dashboard extends Component
 
         // ── Delegate performance ─────────────────────────────────────
         $delegatesPerformance = Delegate::where('is_active', true)
+            ->when($branchId, fn($q) => $q->whereHas('branches', fn($b) => $b->where('branches.id', $branchId)))
             ->orderByDesc('total_collected')
             ->take(6)
             ->get(['id', 'name', 'total_collected', 'total_due', 'cash_custody', 'is_active']);
 
-        $totalDelegatesCustody = Delegate::sum('cash_custody');
+        $totalDelegatesCustody = Delegate::when($branchId, fn($q) => $q->whereHas('branches', fn($b) => $b->where('branches.id', $branchId)))->sum('cash_custody');
 
         // ── Pending / overdue helpers ────────────────────────────────
         $pendingSaleOrdersCount  = SaleOrder::whereIn('status', ['draft', 'confirmed'])->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count();
@@ -258,11 +259,15 @@ class Dashboard extends Component
         )->count();
 
         // ── Trips alerts ─────────────────────────────────────────────
-        $pendingBookingRequests = TripBookingRequest::where('status', 'pending')->count();
+        $pendingBookingRequests = TripBookingRequest::where('status', 'pending')
+            ->when($branchId, fn($q) => $q->whereHas('delegate.branches', fn($b) => $b->where('branches.id', $branchId)))
+            ->count();
         $pendingBookingRequestsList = TripBookingRequest::with(['delegate', 'trip'])
+            ->when($branchId, fn($q) => $q->whereHas('delegate.branches', fn($b) => $b->where('branches.id', $branchId)))
             ->where('status', 'pending')->latest()->take(5)->get();
 
         $tripDeficitAlerts = Trip::where('status', 'settled')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->where(function ($q) {
                 $q->where('settlement_cash_deficit', '>', 0)
                   ->orWhere('settlement_product_deficit', '>', 0);
@@ -290,6 +295,7 @@ class Dashboard extends Component
             ->selectRaw('(SELECT COUNT(*) FROM trips WHERE trips.delegate_id = delegates.id AND trips.status = "active") as trips_active')
             ->selectRaw('(SELECT COALESCE(SUM(settlement_cash_deficit),0) FROM trips WHERE trips.delegate_id = delegates.id AND trips.status = "settled") as total_cash_def')
             ->selectRaw('(SELECT COALESCE(SUM(settlement_product_deficit),0) FROM trips WHERE trips.delegate_id = delegates.id AND trips.status = "settled") as total_prod_def')
+            ->when($branchId, fn($q) => $q->whereHas('branches', fn($b) => $b->where('branches.id', $branchId)))
             ->where('is_active', true)
             ->whereRaw('(SELECT COUNT(*) FROM trips WHERE trips.delegate_id = delegates.id) > 0')
             ->orderByRaw('(SELECT COUNT(*) FROM trips WHERE trips.delegate_id = delegates.id) DESC')
@@ -319,7 +325,7 @@ class Dashboard extends Component
             ->whereDate('date', today())->when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('amount');
 
         // ── Treasuries list ───────────────────────────────────────────
-        $treasuries = Treasury::where('is_active', true)->get(['id', 'name', 'balance']);
+        $treasuries = Treasury::where('is_active', true)->visibleToBranch($branchId)->get(['id', 'name', 'balance']);
 
         return view('livewire.dashboard', [
             // legacy counts
@@ -332,7 +338,7 @@ class Dashboard extends Component
             'permissionsCount'           => Permission::count(),
             'areasCount'                 => Area::count(),
             'customersCount'             => Customer::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count(),
-            'delegatesCount'             => Delegate::count(),
+            'delegatesCount'             => Delegate::when($branchId, fn($q) => $q->whereHas('branches', fn($b) => $b->where('branches.id', $branchId)))->count(),
             'suppliersCount'             => Supplier::count(),
             'treasuriesCount'            => Treasury::count(),
             // sales

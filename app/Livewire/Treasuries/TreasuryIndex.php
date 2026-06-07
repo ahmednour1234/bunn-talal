@@ -44,7 +44,9 @@ class TreasuryIndex extends Component
 
     public function render()
     {
-        $query = Treasury::query();
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
+        $query = Treasury::query()->with('branch')->visibleToBranch($scopedBranchId);
 
         if ($this->search) {
             $query->where('name', 'like', "%{$this->search}%");

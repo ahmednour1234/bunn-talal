@@ -29,9 +29,12 @@ class AccountStatementReport extends Component
         $totalCredit     = 0;
 
         if ($this->accountId) {
+            $branchId = auth('admin')->user()?->scopedBranchId();
+
             $selectedAccount = Account::find((int) $this->accountId);
 
             $query = FinancialTransaction::where('account_id', (int) $this->accountId)
+                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
                 ->with('admin', 'treasury')
                 ->orderBy('date')
                 ->orderBy('id');

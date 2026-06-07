@@ -29,14 +29,21 @@ class BranchInventoryReport extends Component
     {
         $service = app(BranchReportService::class);
 
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $branchId = $this->branchFilter ? (int) $this->branchFilter : null;
         $inventory = $service->getBranchInventoryReport($branchId, $this->dateFrom ?: null, $this->dateTo ?: null);
-        $summary = $service->getAllBranchesSummary($this->dateFrom ?: null, $this->dateTo ?: null);
+        // Scoped admins cannot see the all-branches comparison summary.
+        $summary = $scopedBranchId ? collect() : $service->getAllBranchesSummary($this->dateFrom ?: null, $this->dateTo ?: null);
 
         return view('livewire.reports.branch-inventory-report', [
             'inventory' => $inventory,
             'summary' => $summary,
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

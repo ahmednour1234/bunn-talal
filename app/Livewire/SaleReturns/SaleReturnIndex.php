@@ -55,6 +55,11 @@ class SaleReturnIndex extends Component
 
     public function render(SaleReturnService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $customerId = $this->customerFilter ? (int) $this->customerFilter : null;
         $branchId   = $this->branchFilter   ? (int) $this->branchFilter   : null;
 
@@ -66,6 +71,7 @@ class SaleReturnIndex extends Component
             'branches'     => Branch::where('is_active', true)->orderBy('name')->get(),
             'statusLabels' => SaleReturn::statusLabels(),
             'stats'        => $stats,
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

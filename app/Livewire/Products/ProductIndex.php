@@ -51,6 +51,8 @@ class ProductIndex extends Component
 
     public function render(ProductService $productService)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
         $query = Product::with(['category', 'unit', 'tax', 'branches']);
 
         if ($this->search) {
@@ -61,13 +63,17 @@ class ProductIndex extends Component
             });
         }
 
-        if ($this->branchFilter) {
-            $query->whereHas('branches', fn($q) => $q->where('branch_id', $this->branchFilter));
+        // Branch-scoped admins are locked to their own branch and only see its products.
+        $effectiveBranch = $scopedBranchId ?: ($this->branchFilter ?: null);
+
+        if ($effectiveBranch) {
+            $query->whereHas('branches', fn($q) => $q->where('branch_id', $effectiveBranch));
         }
 
         return view('livewire.products.product-index', [
             'products' => $query->latest()->paginate(10),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

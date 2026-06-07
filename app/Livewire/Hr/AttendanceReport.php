@@ -28,7 +28,10 @@ class AttendanceReport extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
         $q = HrAttendance::with('delegate')
+            ->when($scopedBranchId, fn($query) => $query->whereHas('delegate.branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
             ->orderByDesc('date');
 
         if ($this->delegateFilter) {
@@ -74,7 +77,9 @@ class AttendanceReport extends Component
             'records'     => $records,
             'summary'     => $summary,
             'perDelegate' => $perDelegate,
-            'delegates'   => Delegate::where('is_active', true)->orderBy('name')->get(),
+            'delegates'   => Delegate::where('is_active', true)
+                ->when($scopedBranchId, fn($query) => $query->whereHas('branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
+                ->orderBy('name')->get(),
             'statuses'    => HrAttendance::statusLabels(),
         ]);
     }

@@ -51,6 +51,11 @@ class DelegateIndex extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $query = Delegate::query()->with(['branches', 'areas', 'categories']);
 
         if ($this->search) {
@@ -70,6 +75,7 @@ class DelegateIndex extends Component
         return view('livewire.delegates.delegate-index', [
             'delegates' => $query->latest()->paginate(10),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

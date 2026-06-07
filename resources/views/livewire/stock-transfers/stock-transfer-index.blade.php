@@ -29,6 +29,7 @@
                 <option value="rejected">مرفوض</option>
                 <option value="received">تم الاستلام</option>
             </select>
+            @unless($scopedBranchId ?? false)
             <select wire:model.live="branchFilter"
                 class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
                 <option value="">كل الفروع</option>
@@ -36,6 +37,7 @@
                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                 @endforeach
             </select>
+            @endunless
         </div>
     </div>
 

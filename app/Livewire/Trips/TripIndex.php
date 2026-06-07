@@ -35,6 +35,11 @@ class TripIndex extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $query = Trip::with(['delegate', 'branch'])
             ->when($this->search, fn($q) => $q->where('trip_number', 'like', "%{$this->search}%"))
             ->when($this->statusFilter, fn($q) => $q->where('status', $this->statusFilter))
@@ -53,6 +58,7 @@ class TripIndex extends Component
             'delegates'    => $delegates,
             'branches'     => Branch::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'statusLabels' => $statusLabels,
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

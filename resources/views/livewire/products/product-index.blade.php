@@ -31,12 +31,14 @@
                     class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm"
                 >
             </div>
+            @unless($scopedBranchId)
             <select wire:model.live="branchFilter" class="border border-gray-200 rounded-lg bg-gray-50 text-sm px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-primary-300 transition-all">
                 <option value="">كل الفروع</option>
                 @foreach($branches as $branch)
                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                 @endforeach
             </select>
+            @endunless
         </div>
     </div>
 
@@ -86,8 +88,9 @@
                     @endif
                 </td>
                 <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ $product->total_quantity > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                        {{ $product->total_quantity }}
+                    @php($displayQty = $scopedBranchId ? (int) ($product->branches->firstWhere('id', $scopedBranchId)?->pivot->quantity ?? 0) : $product->total_quantity)
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ $displayQty > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                        {{ $displayQty }}
                     </span>
                 </td>
                 <td class="px-6 py-4">

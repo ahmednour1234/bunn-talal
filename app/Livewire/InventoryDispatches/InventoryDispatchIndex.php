@@ -51,6 +51,11 @@ class InventoryDispatchIndex extends Component
 
     public function render(InventoryDispatchService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         return view('livewire.inventory-dispatches.inventory-dispatch-index', [
             'dispatches' => $service->paginateWithFilters(
                 10,
@@ -61,6 +66,7 @@ class InventoryDispatchIndex extends Component
             ),
             'branches' => Branch::where('is_active', true)->get(),
             'delegates' => Delegate::where('is_active', true)->get(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

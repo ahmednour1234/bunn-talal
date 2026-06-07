@@ -26,17 +26,20 @@ class BalanceSheetReport extends Component
     {
         $asOf = $this->asOfDate ?: now()->format('Y-m-d');
 
+        $branchId = auth('admin')->user()?->scopedBranchId();
+
         // ══ ASSETS ═══════════════════════════════════════════════════
 
         // 1. Current Assets
 
         // a) Cash & Treasuries
-        $treasuries = Treasury::where('is_active', true)->orderBy('name')->get();
+        $treasuries = Treasury::where('is_active', true)->visibleToBranch($branchId)->orderBy('name')->get();
         $totalCash  = $treasuries->sum('balance');
 
         // b) Accounts Receivable (unpaid/partial sale orders)
         $receivables = SaleOrder::whereIn('status', ['confirmed', 'partial_paid'])
             ->where('date', '<=', $asOf)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->get()
             ->sum(fn($o) => (float)$o->total - (float)$o->paid_amount);
 
@@ -46,11 +49,12 @@ class BalanceSheetReport extends Component
             ->get()
             ->sum(fn($p) => $p->outstanding);
 
-        // d) Inventory Value (qty × cost_price across all branches)
-        $inventoryValue = Product::with('branches')->get()->sum(function ($p) {
-            $qty = $p->branches->sum('pivot.quantity');
-            return $qty * (float) $p->cost_price;
-        });
+        // d) Inventory Value (qty × cost_price; scoped to branch when applicable)
+        $inventoryValue = Product::with(['branches' => fn($q) => $branchId ? $q->where('branch_id', $branchId) : $q])
+            ->get()->sum(function ($p) {
+                $qty = $p->branches->sum('pivot.quantity');
+                return $qty * (float) $p->cost_price;
+            });
 
         $totalCurrentAssets = $totalCash + $receivables + $installmentReceivables + $inventoryValue;
 
@@ -66,6 +70,7 @@ class BalanceSheetReport extends Component
         // a) Accounts Payable (unpaid/partial purchase invoices)
         $payables = PurchaseInvoice::whereIn('status', ['confirmed', 'partial_paid'])
             ->where('date', '<=', $asOf)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->get()
             ->sum(fn($i) => (float)$i->total - (float)$i->paid_amount);
 
@@ -78,6 +83,7 @@ class BalanceSheetReport extends Component
         // c) Sale Returns Payable (pending refunds to customers)
         $saleReturnsPending = SaleReturn::where('status', 'pending')
             ->where('date', '<=', $asOf)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('refund_amount');
 
         $totalCurrentLiabilities = $payables + $installmentPayables + $saleReturnsPending;
@@ -89,22 +95,27 @@ class BalanceSheetReport extends Component
         // Revenue accumulated
         $totalRevenue = SaleOrder::whereNotIn('status', ['draft', 'cancelled'])
             ->where('date', '<=', $asOf)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('total');
 
         $totalSalesReturns = SaleReturn::where('status', 'completed')
             ->where('date', '<=', $asOf)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('refund_amount');
 
         $otherRevenue = FinancialTransaction::where('type', 'revenue')
             ->where('date', '<=', $asOf)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('amount');
 
         $totalExpenses = FinancialTransaction::where('type', 'expense')
             ->where('date', '<=', $asOf)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('amount');
 
         $purchaseCosts = PurchaseInvoice::whereNotIn('status', ['draft', 'cancelled'])
             ->where('date', '<=', $asOf)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('total');
 
         $netIncome = ($totalRevenue - $totalSalesReturns + $otherRevenue) - ($purchaseCosts + $totalExpenses);

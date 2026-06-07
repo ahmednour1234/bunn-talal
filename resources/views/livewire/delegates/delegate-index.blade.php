@@ -21,12 +21,14 @@
                 <input type="text" wire:model.live.debounce.300ms="search" placeholder="بحث بالاسم أو الهاتف أو البريد..."
                     class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
             </div>
+            @unless($scopedBranchId ?? false)
             <select wire:model.live="branchFilter" class="border border-gray-200 rounded-lg bg-gray-50 text-sm px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-primary-300 transition-all">
                 <option value="">كل الفروع</option>
                 @foreach($branches as $branch)
                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                 @endforeach
             </select>
+            @endunless
         </div>
     </div>
 

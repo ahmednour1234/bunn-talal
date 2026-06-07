@@ -51,6 +51,11 @@ class PurchaseReturnIndex extends Component
 
     public function render(PurchaseReturnService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $supplierId = $this->supplierFilter ? (int) $this->supplierFilter : null;
         $branchId = $this->branchFilter ? (int) $this->branchFilter : null;
 
@@ -71,6 +76,7 @@ class PurchaseReturnIndex extends Component
                 $supplierId,
                 $branchId
             ),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

@@ -43,21 +43,26 @@ class IncomeStatementReport extends Component
         $from = $this->dateFrom ?: '2000-01-01';
         $to   = $this->dateTo   ?: now()->format('Y-m-d');
 
+        $branchId = auth('admin')->user()?->scopedBranchId();
+
         // ── REVENUES ─────────────────────────────────────────────────
 
         // 1. Sales Revenue (confirmed/paid/partial_paid sale orders)
         $salesRevenue = SaleOrder::whereNotIn('status', ['draft', 'cancelled'])
             ->whereBetween('date', [$from, $to])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('total');
 
         // 2. Sales Returns (deducted from revenue)
         $salesReturns = SaleReturn::where('status', 'completed')
             ->whereBetween('date', [$from, $to])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('refund_amount');
 
         // 3. Other revenues from financial transactions
         $otherRevenues = FinancialTransaction::where('type', 'revenue')
             ->whereBetween('date', [$from, $to])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->selectRaw('account_id, SUM(amount) as total')
             ->groupBy('account_id')
             ->with('account')
@@ -70,10 +75,12 @@ class IncomeStatementReport extends Component
         // ── COST OF GOODS SOLD ────────────────────────────────────────
         $purchaseCost = PurchaseInvoice::whereNotIn('status', ['draft', 'cancelled'])
             ->whereBetween('date', [$from, $to])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('total');
 
         $purchaseReturns = PurchaseReturn::where('status', 'completed')
             ->whereBetween('date', [$from, $to])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->sum('refund_amount');
 
         $netCogs = $purchaseCost - $purchaseReturns;
@@ -84,6 +91,7 @@ class IncomeStatementReport extends Component
         // ── EXPENSES ─────────────────────────────────────────────────
         $expenseLines = FinancialTransaction::where('type', 'expense')
             ->whereBetween('date', [$from, $to])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->selectRaw('account_id, SUM(amount) as total')
             ->groupBy('account_id')
             ->with('account')
@@ -96,6 +104,7 @@ class IncomeStatementReport extends Component
         // ── Monthly breakdown for chart ───────────────────────────────
         $monthlyRevenue = SaleOrder::whereNotIn('status', ['draft', 'cancelled'])
             ->whereBetween('date', [$from, $to])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(total) as total")
             ->groupBy('month')
             ->orderBy('month')
@@ -103,6 +112,7 @@ class IncomeStatementReport extends Component
 
         $monthlyExpenses = FinancialTransaction::where('type', 'expense')
             ->whereBetween('date', [$from, $to])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(amount) as total")
             ->groupBy('month')
             ->orderBy('month')

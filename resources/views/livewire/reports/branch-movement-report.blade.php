@@ -7,6 +7,7 @@
     {{-- Filters --}}
     <div class="bg-card rounded-2xl shadow-sm border border-primary-100 p-4 mb-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            @unless($scopedBranchId ?? false)
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">الفرع <span class="text-red-500">*</span></label>
                 <select wire:model.live="branchFilter" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm">
@@ -16,6 +17,7 @@
                     @endforeach
                 </select>
             </div>
+            @endunless
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">من تاريخ</label>
                 <input type="date" wire:model.live="dateFrom" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm">

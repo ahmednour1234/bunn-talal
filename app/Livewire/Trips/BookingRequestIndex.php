@@ -142,7 +142,10 @@ class BookingRequestIndex extends Component
                 ->find($this->selectedId)
             : null;
 
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
         $requests = TripBookingRequest::with(['delegate', 'trip'])
+            ->when($scopedBranchId, fn($q) => $q->whereHas('delegate.branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
             ->when($this->search, fn($q) => $q->where(function ($q2) {
                 $q2->where('customer_name', 'like', "%{$this->search}%")
                    ->orWhere('customer_phone', 'like', "%{$this->search}%");
@@ -152,7 +155,9 @@ class BookingRequestIndex extends Component
             ->latest()
             ->paginate(15);
 
-        $delegates    = Delegate::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $delegates    = Delegate::where('is_active', true)
+            ->when($scopedBranchId, fn($q) => $q->whereHas('branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
+            ->orderBy('name')->get(['id', 'name']);
         $statusLabels = TripBookingRequest::statusLabels();
 
         return view('livewire.trips.booking-request-index', compact('requests', 'delegates', 'statusLabels', 'selected'));

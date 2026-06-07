@@ -27,7 +27,10 @@ class TreasuryStatementReport extends Component
 
     public function render()
     {
-        $treasuries = Treasury::where('is_active', true)->orderBy('name')->get();
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        $treasuries = Treasury::where('is_active', true)->visibleToBranch($scopedBranchId)->orderBy('name')->get();
+        // Treasury ids this admin may see; rows for other treasuries are filtered out below.
+        $visibleTreasuryIds = $scopedBranchId ? $treasuries->pluck('id')->all() : null;
 
         // ── Sale order payments (deposits into treasury from customers) ──
         $salePayments = SaleOrderPayment::query()
@@ -153,6 +156,7 @@ class TreasuryStatementReport extends Component
             ->concat($saleReturns)
             ->concat($purchaseReturns)
             ->concat($manualTx)
+            ->when($visibleTreasuryIds !== null, fn($rows) => $rows->whereIn('treasury_id', $visibleTreasuryIds))
             ->sortBy('date')
             ->values();
 
@@ -186,6 +190,10 @@ class TreasuryStatementReport extends Component
             ->concat(TreasuryTransaction::whereIn('reference_number', ['OPENING', 'MANUAL-ADJ'])
                 ->when($this->treasuryId, fn($q) => $q->where('treasury_id', $this->treasuryId))
                 ->get()->map(fn($t) => ['type' => $t->type, 'amount' => (float)$t->amount, 'treasury_id' => $t->treasury_id]));
+
+        if ($visibleTreasuryIds !== null) {
+            $allTimeSources = $allTimeSources->whereIn('treasury_id', $visibleTreasuryIds);
+        }
 
         // Calculate untracked balance per treasury
         $untrackedBalances = [];

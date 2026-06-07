@@ -52,6 +52,11 @@ class FinancialTransactionIndex extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $query = FinancialTransaction::query()->with(['account', 'treasury', 'branch', 'admin']);
 
         if ($this->search) {
@@ -75,6 +80,7 @@ class FinancialTransactionIndex extends Component
             'accounts' => Account::where('is_active', true)->orderBy('name')->get(),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
             'typeLabels' => FinancialTransaction::typeLabels(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

@@ -73,12 +73,14 @@
                 <option value="{{ $c->id }}">{{ $c->name }}</option>
                 @endforeach
             </select>
+            @unless($scopedBranchId ?? false)
             <select wire:model.live="branchFilter" class="border border-gray-200 rounded-xl px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-300">
                 <option value="">كل الفروع</option>
                 @foreach($branches as $b)
                 <option value="{{ $b->id }}">{{ $b->name }}</option>
                 @endforeach
             </select>
+            @endunless
             <input wire:model.live="dateFrom" type="date" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
             <input wire:model.live="dateTo" type="date" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
         </div>

@@ -34,7 +34,10 @@ class AttendanceIndex extends Component
 
     public function render(HrAttendanceService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
         $attendances = HrAttendance::with('delegate')
+            ->when($scopedBranchId, fn($q) => $q->whereHas('delegate.branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
             ->when($this->filterDelegate, fn($q) => $q->where('delegate_id', $this->filterDelegate))
             ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))
             ->when($this->filterDateFrom, fn($q) => $q->where('date', '>=', $this->filterDateFrom))
@@ -45,7 +48,7 @@ class AttendanceIndex extends Component
 
         return view('livewire.hr.attendance-index', [
             'attendances' => $attendances,
-            'delegates'   => Delegate::orderBy('name')->get(['id', 'name']),
+            'delegates'   => Delegate::when($scopedBranchId, fn($q) => $q->whereHas('branches', fn($b) => $b->where('branches.id', $scopedBranchId)))->orderBy('name')->get(['id', 'name']),
             'statuses'    => HrAttendance::statusLabels(),
         ]);
     }

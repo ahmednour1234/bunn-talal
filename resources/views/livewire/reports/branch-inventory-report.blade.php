@@ -62,6 +62,7 @@
     {{-- Filters --}}
     <div class="bg-white rounded-3xl shadow-[0_8px_24px_rgba(15,23,42,0.05)] p-5 md:p-6 no-print print-soft">
         <div class="filters-row">
+            @unless($scopedBranchId ?? false)
             <div class="filter-item">
                 <label class="text-xs font-semibold text-gray-500 mb-1 block">الفرع</label>
                 <select wire:model.live="branchFilter" class="w-full px-4 py-2.5 border border-gray-100 rounded-xl bg-white text-sm focus:border-primary-300 focus:ring-primary-100">
@@ -71,6 +72,7 @@
                     @endforeach
                 </select>
             </div>
+            @endunless
 
             <div class="filter-item">
                 <label class="text-xs font-semibold text-gray-500 mb-1 block">من تاريخ</label>

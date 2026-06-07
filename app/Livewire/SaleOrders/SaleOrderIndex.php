@@ -46,6 +46,11 @@ class SaleOrderIndex extends Component
 
     public function render(SaleOrderService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $customerId  = $this->customerFilter  ? (int) $this->customerFilter  : null;
         $branchId    = $this->branchFilter    ? (int) $this->branchFilter    : null;
         $delegateId  = $this->delegateFilter  ? (int) $this->delegateFilter  : null;
@@ -71,6 +76,7 @@ class SaleOrderIndex extends Component
                 $customerId,
                 $branchId,
             ),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

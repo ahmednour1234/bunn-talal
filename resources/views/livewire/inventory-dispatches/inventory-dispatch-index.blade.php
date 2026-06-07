@@ -30,6 +30,7 @@
                 <option value="returned">مرتجع كامل</option>
                 <option value="settled">تمت التسوية</option>
             </select>
+            @unless($scopedBranchId ?? false)
             <select wire:model.live="branchFilter"
                 class="w-36 px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
                 <option value="">كل الفروع</option>
@@ -37,6 +38,7 @@
                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                 @endforeach
             </select>
+            @endunless
             <select wire:model.live="delegateFilter"
                 class="w-36 px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
                 <option value="">كل المناديب</option>

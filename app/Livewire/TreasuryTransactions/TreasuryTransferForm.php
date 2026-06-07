@@ -76,7 +76,9 @@ class TreasuryTransferForm extends Component
             : null;
 
         return view('livewire.treasury-transactions.treasury-transfer-form', [
-            'treasuries'   => Treasury::where('is_active', true)->orderBy('name')->get(),
+            'treasuries'   => Treasury::where('is_active', true)
+                ->visibleToBranch(auth('admin')->user()?->scopedBranchId())
+                ->orderBy('name')->get(),
             'fromTreasury' => $fromTreasury,
         ]);
     }

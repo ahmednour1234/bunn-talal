@@ -41,6 +41,11 @@ class PurchaseInvoiceIndex extends Component
 
     public function render(PurchaseInvoiceService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $supplierId = $this->supplierFilter ? (int) $this->supplierFilter : null;
         $branchId = $this->branchFilter ? (int) $this->branchFilter : null;
 
@@ -61,6 +66,7 @@ class PurchaseInvoiceIndex extends Component
                 $supplierId,
                 $branchId
             ),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

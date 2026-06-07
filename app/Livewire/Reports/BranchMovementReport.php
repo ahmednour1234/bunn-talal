@@ -20,6 +20,11 @@ class BranchMovementReport extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $report = null;
 
         if ($this->branchFilter) {
@@ -34,6 +39,7 @@ class BranchMovementReport extends Component
         return view('livewire.reports.branch-movement-report', [
             'report' => $report,
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

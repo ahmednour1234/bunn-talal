@@ -26,7 +26,10 @@ class SalariesReport extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
         $q = HrSalary::with('delegate')
+            ->when($scopedBranchId, fn($query) => $query->whereHas('delegate.branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
             ->orderByDesc('year')
             ->orderByDesc('month');
 
@@ -63,7 +66,9 @@ class SalariesReport extends Component
         return view('livewire.hr.salaries-report', [
             'salaries'  => $salaries,
             'summary'   => $summary,
-            'delegates' => Delegate::where('is_active', true)->orderBy('name')->get(),
+            'delegates' => Delegate::where('is_active', true)
+                ->when($scopedBranchId, fn($query) => $query->whereHas('branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
+                ->orderBy('name')->get(),
             'months'    => HrSalary::monthLabels(),
             'years'     => range(now()->year, now()->year - 4),
         ]);

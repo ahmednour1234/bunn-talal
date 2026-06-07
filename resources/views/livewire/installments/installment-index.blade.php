@@ -72,12 +72,14 @@
                 </select>
             </div>
             <div style="flex:1 1 0;min-width:140px;">
+                @unless($scopedBranchId ?? false)
                 <select wire:model.live="branchFilter" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm">
                     <option value="">كل الفروع</option>
                     @foreach($branches as $branch)
                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                     @endforeach
                 </select>
+                @endunless
             </div>
             <div style="flex:1 1 0;min-width:130px;">
                 <input type="date" wire:model.live="dateFrom" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm">

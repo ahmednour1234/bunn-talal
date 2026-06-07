@@ -21,10 +21,14 @@ class ReportsIndex extends Component
 
     public function render()
     {
-        $totalTreasuryBalance = Treasury::where('is_active', true)->sum('balance');
+        $branchId = auth('admin')->user()?->scopedBranchId();
 
-        $financialQuery = FinancialTransaction::query();
-        $treasuryTxQuery = TreasuryTransaction::query();
+        $totalTreasuryBalance = Treasury::where('is_active', true)->visibleToBranch($branchId)->sum('balance');
+
+        $financialQuery = FinancialTransaction::query()
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId));
+        $treasuryTxQuery = TreasuryTransaction::query()
+            ->when($branchId, fn($q) => $q->whereHas('treasury', fn($t) => $t->visibleToBranch($branchId)));
 
         if ($this->dateFrom) {
             $financialQuery->where('date', '>=', $this->dateFrom);
@@ -43,6 +47,7 @@ class ReportsIndex extends Component
 
         $expensesByAccount = FinancialTransaction::query()
             ->where('type', 'expense')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($this->dateFrom, fn($q) => $q->where('date', '>=', $this->dateFrom))
             ->when($this->dateTo, fn($q) => $q->where('date', '<=', $this->dateTo))
             ->selectRaw('account_id, SUM(amount) as total')
@@ -52,6 +57,7 @@ class ReportsIndex extends Component
 
         $revenuesByAccount = FinancialTransaction::query()
             ->where('type', 'revenue')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($this->dateFrom, fn($q) => $q->where('date', '>=', $this->dateFrom))
             ->when($this->dateTo, fn($q) => $q->where('date', '<=', $this->dateTo))
             ->selectRaw('account_id, SUM(amount) as total')
@@ -59,9 +65,10 @@ class ReportsIndex extends Component
             ->with('account')
             ->get();
 
-        $treasuryBalances = Treasury::where('is_active', true)->orderBy('name')->get();
+        $treasuryBalances = Treasury::where('is_active', true)->visibleToBranch($branchId)->orderBy('name')->get();
 
         $recentTransactions = FinancialTransaction::with(['account', 'admin'])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($this->dateFrom, fn($q) => $q->where('date', '>=', $this->dateFrom))
             ->when($this->dateTo, fn($q) => $q->where('date', '<=', $this->dateTo))
             ->latest()

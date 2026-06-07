@@ -22,6 +22,11 @@ class ProductDepreciationIndex extends Component
 
     public function render(ProductDepreciationService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         return view('livewire.product-depreciations.product-depreciation-index', [
             'depreciations' => $service->paginateWithFilters(
                 10,
@@ -31,6 +36,7 @@ class ProductDepreciationIndex extends Component
             ),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
             'statusLabels' => ProductDepreciation::statusLabels(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

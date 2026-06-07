@@ -41,6 +41,11 @@ class InstallmentIndex extends Component
 
     public function render(InstallmentService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $stats = $service->getSummaryStats();
         $plans = $service->paginateWithFilters(
             10,
@@ -58,6 +63,7 @@ class InstallmentIndex extends Component
             'branches'     => Branch::where('is_active', true)->orderBy('name')->get(),
             'statusLabels' => InstallmentPlan::statusLabels(),
             'partyLabels'  => InstallmentPlan::partyTypeLabels(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

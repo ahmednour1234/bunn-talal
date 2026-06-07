@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Treasuries;
 
+use App\Models\Branch;
 use App\Models\Treasury;
 use App\Models\TreasuryTransaction;
 use App\Services\TreasuryService;
@@ -12,6 +13,7 @@ class TreasuryForm extends Component
 {
     public ?int $treasuryId = null;
     public string $name = '';
+    public ?int $branch_id = null;
     public string $balance = '0';
     public bool $is_active = true;
 
@@ -24,9 +26,13 @@ class TreasuryForm extends Component
             $this->treasuryId = $id;
             $treasury = $treasuryService->getTreasuryById($id);
             $this->name = $treasury->name;
+            $this->branch_id = $treasury->branch_id;
             $this->balance = (string) ($treasury->balance * 1);
             $this->is_active = $treasury->is_active;
             $this->originalBalance = (float) $treasury->balance;
+        } else {
+            // A branch-scoped admin creates treasuries for their own branch by default.
+            $this->branch_id = auth('admin')->user()?->scopedBranchId();
         }
     }
 
@@ -34,6 +40,7 @@ class TreasuryForm extends Component
     {
         return [
             'name' => 'required|string|max:255',
+            'branch_id' => 'nullable|exists:branches,id',
             'balance' => 'required|numeric|min:0',
             'is_active' => 'boolean',
         ];
@@ -51,8 +58,13 @@ class TreasuryForm extends Component
     {
         $this->validate();
 
+        // Branch-scoped admins can only assign treasuries to their own branch.
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        $branchId = $scopedBranchId ?: ($this->branch_id ?: null);
+
         $data = [
             'name' => $this->name,
+            'branch_id' => $branchId,
             'balance' => $this->balance,
             'is_active' => $this->is_active,
         ];
@@ -110,6 +122,9 @@ class TreasuryForm extends Component
 
     public function render()
     {
-        return view('livewire.treasuries.treasury-form');
+        return view('livewire.treasuries.treasury-form', [
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'branchScoped' => auth('admin')->user()?->isBranchScoped() ?? false,
+        ]);
     }
 }

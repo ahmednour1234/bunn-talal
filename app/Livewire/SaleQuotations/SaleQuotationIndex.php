@@ -37,6 +37,11 @@ class SaleQuotationIndex extends Component
 
     public function render(SaleQuotationService $service)
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchFilter = (string) $scopedBranchId;
+        }
+
         $customerId = $this->customerFilter ? (int) $this->customerFilter : null;
         $branchId   = $this->branchFilter   ? (int) $this->branchFilter   : null;
 
@@ -45,6 +50,7 @@ class SaleQuotationIndex extends Component
             'customers'    => Customer::where('is_active', true)->orderBy('name')->get(),
             'branches'     => Branch::where('is_active', true)->orderBy('name')->get(),
             'statusLabels' => SaleQuotation::statusLabels(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }

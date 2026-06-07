@@ -51,7 +51,10 @@ class LeavesReport extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
         $q = HrLeave::with('delegate')
+            ->when($scopedBranchId, fn($query) => $query->whereHas('delegate.branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
             ->orderByDesc('start_date');
 
         if ($this->delegateFilter) {
@@ -92,7 +95,9 @@ class LeavesReport extends Component
             'leaves'    => $leaves,
             'summary'   => $summary,
             'byType'    => $byType,
-            'delegates' => Delegate::where('is_active', true)->orderBy('name')->get(),
+            'delegates' => Delegate::where('is_active', true)
+                ->when($scopedBranchId, fn($query) => $query->whereHas('branches', fn($b) => $b->where('branches.id', $scopedBranchId)))
+                ->orderBy('name')->get(),
             'types'     => HrLeave::typeLabels(),
             'statuses'  => HrLeave::statusLabels(),
         ]);
