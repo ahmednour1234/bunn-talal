@@ -13,19 +13,20 @@
                 <h3 class="text-base font-bold text-primary-700 mb-4 pb-2 border-b border-gray-100">بيانات الخزنة</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <x-form-input label="اسم الخزنة" name="name" wire:model="name" placeholder="مثال: الخزنة الرئيسية" required :error="$errors->first('name')" />
-                    @unless($branchScoped)
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الفرع</label>
-                        <select wire:model="branch_id"
-                            class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm">
+                        <select wire:model="branch_id" @disabled($branchScoped)
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm {{ $branchScoped ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-gray-50' }}">
                             <option value="">مشتركة (كل الفروع)</option>
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                             @endforeach
                         </select>
+                        @if($branchScoped)
+                            <p class="text-xs text-gray-400 mt-1">الخزنة مرتبطة بفرعك تلقائياً.</p>
+                        @endif
                         @error('branch_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
-                    @endunless
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الرصيد <span class="text-red-500">*</span></label>
                         <input type="number" wire:model="balance" step="0.01" min="0"
