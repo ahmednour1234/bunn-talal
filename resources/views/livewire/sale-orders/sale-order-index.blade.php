@@ -137,8 +137,8 @@
                         @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-4 py-3 font-mono text-xs text-primary-600 font-semibold">{{ $order->order_number }}</td>
-                            <td class="px-4 py-3">{{ $order->customer->name }}</td>
-                            <td class="px-4 py-3">{{ $order->branch->name }}</td>
+                            <td class="px-4 py-3">{{ $order->customer?->name ?? '-' }}</td>
+                            <td class="px-4 py-3">{{ $order->branch?->name ?? '-' }}</td>
                             <td class="px-4 py-3">{{ $order->delegate?->name ?? '-' }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $order->date->format('Y-m-d') }}</td>
                             <td class="px-4 py-3 font-semibold">{{ number_format($order->total, 2) }}</td>

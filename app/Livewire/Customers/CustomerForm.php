@@ -44,6 +44,9 @@ class CustomerForm extends Component
             $this->classification = $customer->classification;
             $this->is_active = $customer->is_active;
             $this->selectedDelegates = $customer->delegates->pluck('id')->map(fn ($v) => (string) $v)->toArray();
+        } else {
+            // Default new customers to the admin's own branch when they are branch-scoped.
+            $this->branch_id = auth('admin')->user()?->scopedBranchId();
         }
     }
 
@@ -80,6 +83,12 @@ class CustomerForm extends Component
     public function save(CustomerService $customerService)
     {
         $this->validate();
+
+        // Force branch-scoped admins to save customers under their own branch.
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branch_id = $scopedBranchId;
+        }
 
         $data = [
             'name' => $this->name,

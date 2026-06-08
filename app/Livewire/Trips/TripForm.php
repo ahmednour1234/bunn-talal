@@ -22,6 +22,12 @@ class TripForm extends Component
     {
         $this->startDate = now()->format('Y-m-d');
 
+        // Lock branch-scoped admins to their own branch.
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchId = $scopedBranchId;
+        }
+
         if ($id) {
             $trip = Trip::findOrFail($id);
             $this->tripId              = $id;
@@ -48,6 +54,12 @@ class TripForm extends Component
 
     public function save(): void
     {
+        // Force branch-scoped admins to save under their own branch.
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branchId = $scopedBranchId;
+        }
+
         $data = $this->validate();
 
         $payload = [
@@ -75,8 +87,17 @@ class TripForm extends Component
 
     public function render()
     {
-        $delegates   = Delegate::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $branches    = Branch::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
+        $delegates = Delegate::where('is_active', true)
+            ->when($scopedBranchId, fn ($q) => $q->whereHas('branches', fn ($b) => $b->where('branches.id', $scopedBranchId)))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $branches = Branch::where('is_active', true)
+            ->when($scopedBranchId, fn ($q) => $q->where('id', $scopedBranchId))
+            ->orderBy('name')
+            ->get(['id', 'name']);
         $statusLabels = Trip::statusLabels();
 
         return view('livewire.trips.trip-form', compact('delegates', 'branches', 'statusLabels'));
