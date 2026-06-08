@@ -12,6 +12,7 @@ class SaleOrderItem extends Model
         'unit_id',
         'quantity',
         'unit_price',
+        'cost_price',
         'discount',
         'discount_type',
         'tax_amount',
@@ -23,6 +24,7 @@ class SaleOrderItem extends Model
         return [
             'quantity'   => 'decimal:4',
             'unit_price' => 'decimal:4',
+            'cost_price' => 'decimal:4',
             'discount'   => 'decimal:4',
             'tax_amount' => 'decimal:4',
             'total'      => 'decimal:2',

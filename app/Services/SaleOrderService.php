@@ -168,11 +168,16 @@ class SaleOrderService
             ]));
 
             foreach ($items as $item) {
+                // Snapshot the branch cost price at sale time for accurate profit reporting.
+                $product = \App\Models\Product::find($item['product_id']);
+                $costPrice = $product ? $product->getCostInBranch((int) $data['branch_id']) : 0;
+
                 $order->items()->create([
                     'product_id'    => $item['product_id'],
                     'unit_id'       => $item['unit_id'] ?? null,
                     'quantity'      => $item['quantity'],
                     'unit_price'    => $item['unit_price'],
+                    'cost_price'    => $costPrice,
                     'discount'      => $item['discount'] ?? 0,
                     'discount_type' => $item['discount_type'] ?? 'fixed',
                     'tax_amount'    => $item['tax_amount'] ?? 0,

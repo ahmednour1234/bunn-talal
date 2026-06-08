@@ -71,12 +71,32 @@ class ProductService
         return $product;
     }
 
-    public function updateBranchQuantity(int $productId, int $branchId, int $quantity, ?int $unitId = null)
+    public function updateBranchQuantity(int $productId, int $branchId, int $quantity, ?int $unitId = null, ?float $costPrice = null)
     {
         $product = $this->productRepository->getById($productId);
-        $product->branches()->syncWithoutDetaching([
-            $branchId => ['quantity' => $quantity, 'unit_id' => $unitId],
-        ]);
+
+        // Log the cost change before applying it, so we can analyse profit over time.
+        if ($costPrice !== null) {
+            $existing = $product->branches()->where('branch_id', $branchId)->first();
+            $oldCost = (float) ($existing?->pivot->cost_price ?? 0);
+
+            if (round($oldCost, 2) !== round($costPrice, 2)) {
+                \App\Models\ProductCostHistory::create([
+                    'product_id' => $productId,
+                    'branch_id'  => $branchId,
+                    'old_cost'   => $oldCost,
+                    'new_cost'   => $costPrice,
+                    'admin_id'   => auth('admin')->id(),
+                ]);
+            }
+        }
+
+        $pivot = ['quantity' => $quantity, 'unit_id' => $unitId];
+        if ($costPrice !== null) {
+            $pivot['cost_price'] = $costPrice;
+        }
+
+        $product->branches()->syncWithoutDetaching([$branchId => $pivot]);
     }
 
     public function getProductsByBranch(int $branchId)

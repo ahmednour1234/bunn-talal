@@ -27,9 +27,10 @@ class ProductForm extends Component
     public $image;
     public ?string $existingImage = null;
 
-    // Branch quantities and units
+    // Branch quantities, units and per-branch cost prices
     public array $branch_quantities = [];
     public array $branch_units = [];
+    public array $branch_costs = [];
 
     public function mount(ProductService $productService, ?int $id = null)
     {
@@ -50,6 +51,7 @@ class ProductForm extends Component
             foreach ($product->branches as $branch) {
                 $this->branch_quantities[$branch->id] = (string) $branch->pivot->quantity;
                 $this->branch_units[$branch->id] = (string) ($branch->pivot->unit_id ?? $product->unit_id ?? '');
+                $this->branch_costs[$branch->id] = (string) ($branch->pivot->cost_price ?? '0');
             }
         }
 
@@ -59,6 +61,7 @@ class ProductForm extends Component
             if (!isset($this->branch_quantities[$branch->id])) {
                 $this->branch_quantities[$branch->id] = '0';
                 $this->branch_units[$branch->id] = '';
+                $this->branch_costs[$branch->id] = '0';
             }
         }
     }
@@ -78,6 +81,7 @@ class ProductForm extends Component
             'image' => $this->productId ? 'nullable|image|max:2048' : 'nullable|image|max:2048',
             'branch_quantities.*' => 'nullable|integer|min:0',
             'branch_units.*' => 'nullable|exists:units,id',
+            'branch_costs.*' => 'nullable|numeric|min:0',
         ];
     }
 
@@ -123,7 +127,8 @@ class ProductForm extends Component
         // Update branch quantities
         foreach ($this->branch_quantities as $branchId => $qty) {
             $unitId = !empty($this->branch_units[$branchId]) ? (int) $this->branch_units[$branchId] : $product->unit_id;
-            $productService->updateBranchQuantity($product->id, (int) $branchId, (int) $qty, $unitId);
+            $cost = isset($this->branch_costs[$branchId]) ? (float) $this->branch_costs[$branchId] : 0.0;
+            $productService->updateBranchQuantity($product->id, (int) $branchId, (int) $qty, $unitId, $cost);
         }
 
         return redirect()->route('products.index');

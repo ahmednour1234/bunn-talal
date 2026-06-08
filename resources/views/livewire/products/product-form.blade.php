@@ -164,6 +164,17 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="mt-2">
+                                <label class="block text-xs text-gray-500 mb-1">سعر التكلفة بالفرع</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    wire:model="branch_costs.{{ $branch->id }}"
+                                    min="0"
+                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm"
+                                    placeholder="0.00"
+                                >
+                            </div>
                         </div>
                     @endforeach
                 </div>

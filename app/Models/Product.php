@@ -50,8 +50,21 @@ class Product extends Model
     public function branches()
     {
         return $this->belongsToMany(Branch::class, 'branch_product')
-            ->withPivot('quantity', 'unit_id')
+            ->withPivot('quantity', 'unit_id', 'cost_price')
             ->withTimestamps();
+    }
+
+    public function costHistories()
+    {
+        return $this->hasMany(ProductCostHistory::class);
+    }
+
+    public function getCostInBranch(int $branchId): float
+    {
+        $branch = $this->branches()->where('branch_id', $branchId)->first();
+
+        // Fall back to the global product cost when no per-branch cost is set.
+        return (float) ($branch?->pivot->cost_price ?: $this->cost_price);
     }
 
     public function getTotalQuantityAttribute(): int
