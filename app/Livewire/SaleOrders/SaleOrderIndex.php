@@ -76,6 +76,15 @@ class SaleOrderIndex extends Component
                 $customerId,
                 $branchId,
             ),
+            'totalsSummary' => $service->getTotalsSummary(
+                $this->search ?: null,
+                $this->statusFilter ?: null,
+                $customerId,
+                $branchId,
+                $delegateId,
+                $this->dateFrom ?: null,
+                $this->dateTo ?: null,
+            ),
             'scopedBranchId' => $scopedBranchId,
         ]);
     }

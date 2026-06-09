@@ -87,6 +87,26 @@
         </div>
     </div>
 
+    {{-- Totals Summary (excludes cancelled) --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div class="rounded-xl border border-primary-200 bg-primary-50 p-4">
+            <p class="text-xs text-primary-600 mb-1">عدد الطلبات</p>
+            <p class="text-2xl font-bold text-primary-700">{{ number_format($totalsSummary['orders_count']) }}</p>
+        </div>
+        <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+            <p class="text-xs text-indigo-600 mb-1">إجمالي المبيعات</p>
+            <p class="text-2xl font-bold text-indigo-700">{{ number_format($totalsSummary['total'], 2) }}</p>
+        </div>
+        <div class="rounded-xl border border-green-200 bg-green-50 p-4">
+            <p class="text-xs text-green-600 mb-1">إجمالي المدفوع</p>
+            <p class="text-2xl font-bold text-green-700">{{ number_format($totalsSummary['paid'], 2) }}</p>
+        </div>
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p class="text-xs text-red-600 mb-1">إجمالي المتبقي</p>
+            <p class="text-2xl font-bold text-red-700">{{ number_format($totalsSummary['remaining'], 2) }}</p>
+        </div>
+    </div>
+
     {{-- Status Cards --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
         @php

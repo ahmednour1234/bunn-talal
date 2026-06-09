@@ -88,6 +88,21 @@ class SaleOrderService
         return $result;
     }
 
+    public function getTotalsSummary(?string $search, ?string $status, ?int $customerId, ?int $branchId, ?int $delegateId = null, ?string $dateFrom = null, ?string $dateTo = null): array
+    {
+        $row = $this->buildFilteredQuery($search, $status, $customerId, $branchId, $delegateId, $dateFrom, $dateTo)
+            ->where('status', '!=', 'cancelled')
+            ->selectRaw('COUNT(*) as orders_count, COALESCE(SUM(total), 0) as total, COALESCE(SUM(paid_amount), 0) as paid, COALESCE(SUM(GREATEST(total - paid_amount, 0)), 0) as remaining')
+            ->first();
+
+        return [
+            'orders_count' => (int) ($row->orders_count ?? 0),
+            'total'        => (float) ($row->total ?? 0),
+            'paid'         => (float) ($row->paid ?? 0),
+            'remaining'    => (float) ($row->remaining ?? 0),
+        ];
+    }
+
     protected function buildFilteredQuery(?string $search, ?string $status, ?int $customerId, ?int $branchId, ?int $delegateId = null, ?string $dateFrom = null, ?string $dateTo = null)
     {
         $query = SaleOrder::query()->with(['customer', 'branch', 'admin', 'delegate', 'treasury']);
