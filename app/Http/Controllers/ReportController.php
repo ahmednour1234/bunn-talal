@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Collection;
 use App\Models\Customer;
 use App\Models\Delegate;
 use App\Models\FinancialTransaction;
@@ -42,6 +43,81 @@ class ReportController extends Controller
     public function treasuryStatement()
     {
         return view('pages.reports.treasury-statement');
+    }
+
+    public function salesCollections(Request $request)
+    {
+        $dateFrom = $request->input('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $dateTo   = $request->input('date_to',   now()->format('Y-m-d'));
+
+        // ══════════════════════════════════════════════════════════
+        // SALES — الفواتير (المبيعات)
+        // ══════════════════════════════════════════════════════════
+        $ordersInPeriod = SaleOrder::whereBetween('date', [$dateFrom, $dateTo]);
+
+        // الفواتير النشطة (غير المسودة وغير الملغية)
+        $activeOrders = (clone $ordersInPeriod)->whereNotIn('status', ['draft', 'cancelled']);
+
+        $salesTotal     = (float) (clone $activeOrders)->sum('total');      // بعنا بكام
+        $salesCollected = (float) (clone $activeOrders)->sum('paid_amount'); // حصلنا كام من الفواتير
+        $salesCount     = (clone $activeOrders)->count();
+        $salesOutstanding = max(0, $salesTotal - $salesCollected);          // المتبقي (آجل)
+
+        // الفواتير الملغية
+        $cancelledOrders     = (clone $ordersInPeriod)->where('status', 'cancelled');
+        $cancelledOrdersTotal = (float) (clone $cancelledOrders)->sum('total');
+        $cancelledOrdersCount = (clone $cancelledOrders)->count();
+
+        // ══════════════════════════════════════════════════════════
+        // COLLECTIONS — سندات التحصيل (من المناديب/العملاء)
+        // ══════════════════════════════════════════════════════════
+        $collectionsInPeriod = Collection::whereBetween('collection_date', [$dateFrom, $dateTo]);
+
+        $collectionsTotal = (float) (clone $collectionsInPeriod)->where('status', 'completed')->sum('total_amount');
+        $collectionsCount = (clone $collectionsInPeriod)->where('status', 'completed')->count();
+
+        $cancelledCollectionsTotal = (float) (clone $collectionsInPeriod)->where('status', 'cancelled')->sum('total_amount');
+        $cancelledCollectionsCount = (clone $collectionsInPeriod)->where('status', 'cancelled')->count();
+
+        // إجمالي المحصّل = مدفوعات الفواتير وقت البيع + سندات التحصيل المكتملة
+        $totalCollected = $salesCollected + $collectionsTotal;
+
+        // ══════════════════════════════════════════════════════════
+        // RETURNS — المرتجعات
+        // ══════════════════════════════════════════════════════════
+        $returnsInPeriod = SaleReturn::whereBetween('date', [$dateFrom, $dateTo]);
+
+        // المرتجعات المؤكدة/المستردة
+        $activeReturns      = (clone $returnsInPeriod)->whereIn('status', ['confirmed', 'refunded']);
+        $returnsTotal       = (float) (clone $activeReturns)->sum('refund_amount'); // مرتجعات بكام
+        $returnsCount       = (clone $activeReturns)->count();
+
+        // المرتجعات الملغية
+        $cancelledReturns      = (clone $returnsInPeriod)->where('status', 'cancelled');
+        $cancelledReturnsTotal = (float) (clone $cancelledReturns)->sum('refund_amount');
+        $cancelledReturnsCount = (clone $cancelledReturns)->count();
+
+        // ══════════════════════════════════════════════════════════
+        // NET — الصافي
+        // ══════════════════════════════════════════════════════════
+        $netSales      = $salesTotal - $returnsTotal;       // صافي المبيعات (بعد خصم المرتجعات)
+        $netCollected  = $totalCollected - $returnsTotal;   // صافي المحصّل (بعد رد المرتجعات)
+
+        return view('pages.reports.sales-collections', compact(
+            'dateFrom', 'dateTo',
+            // Sales
+            'salesTotal', 'salesCollected', 'salesCount', 'salesOutstanding',
+            'cancelledOrdersTotal', 'cancelledOrdersCount',
+            // Collections
+            'collectionsTotal', 'collectionsCount',
+            'cancelledCollectionsTotal', 'cancelledCollectionsCount',
+            'totalCollected',
+            // Returns
+            'returnsTotal', 'returnsCount',
+            'cancelledReturnsTotal', 'cancelledReturnsCount',
+            // Net
+            'netSales', 'netCollected',
+        ));
     }
 
     public function financialOverview(Request $request)
