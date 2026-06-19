@@ -133,6 +133,7 @@ Route::middleware('auth:admin')->group(function () {
     });
     Route::middleware('permission:customers.view')->group(function () {
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('/customers/export/excel', [CustomerController::class, 'exportExcel'])->name('customers.export.excel');
         Route::get('/customers/{id}', [CustomerController::class, 'show'])->name('customers.show');
     });
     Route::middleware('permission:customers.edit')->group(function () {

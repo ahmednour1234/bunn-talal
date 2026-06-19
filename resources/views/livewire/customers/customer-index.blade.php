@@ -5,6 +5,11 @@
             <p class="text-sm text-gray-400 mt-0.5">عرض وإدارة جميع العملاء</p>
         </div>
         <div class="flex items-center gap-2">
+            <a href="{{ route('customers.export.excel', ['search' => $search, 'classification' => $classificationFilter, 'area_id' => $areaFilter, 'branch_id' => $branchFilter]) }}"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                تصدير Excel
+            </a>
             @if(auth('admin')->user()?->hasPermission('customers.delete'))
                 <a href="{{ route('customers.trash') }}"
                     class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors">
@@ -74,13 +79,14 @@
         <table class="w-full text-sm text-right table-fixed">
             <colgroup>
                 <col class="w-10">
-                <col class="w-[24%]">
-                <col class="w-[13%]">
+                <col class="w-[20%]">
+                <col class="w-[11%]">
+                <col class="w-[10%]">
+                <col class="w-[9%]">
+                <col class="w-[11%]">
                 <col class="w-[12%]">
-                <col class="w-[10%]">
-                <col class="w-[13%]">
-                <col class="w-[10%]">
-                <col class="w-[18%]">
+                <col class="w-[9%]">
+                <col class="w-[16%]">
             </colgroup>
             <thead>
                 <tr class="bg-primary-700">
@@ -90,6 +96,7 @@
                     <th class="px-4 py-3 text-xs font-bold text-white">المنطقة</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">التصنيف</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">الحد الائتماني</th>
+                    <th class="px-4 py-3 text-xs font-bold text-white">مديونية العميل</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">الحالة</th>
                     <th class="px-4 py-3 text-xs font-bold text-white text-center">الإجراءات</th>
                 </tr>
@@ -117,6 +124,10 @@
                         </span>
                     </td>
                     <td class="px-4 py-3 font-bold text-gray-800 text-sm">{{ number_format($customer->credit_limit, 0) }}</td>
+                    @php $debt = $debts[$customer->id] ?? 0; @endphp
+                    <td class="px-4 py-3 font-bold text-sm {{ $debt > 0 ? 'text-red-600' : ($debt < 0 ? 'text-green-600' : 'text-gray-500') }}">
+                        {{ number_format($debt, 2) }}
+                    </td>
                     <td class="px-4 py-3">
                         @if($customer->is_active)
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 whitespace-nowrap">
@@ -164,7 +175,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-5 py-16 text-center">
+                    <td colspan="9" class="px-5 py-16 text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
                         <p class="text-gray-400 text-sm">لا يوجد عملاء مسجلون</p>
                     </td>

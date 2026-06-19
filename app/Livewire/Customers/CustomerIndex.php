@@ -102,8 +102,11 @@ class CustomerIndex extends Component
             $query->where('branch_id', $this->branchFilter);
         }
 
+        $customers = $query->latest()->paginate(10);
+
         return view('livewire.customers.customer-index', [
-            'customers' => $query->latest()->paginate(10),
+            'customers' => $customers,
+            'debts' => \App\Support\CustomerDebt::forCustomers($customers->getCollection()),
             'classificationLabels' => Customer::classificationLabels(),
             'areas' => \App\Models\Area::where('is_active', true)->orderBy('name')->get(),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),

@@ -4,13 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\Area;
 use App\Models\Customer;
+use App\Exports\CustomersExport;
 use App\Services\CustomerService;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerController extends Controller
 {
     public function __construct(protected CustomerService $customerService)
     {
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $branchFilter = (string) $request->input('branch_id', '');
+
+        // قيّد التصدير بفرع المستخدم إن كان مرتبطاً بفرع
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $branchFilter = (string) $scopedBranchId;
+        }
+
+        return Excel::download(
+            new CustomersExport(
+                (string) $request->input('search', ''),
+                (string) $request->input('classification', ''),
+                (string) $request->input('area_id', ''),
+                $branchFilter,
+            ),
+            'العملاء.xlsx'
+        );
     }
 
     public function index(Request $request)
