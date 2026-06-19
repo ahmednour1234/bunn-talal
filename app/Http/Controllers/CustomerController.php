@@ -62,8 +62,9 @@ class CustomerController extends Controller
 
         $customers = $query->latest()->paginate(10)->withQueryString();
         $areas     = Area::where('is_active', true)->orderBy('name')->get();
+        $debts     = \App\Support\CustomerDebt::forCustomers($customers->getCollection());
 
-        return view('pages.customers.index', compact('customers', 'areas', 'search', 'classification', 'areaId'));
+        return view('pages.customers.index', compact('customers', 'areas', 'search', 'classification', 'areaId', 'debts'));
     }
 
     public function toggleActive(int $id)
