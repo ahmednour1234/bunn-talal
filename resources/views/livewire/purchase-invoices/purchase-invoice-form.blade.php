@@ -24,12 +24,21 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">الفرع <span class="text-red-500">*</span></label>
-                    <select wire:model="branch_id" class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 @error('branch_id') border-red-400 ring-1 ring-red-300 @enderror">
-                        <option value="">اختر الفرع</option>
-                        @foreach($branches as $branch)
-                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                        @endforeach
-                    </select>
+                    @if($scopedBranchId)
+                        {{-- المستخدم مقيّد بفرع: الفرع محدد تلقائياً ولا يمكن تغييره --}}
+                        <select disabled class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}" selected>{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    @else
+                        <select wire:model.live="branch_id" class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 @error('branch_id') border-red-400 ring-1 ring-red-300 @enderror">
+                            <option value="">اختر الفرع</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    @endif
                     @error('branch_id')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>

@@ -30,6 +30,12 @@ class PurchaseInvoiceForm extends Component
     {
         $this->date = now()->format('Y-m-d');
 
+        // المستخدم المقيّد بفرع: يُحدد فرعه تلقائياً ولا يمكنه اختيار غيره
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branch_id = $scopedBranchId;
+        }
+
         if ($id) {
             $this->invoiceId = $id;
             $invoice = app(PurchaseInvoiceService::class)->getById($id);
@@ -276,9 +282,15 @@ class PurchaseInvoiceForm extends Component
 
     public function save(PurchaseInvoiceService $service)
     {
-        $this->validate();
-
         $admin = auth('admin')->user();
+
+        // المستخدم المقيّد بفرع: افرض فرعه دائماً مهما كانت القيمة المرسلة
+        $scopedBranchId = $admin?->scopedBranchId();
+        if ($scopedBranchId) {
+            $this->branch_id = $scopedBranchId;
+        }
+
+        $this->validate();
 
         $data = [
             'supplier_id' => $this->supplier_id,
@@ -309,13 +321,21 @@ class PurchaseInvoiceForm extends Component
 
     public function render()
     {
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+
+        $branchesQuery = Branch::where('is_active', true)->orderBy('name');
+        if ($scopedBranchId) {
+            $branchesQuery->where('id', $scopedBranchId);
+        }
+
         return view('livewire.purchase-invoices.purchase-invoice-form', [
             'suppliers' => Supplier::where('is_active', true)->orderBy('name')->get(),
-            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'branches' => $branchesQuery->get(),
             'treasuries' => Treasury::where('is_active', true)->orderBy('name')->get(),
             'products' => Product::where('is_active', true)->with('unit', 'tax')->orderBy('name')->get(),
             'units' => Unit::where('is_active', true)->get(),
             'paymentMethods' => \App\Models\PurchaseInvoice::paymentMethodLabels(),
+            'scopedBranchId' => $scopedBranchId,
         ]);
     }
 }
