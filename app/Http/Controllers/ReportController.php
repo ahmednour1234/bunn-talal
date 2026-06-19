@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Branch;
 use App\Models\Collection;
 use App\Models\Customer;
 use App\Models\Delegate;
@@ -117,6 +118,138 @@ class ReportController extends Controller
             'cancelledReturnsTotal', 'cancelledReturnsCount',
             // Net
             'netSales', 'netCollected',
+        ));
+    }
+
+    /**
+     * تقرير أرباح المنتجات — لكل منتج خلال فترة وفرع:
+     * سعر الشراء/البيع، الكمية المباعة، المبيعات، التكلفة، الربح،
+     * المرتجعات، المتبقي في المخزون، وعدد الفواتير. مع فلتر الفرع والتاريخ.
+     */
+    public function productProfit(Request $request)
+    {
+        $dateFrom = $request->input('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $dateTo   = $request->input('date_to',   now()->format('Y-m-d'));
+
+        // المستخدم المقيّد بفرع يُجبر على فرعه
+        $scopedBranchId = auth('admin')->user()?->scopedBranchId();
+        $branchId = $scopedBranchId ?: $request->input('branch_id', '');
+
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        // ── الفواتير النشطة في الفترة (والفرع) ──────────────────────
+        $activeOrdersQuery = SaleOrder::whereBetween('date', [$dateFrom, $dateTo])
+            ->whereNotIn('status', ['draft', 'cancelled']);
+        if ($branchId) {
+            $activeOrdersQuery->where('branch_id', $branchId);
+        }
+        $activeOrderIds = (clone $activeOrdersQuery)->pluck('id');
+
+        // ── ملخص الفواتير (موجودة / ملغية) ─────────────────────────
+        $ordersBase = SaleOrder::whereBetween('date', [$dateFrom, $dateTo]);
+        if ($branchId) {
+            $ordersBase->where('branch_id', $branchId);
+        }
+        $activeOrdersCount    = (clone $ordersBase)->whereNotIn('status', ['draft', 'cancelled'])->count();
+        $cancelledOrdersCount = (clone $ordersBase)->where('status', 'cancelled')->count();
+
+        // ── بنود البيع مجمّعة حسب المنتج ───────────────────────────
+        $soldRows = \App\Models\SaleOrderItem::whereIn('sale_order_id', $activeOrderIds)
+            ->selectRaw('product_id,
+                SUM(quantity)                       as qty_sold,
+                SUM(total)                          as sales_total,
+                SUM(cost_price * quantity)          as cost_total,
+                COUNT(DISTINCT sale_order_id)       as invoices_count')
+            ->groupBy('product_id')
+            ->get()
+            ->keyBy('product_id');
+
+        // ── المرتجعات النشطة في الفترة (والفرع) ─────────────────────
+        $returnsQuery = SaleReturn::whereBetween('date', [$dateFrom, $dateTo])
+            ->whereIn('status', ['confirmed', 'refunded']);
+        if ($branchId) {
+            $returnsQuery->where('branch_id', $branchId);
+        }
+        $returnIds = (clone $returnsQuery)->pluck('id');
+        $returnsCount = $returnIds->count();
+
+        $returnedRows = \App\Models\SaleReturnItem::whereIn('sale_return_id', $returnIds)
+            ->selectRaw('product_id,
+                SUM(quantity)        as qty_returned,
+                SUM(refund_amount)   as refund_total')
+            ->groupBy('product_id')
+            ->get()
+            ->keyBy('product_id');
+
+        // ── المنتجات التي ظهرت في البيع أو المرتجع ──────────────────
+        $productIds = $soldRows->keys()->merge($returnedRows->keys())->unique()->values();
+
+        $products = Product::with('unit')
+            ->with(['branches' => function ($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+            }])
+            ->whereIn('id', $productIds)
+            ->orderBy('name')
+            ->get();
+
+        // ── بناء صفوف التقرير ──────────────────────────────────────
+        $rows = $products->map(function ($product) use ($soldRows, $returnedRows, $branchId) {
+            $sold     = $soldRows->get($product->id);
+            $returned = $returnedRows->get($product->id);
+
+            $qtySold     = (float) ($sold->qty_sold ?? 0);
+            $salesTotal  = (float) ($sold->sales_total ?? 0);
+            $costTotal   = (float) ($sold->cost_total ?? 0);
+            $invoices    = (int)   ($sold->invoices_count ?? 0);
+
+            $qtyReturned = (float) ($returned->qty_returned ?? 0);
+            $refundTotal = (float) ($returned->refund_total ?? 0);
+
+            // متوسط سعر البيع والشراء للوحدة
+            $avgSellPrice = $qtySold > 0 ? $salesTotal / $qtySold : 0;
+            $avgCostPrice = $qtySold > 0 ? $costTotal  / $qtySold : (float) $product->cost_price;
+
+            // الكمية المتبقية في المخزون
+            $remainingQty = $product->branches->sum(fn($b) => (float) ($b->pivot->quantity ?? 0));
+
+            // صافي الربح = (مبيعات − تكلفة المبيعات) − مرتجعات
+            $grossProfit = $salesTotal - $costTotal;
+            $netProfit   = $grossProfit - $refundTotal;
+
+            return [
+                'product'       => $product,
+                'avgCostPrice'  => $avgCostPrice,
+                'avgSellPrice'  => $avgSellPrice,
+                'qtySold'       => $qtySold,
+                'qtyReturned'   => $qtyReturned,
+                'qtyNet'        => $qtySold - $qtyReturned,
+                'remainingQty'  => $remainingQty,
+                'salesTotal'    => $salesTotal,
+                'costTotal'     => $costTotal,
+                'refundTotal'   => $refundTotal,
+                'grossProfit'   => $grossProfit,
+                'netProfit'     => $netProfit,
+                'invoices'      => $invoices,
+            ];
+        })->sortByDesc('netProfit')->values();
+
+        // ── الإجماليات ─────────────────────────────────────────────
+        $totals = [
+            'salesTotal'  => $rows->sum('salesTotal'),
+            'costTotal'   => $rows->sum('costTotal'),
+            'refundTotal' => $rows->sum('refundTotal'),
+            'grossProfit' => $rows->sum('grossProfit'),
+            'netProfit'   => $rows->sum('netProfit'),
+            'qtySold'     => $rows->sum('qtySold'),
+            'qtyReturned' => $rows->sum('qtyReturned'),
+        ];
+
+        return view('pages.reports.product-profit', compact(
+            'dateFrom', 'dateTo', 'branchId', 'branches', 'scopedBranchId',
+            'rows', 'totals',
+            'activeOrdersCount', 'cancelledOrdersCount', 'returnsCount',
         ));
     }
 

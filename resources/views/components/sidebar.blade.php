@@ -31,6 +31,7 @@
         ['route' => 'reports.balance-sheet', 'icon' => 'calculator', 'label' => 'الميزانية العمومية', 'permission' => 'reports.view'],
         ['route' => 'reports.treasury-statement', 'icon' => 'arrows-right-left', 'label' => 'كشف حركات الخزنة', 'permission' => 'reports.view'],
         ['route' => 'reports.financial-overview', 'icon' => 'chart-bar', 'label' => 'التقرير المالي الشامل', 'permission' => 'reports.view'],
+        ['route' => 'reports.product-profit', 'icon' => 'chart-bar', 'label' => 'أرباح المنتجات', 'permission' => 'reports.view'],
     ];
 
     $inventoryLinks = [

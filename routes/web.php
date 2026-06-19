@@ -240,6 +240,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::get('/reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance-sheet');
         Route::get('/reports/financial-overview', [ReportController::class, 'financialOverview'])->name('reports.financial-overview');
         Route::get('/reports/sales-collections', [ReportController::class, 'salesCollections'])->name('reports.sales-collections');
+        Route::get('/reports/product-profit', [ReportController::class, 'productProfit'])->name('reports.product-profit');
         Route::get('/reports/treasury-statement', [ReportController::class, 'treasuryStatement'])->name('reports.treasury-statement');
     });
 
