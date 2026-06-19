@@ -79,14 +79,13 @@
         <table class="w-full text-sm text-right table-fixed">
             <colgroup>
                 <col class="w-10">
-                <col class="w-[20%]">
-                <col class="w-[11%]">
-                <col class="w-[10%]">
-                <col class="w-[9%]">
-                <col class="w-[11%]">
+                <col class="w-[24%]">
+                <col class="w-[13%]">
                 <col class="w-[12%]">
-                <col class="w-[9%]">
-                <col class="w-[16%]">
+                <col class="w-[10%]">
+                <col class="w-[13%]">
+                <col class="w-[10%]">
+                <col class="w-[18%]">
             </colgroup>
             <thead>
                 <tr class="bg-primary-700">
@@ -95,7 +94,6 @@
                     <th class="px-4 py-3 text-xs font-bold text-white">الهاتف</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">المنطقة</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">التصنيف</th>
-                    <th class="px-4 py-3 text-xs font-bold text-white">الحد الائتماني</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">مديونية العميل</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">الحالة</th>
                     <th class="px-4 py-3 text-xs font-bold text-white text-center">الإجراءات</th>
@@ -123,7 +121,6 @@
                             {{ $classificationLabels[$customer->classification] ?? $customer->classification }}
                         </span>
                     </td>
-                    <td class="px-4 py-3 font-bold text-gray-800 text-sm">{{ number_format($customer->credit_limit, 0) }}</td>
                     @php $debt = $debts[$customer->id] ?? 0; @endphp
                     <td class="px-4 py-3 font-bold text-sm {{ $debt > 0 ? 'text-red-600' : ($debt < 0 ? 'text-green-600' : 'text-gray-500') }}">
                         {{ number_format($debt, 2) }}
@@ -175,7 +172,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="px-5 py-16 text-center">
+                    <td colspan="8" class="px-5 py-16 text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
                         <p class="text-gray-400 text-sm">لا يوجد عملاء مسجلون</p>
                     </td>

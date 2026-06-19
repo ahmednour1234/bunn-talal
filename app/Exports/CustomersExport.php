@@ -66,7 +66,6 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
             'المنطقة',
             'الفرع',
             'التصنيف',
-            'الحد الائتماني',
             'مديونية العميل',
             'الحالة',
         ];
@@ -85,7 +84,6 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
             $customer->area?->name ?? '—',
             $customer->branch?->name ?? '—',
             $labels[$customer->classification] ?? $customer->classification,
-            number_format((float) $customer->credit_limit, 2),
             number_format((float) $debt, 2),
             $customer->is_active ? 'نشط' : 'معطل',
         ];
