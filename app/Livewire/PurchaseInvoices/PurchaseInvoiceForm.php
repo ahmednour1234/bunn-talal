@@ -85,6 +85,27 @@ class PurchaseInvoiceForm extends Component
         $this->items = array_values($this->items);
     }
 
+    // عند تغيير الفرع، أعد ضبط سعر التكلفة لكل بند حسب سعر تكلفة الفرع الجديد
+    public function updatedBranchId($value): void
+    {
+        if (!$value) return;
+
+        foreach ($this->items as $index => $item) {
+            if (empty($item['product_id'])) continue;
+
+            $product = Product::find($item['product_id']);
+            if (!$product) continue;
+
+            $costPrice = $product->getCostInBranch((int) $value);
+
+            $this->items[$index]['base_unit_price'] = (string) round($costPrice, 2);
+            $this->items[$index]['unit_price']      = (string) round($costPrice, 2);
+
+            // أعد حساب سعر الوحدة المختارة من سعر الوحدة الأساسية
+            $this->applyUnitPriceContext($index);
+        }
+    }
+
     public function updatedItems($value, $key)
     {
         $parts = explode('.', $key);
@@ -100,7 +121,10 @@ class PurchaseInvoiceForm extends Component
             if ($product && $product->unit) {
                 $stockUnit      = $product->unit;
                 $availableUnits = $this->getInvoiceableUnits($stockUnit);
-                $costPrice      = (float) ($product->cost_price ?? 0);
+                // سعر التكلفة الخاص بالفرع المختار، ويرجع للسعر العام إن لم يُحدد للفرع
+                $costPrice      = $this->branch_id
+                    ? $product->getCostInBranch((int) $this->branch_id)
+                    : (float) ($product->cost_price ?? 0);
 
                 $this->items[$index]['unit_id']           = (string) $stockUnit->id;
                 $this->items[$index]['unit_symbol']       = $stockUnit->symbol ?? '';
