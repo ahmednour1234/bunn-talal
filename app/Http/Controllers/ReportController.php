@@ -154,12 +154,16 @@ class ReportController extends Controller
         $cancelledOrdersCount = (clone $ordersBase)->where('status', 'cancelled')->count();
 
         // ── بنود البيع مجمّعة حسب المنتج ───────────────────────────
+        // cost_total = تكلفة البنود التي لها سعر تكلفة مسجّل وقت البيع.
+        // qty_missing_cost = كمية البنود التي سعر تكلفتها 0 (فواتير قديمة) —
+        // تُحسب تكلفتها لاحقاً من تكلفة الفرع/المنتج الحالية حتى لا تكون التكلفة صفراً.
         $soldRows = \App\Models\SaleOrderItem::whereIn('sale_order_id', $activeOrderIds)
             ->selectRaw('product_id,
-                SUM(quantity)                       as qty_sold,
-                SUM(total)                          as sales_total,
-                SUM(cost_price * quantity)          as cost_total,
-                COUNT(DISTINCT sale_order_id)       as invoices_count')
+                SUM(quantity)                                            as qty_sold,
+                SUM(total)                                               as sales_total,
+                SUM(cost_price * quantity)                               as cost_total,
+                SUM(CASE WHEN cost_price > 0 THEN 0 ELSE quantity END)   as qty_missing_cost,
+                COUNT(DISTINCT sale_order_id)                            as invoices_count')
             ->groupBy('product_id')
             ->get()
             ->keyBy('product_id');
@@ -199,13 +203,23 @@ class ReportController extends Controller
             $sold     = $soldRows->get($product->id);
             $returned = $returnedRows->get($product->id);
 
-            $qtySold     = (float) ($sold->qty_sold ?? 0);
-            $salesTotal  = (float) ($sold->sales_total ?? 0);
-            $costTotal   = (float) ($sold->cost_total ?? 0);
-            $invoices    = (int)   ($sold->invoices_count ?? 0);
+            $qtySold        = (float) ($sold->qty_sold ?? 0);
+            $salesTotal     = (float) ($sold->sales_total ?? 0);
+            $costTotal      = (float) ($sold->cost_total ?? 0);
+            $qtyMissingCost = (float) ($sold->qty_missing_cost ?? 0);
+            $invoices       = (int)   ($sold->invoices_count ?? 0);
 
             $qtyReturned = (float) ($returned->qty_returned ?? 0);
             $refundTotal = (float) ($returned->refund_total ?? 0);
+
+            // البنود القديمة التي لم تُسجّل سعر تكلفة وقت البيع: نكمّل تكلفتها
+            // من تكلفة الفرع الحالية (أو تكلفة المنتج العامة) حتى لا تكون التكلفة صفراً.
+            if ($qtyMissingCost > 0) {
+                $fallbackCost = $branchId
+                    ? $product->getCostInBranch((int) $branchId)
+                    : (float) $product->cost_price;
+                $costTotal += $fallbackCost * $qtyMissingCost;
+            }
 
             // متوسط سعر البيع والشراء للوحدة
             $avgSellPrice = $qtySold > 0 ? $salesTotal / $qtySold : 0;
