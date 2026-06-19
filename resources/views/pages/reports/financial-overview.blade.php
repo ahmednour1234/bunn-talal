@@ -358,11 +358,13 @@
             <div class="grid grid-cols-2 divide-x divide-x-reverse divide-indigo-100 border-t border-indigo-100">
                 <div class="px-5 py-3 bg-orange-50/50 text-center">
                     <p class="text-xs text-orange-700 font-bold">إجمالي ذمم العملاء</p>
-                    <p class="font-extrabold text-orange-700 mt-0.5">{{ $fmt($customerOpeningBalance + $customerCurrentBalance) }}</p>
+                    {{-- الرصيد الجاري (balance) هو الإجمالي المستحق ويشمل الافتتاحي — لا يُجمع الافتتاحي مرة أخرى --}}
+                    <p class="font-extrabold text-orange-700 mt-0.5">{{ $fmt($customerCurrentBalance) }}</p>
                 </div>
                 <div class="px-5 py-3 bg-red-50/50 text-center">
                     <p class="text-xs text-red-700 font-bold">إجمالي ذمم الموردين</p>
-                    <p class="font-extrabold text-red-700 mt-0.5">{{ $fmt($supplierOpeningBalance + $supplierCurrentBalance) }}</p>
+                    {{-- نفس المنطق: الرصيد الجاري يشمل الافتتاحي --}}
+                    <p class="font-extrabold text-red-700 mt-0.5">{{ $fmt($supplierCurrentBalance) }}</p>
                 </div>
             </div>
         </div>
