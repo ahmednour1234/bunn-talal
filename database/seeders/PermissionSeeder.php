@@ -169,6 +169,11 @@ class PermissionSeeder extends Seeder
             ['name' => 'trips.edit', 'display_name' => 'تعديل رحلة', 'group_name' => 'الرحلات'],
             ['name' => 'trips.settle', 'display_name' => 'تسوية رحلة', 'group_name' => 'الرحلات'],
             ['name' => 'trips.approve-settlement', 'display_name' => 'موافقة/رفض تسوية رحلة', 'group_name' => 'الرحلات'],
+
+            // Collections
+            ['name' => 'collections.view', 'display_name' => 'عرض التحصيلات', 'group_name' => 'التحصيلات'],
+            ['name' => 'collections.create', 'display_name' => 'إنشاء تحصيل', 'group_name' => 'التحصيلات'],
+            ['name' => 'collections.edit', 'display_name' => 'تعديل/إلغاء تحصيل', 'group_name' => 'التحصيلات'],
         ];
 
         foreach ($permissions as $permission) {
