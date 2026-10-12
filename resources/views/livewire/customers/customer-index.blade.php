@@ -67,6 +67,12 @@
                 @endforeach
             </select>
             @endunless
+            <select wire:model.live="delegateFilter" class="border border-gray-200 rounded-xl bg-gray-50 text-sm px-3 py-2.5 focus:bg-white focus:ring-2 focus:ring-primary-300 transition-all">
+                <option value="">كل المناديب</option>
+                @foreach($delegates as $delegate)
+                    <option value="{{ $delegate->id }}">{{ $delegate->name }}</option>
+                @endforeach
+            </select>
         </div>
     </div>
 
@@ -93,6 +99,7 @@
                     <th class="px-4 py-3 text-xs font-bold text-white">العميل</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">الهاتف</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">المنطقة</th>
+                    <th class="px-4 py-3 text-xs font-bold text-white">المناديب</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">التصنيف</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">مديونية العميل</th>
                     <th class="px-4 py-3 text-xs font-bold text-white">الحالة</th>
@@ -116,6 +123,7 @@
                     </td>
                     <td class="px-4 py-3 text-gray-700 font-medium text-sm" dir="ltr">{{ $customer->phone ?? '—' }}</td>
                     <td class="px-4 py-3 text-gray-600 text-sm truncate">{{ $customer->area?->name ?? '—' }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-sm">{{ $customer->delegates->pluck('name')->join('، ') ?: '—' }}</td>
                     <td class="px-4 py-3">
                         <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 whitespace-nowrap">
                             {{ $classificationLabels[$customer->classification] ?? $customer->classification }}
@@ -172,7 +180,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-5 py-16 text-center">
+                    <td colspan="9" class="px-5 py-16 text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
                         <p class="text-gray-400 text-sm">لا يوجد عملاء مسجلون</p>
                     </td>

@@ -16,6 +16,7 @@ class CustomerIndex extends Component
     public string $classificationFilter = '';
     public string $areaFilter = '';
     public string $branchFilter = '';
+    public string $delegateFilter = '';
 
     protected CustomerService $customerService;
 
@@ -40,6 +41,11 @@ class CustomerIndex extends Component
     }
 
     public function updatingBranchFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDelegateFilter()
     {
         $this->resetPage();
     }
@@ -79,7 +85,7 @@ class CustomerIndex extends Component
             $this->branchFilter = (string) $scopedBranchId;
         }
 
-        $query = Customer::query()->with(['area', 'branch']);
+        $query = Customer::query()->with(['area', 'branch', 'delegates:id,name']);
 
         if ($this->search) {
             $search = $this->search;
@@ -102,6 +108,11 @@ class CustomerIndex extends Component
             $query->where('branch_id', $this->branchFilter);
         }
 
+        if ($this->delegateFilter) {
+            $delegateId = $this->delegateFilter;
+            $query->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegateId));
+        }
+
         $customers = $query->latest()->paginate(10);
 
         return view('livewire.customers.customer-index', [
@@ -110,6 +121,7 @@ class CustomerIndex extends Component
             'classificationLabels' => Customer::classificationLabels(),
             'areas' => \App\Models\Area::where('is_active', true)->orderBy('name')->get(),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'delegates' => \App\Models\Delegate::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'scopedBranchId' => $scopedBranchId,
         ]);
     }
