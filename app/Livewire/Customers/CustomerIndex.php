@@ -17,6 +17,7 @@ class CustomerIndex extends Component
     public string $areaFilter = '';
     public string $branchFilter = '';
     public string $delegateFilter = '';
+    public bool $debtOnly = false;
 
     protected CustomerService $customerService;
 
@@ -46,6 +47,11 @@ class CustomerIndex extends Component
     }
 
     public function updatingDelegateFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDebtOnly()
     {
         $this->resetPage();
     }
@@ -113,6 +119,15 @@ class CustomerIndex extends Component
             $query->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegateId));
         }
 
+        $totalDebt = null;
+        if ($this->debtOnly) {
+            // المديونية محسوبة في PHP، فنحسبها لكل العملاء المطابقين ثم نفلتر بالـ id
+            $allDebts = \App\Support\CustomerDebt::forCustomers((clone $query)->get(['customers.id']));
+            $debtorIds = array_keys(array_filter($allDebts, fn ($v) => $v > 0.009));
+            $totalDebt = array_sum(array_intersect_key($allDebts, array_flip($debtorIds)));
+            $query->whereIn('customers.id', $debtorIds);
+        }
+
         $customers = $query->latest()->paginate(10);
 
         return view('livewire.customers.customer-index', [
@@ -122,6 +137,7 @@ class CustomerIndex extends Component
             'areas' => \App\Models\Area::where('is_active', true)->orderBy('name')->get(),
             'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
             'delegates' => \App\Models\Delegate::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'totalDebt' => $totalDebt,
             'scopedBranchId' => $scopedBranchId,
         ]);
     }

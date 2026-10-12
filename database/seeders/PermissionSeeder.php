@@ -177,10 +177,14 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(
+            $model = Permission::withTrashed()->updateOrCreate(
                 ['name' => $permission['name']],
                 $permission
             );
+
+            if ($model->trashed()) {
+                $model->restore();
+            }
         }
     }
 }
