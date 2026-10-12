@@ -41,8 +41,10 @@ class CustomerController extends Controller
         $search         = $request->input('search', '');
         $classification = $request->input('classification', '');
         $areaId         = $request->input('area_id', '');
+        $delegateId     = $request->input('delegate_id', '');
+        $debtOnly       = $request->boolean('debt_only');
 
-        $query = Customer::query()->with('area');
+        $query = Customer::query()->with(['area', 'delegates:id,name']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -60,11 +62,25 @@ class CustomerController extends Controller
             $query->where('area_id', $areaId);
         }
 
+        if ($delegateId) {
+            $query->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegateId));
+        }
+
+        $totalDebt = null;
+        if ($debtOnly) {
+            // المديونية محسوبة في PHP، فنحسبها لكل العملاء المطابقين ثم نفلتر بالـ id
+            $allDebts  = \App\Support\CustomerDebt::forCustomers((clone $query)->get(['customers.id']));
+            $debtorIds = array_keys(array_filter($allDebts, fn ($v) => $v > 0.009));
+            $totalDebt = array_sum(array_intersect_key($allDebts, array_flip($debtorIds)));
+            $query->whereIn('customers.id', $debtorIds);
+        }
+
         $customers = $query->latest()->paginate(10)->withQueryString();
         $areas     = Area::where('is_active', true)->orderBy('name')->get();
+        $delegates = \App\Models\Delegate::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $debts     = \App\Support\CustomerDebt::forCustomers($customers->getCollection());
 
-        return view('pages.customers.index', compact('customers', 'areas', 'search', 'classification', 'areaId', 'debts'));
+        return view('pages.customers.index', compact('customers', 'areas', 'delegates', 'search', 'classification', 'areaId', 'delegateId', 'debtOnly', 'totalDebt', 'debts'));
     }
 
     public function toggleActive(int $id)
