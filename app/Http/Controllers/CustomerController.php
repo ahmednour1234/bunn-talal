@@ -18,6 +18,12 @@ class CustomerController extends Controller
     public function exportExcel(Request $request)
     {
         $branchFilter = (string) $request->input('branch_id', '');
+        $selectedIds = collect(explode(',', (string) $request->input('ids', '')))
+            ->map(fn ($id) => (int) trim($id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
         // قيّد التصدير بفرع المستخدم إن كان مرتبطاً بفرع
         $scopedBranchId = auth('admin')->user()?->scopedBranchId();
@@ -31,6 +37,7 @@ class CustomerController extends Controller
                 (string) $request->input('classification', ''),
                 (string) $request->input('area_id', ''),
                 $branchFilter,
+                $selectedIds,
             ),
             'العملاء.xlsx'
         );

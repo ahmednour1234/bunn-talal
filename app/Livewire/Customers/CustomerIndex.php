@@ -18,6 +18,7 @@ class CustomerIndex extends Component
     public string $branchFilter = '';
     public string $delegateFilter = '';
     public bool $debtOnly = false;
+    public array $selectedCustomers = [];
 
     protected CustomerService $customerService;
 
@@ -56,6 +57,79 @@ class CustomerIndex extends Component
         $this->resetPage();
     }
 
+    public function updatedSelectedCustomers(): void
+    {
+        $this->selectedCustomers = array_values(array_unique(array_filter(array_map('intval', $this->selectedCustomers))));
+    }
+
+    public function toggleSelectPage(): void
+    {
+        $pageIds = $this->getCurrentPageCustomerIds();
+        $selected = array_map('intval', $this->selectedCustomers);
+
+        if (empty(array_diff($pageIds, $selected))) {
+            $this->selectedCustomers = array_values(array_diff($selected, $pageIds));
+            return;
+        }
+
+        $this->selectedCustomers = array_values(array_unique(array_merge($selected, $pageIds)));
+    }
+
+    public function getExportUrlProperty(): string
+    {
+        return route('customers.export.excel', [
+            'search' => $this->search,
+            'classification' => $this->classificationFilter,
+            'area_id' => $this->areaFilter,
+            'branch_id' => $this->branchFilter,
+            'ids' => implode(',', $this->selectedCustomers),
+        ]);
+    }
+
+    private function getCurrentPageCustomerIds(): array
+    {
+        return $this->buildCustomerQuery()
+            ->latest()
+            ->paginate(10)
+            ->getCollection()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    private function buildCustomerQuery()
+    {
+        $query = Customer::query()->with(['area', 'branch', 'delegates:id,name']);
+
+        if ($this->search) {
+            $search = $this->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($this->classificationFilter) {
+            $query->where('classification', $this->classificationFilter);
+        }
+
+        if ($this->areaFilter) {
+            $query->where('area_id', $this->areaFilter);
+        }
+
+        if ($this->branchFilter) {
+            $query->where('branch_id', $this->branchFilter);
+        }
+
+        if ($this->delegateFilter) {
+            $delegateId = $this->delegateFilter;
+            $query->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegateId));
+        }
+
+        return $query;
+    }
+
     public function toggleActive(int $id)
     {
         $admin = auth('admin')->user();
@@ -91,33 +165,7 @@ class CustomerIndex extends Component
             $this->branchFilter = (string) $scopedBranchId;
         }
 
-        $query = Customer::query()->with(['area', 'branch', 'delegates:id,name']);
-
-        if ($this->search) {
-            $search = $this->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if ($this->classificationFilter) {
-            $query->where('classification', $this->classificationFilter);
-        }
-
-        if ($this->areaFilter) {
-            $query->where('area_id', $this->areaFilter);
-        }
-
-        if ($this->branchFilter) {
-            $query->where('branch_id', $this->branchFilter);
-        }
-
-        if ($this->delegateFilter) {
-            $delegateId = $this->delegateFilter;
-            $query->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegateId));
-        }
+        $query = $this->buildCustomerQuery();
 
         $totalDebt = null;
         if ($this->debtOnly) {

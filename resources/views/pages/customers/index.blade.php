@@ -1,11 +1,13 @@
 <x-layouts.app>
+    <div x-data="{ selectedCustomers: [] }">
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-extrabold text-primary-700 tracking-tight">إدارة العملاء</h1>
             <p class="text-sm text-gray-400 mt-0.5">عرض وإدارة جميع العملاء</p>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{{ route('customers.export.excel', ['search' => $search, 'classification' => $classification, 'area_id' => $areaId]) }}"
+            <a
+                x-bind:href="'{{ route('customers.export.excel', ['search' => $search, 'classification' => $classification, 'area_id' => $areaId]) }}' + (selectedCustomers.length ? '&ids=' + selectedCustomers.join(',') : '')"
                 class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                 تصدير Excel
@@ -90,6 +92,7 @@
             <table class="w-full text-sm text-right">
                 <thead>
                     <tr class="bg-primary-700">
+                        <th class="px-4 py-3 text-xs font-bold text-white text-center"></th>
                         <th class="px-4 py-3 text-xs font-bold text-white text-center">#</th>
                         <th class="px-4 py-3 text-xs font-bold text-white">العميل</th>
                         <th class="px-4 py-3 text-xs font-bold text-white">الهاتف</th>
@@ -104,6 +107,9 @@
                 <tbody>
                     @forelse($customers as $i => $customer)
                     <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-stone-50/40' }} hover:bg-stone-50 transition-colors border-b border-gray-50">
+                        <td class="px-4 py-3 text-center">
+                            <input type="checkbox" x-model="selectedCustomers" value="{{ $customer->id }}" class="rounded border-gray-300 text-primary-600 focus:ring-primary-300">
+                        </td>
                         <td class="px-4 py-3 text-xs text-gray-400 font-mono text-center">{{ $customers->firstItem() + $i }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-2 justify-end">
@@ -181,7 +187,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-5 py-16 text-center">
+                        <td colspan="10" class="px-5 py-16 text-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
                             <p class="text-gray-400 text-sm">لا يوجد عملاء مسجلون</p>
                         </td>
@@ -197,4 +203,5 @@
             {{ $customers->links() }}
         </div>
     @endif
+    </div>
 </x-layouts.app>

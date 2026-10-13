@@ -20,7 +20,9 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
         protected string $classificationFilter = '',
         protected string $areaFilter = '',
         protected string $branchFilter = '',
+        protected array $selectedIds = [],
     ) {
+        $this->selectedIds = array_values(array_unique(array_filter(array_map('intval', $this->selectedIds))));
     }
 
     public function collection()
@@ -46,6 +48,10 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
 
         if ($this->branchFilter !== '') {
             $query->where('branch_id', $this->branchFilter);
+        }
+
+        if (! empty($this->selectedIds)) {
+            $query->whereIn('id', $this->selectedIds);
         }
 
         $customers = $query->latest()->get();
