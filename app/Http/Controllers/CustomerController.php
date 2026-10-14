@@ -38,6 +38,8 @@ class CustomerController extends Controller
                 (string) $request->input('area_id', ''),
                 $branchFilter,
                 $selectedIds,
+                (string) $request->input('delegate_id', ''),
+                $request->boolean('debt_only'),
             ),
             'العملاء.xlsx'
         );

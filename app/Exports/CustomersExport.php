@@ -21,6 +21,8 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
         protected string $areaFilter = '',
         protected string $branchFilter = '',
         protected array $selectedIds = [],
+        protected string $delegateFilter = '',
+        protected bool $debtOnly = false,
     ) {
         $this->selectedIds = array_values(array_unique(array_filter(array_map('intval', $this->selectedIds))));
     }
@@ -54,10 +56,19 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
             $query->whereIn('id', $this->selectedIds);
         }
 
+        if ($this->delegateFilter !== '') {
+            $delegateId = $this->delegateFilter;
+            $query->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegateId));
+        }
+
         $customers = $query->latest()->get();
 
         // احسب المديونية لكل العملاء دفعة واحدة
         $this->debts = CustomerDebt::forCustomers($customers);
+
+        if ($this->debtOnly) {
+            $customers = $customers->filter(fn ($c) => ($this->debts[$c->id] ?? 0) > 0.009)->values();
+        }
 
         return $customers;
     }

@@ -1,5 +1,10 @@
 <x-layouts.app>
-    <div x-data="{ selectedCustomers: [] }">
+    <div x-data="{
+        selectedCustomers: [],
+        pageIds: @js($customers->pluck('id')->map(fn ($id) => (string) $id)->values()),
+        get allSelected() { return this.pageIds.length > 0 && this.pageIds.every(id => this.selectedCustomers.includes(id)); },
+        toggleAll() { this.selectedCustomers = this.allSelected ? [] : [...this.pageIds]; }
+    }">
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-extrabold text-primary-700 tracking-tight">إدارة العملاء</h1>
@@ -7,7 +12,7 @@
         </div>
         <div class="flex items-center gap-2">
             <a
-                x-bind:href="'{{ route('customers.export.excel', ['search' => $search, 'classification' => $classification, 'area_id' => $areaId]) }}' + (selectedCustomers.length ? '&ids=' + selectedCustomers.join(',') : '')"
+                x-bind:href="'{{ route('customers.export.excel', ['search' => $search, 'classification' => $classification, 'area_id' => $areaId, 'delegate_id' => $delegateId, 'debt_only' => $debtOnly ? 1 : null]) }}' + (selectedCustomers.length ? '&ids=' + selectedCustomers.join(',') : '')"
                 class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                 تصدير Excel
@@ -92,7 +97,9 @@
             <table class="w-full text-sm text-right">
                 <thead>
                     <tr class="bg-primary-700">
-                        <th class="px-4 py-3 text-xs font-bold text-white text-center"></th>
+                        <th class="px-4 py-3 text-xs font-bold text-white text-center">
+                            <input type="checkbox" title="تحديد الكل" :checked="allSelected" @change="toggleAll()" class="rounded border-gray-300 text-primary-600 focus:ring-primary-300">
+                        </th>
                         <th class="px-4 py-3 text-xs font-bold text-white text-center">#</th>
                         <th class="px-4 py-3 text-xs font-bold text-white">العميل</th>
                         <th class="px-4 py-3 text-xs font-bold text-white">الهاتف</th>
