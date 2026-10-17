@@ -29,7 +29,7 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
 
     public function collection()
     {
-        $query = Customer::query()->with(['area', 'branch']);
+        $query = Customer::query()->with(['area', 'branch', 'delegates:id,name']);
 
         if ($this->search !== '') {
             $search = $this->search;
@@ -53,7 +53,7 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
         }
 
         if (! empty($this->selectedIds)) {
-            $query->whereIn('id', $this->selectedIds);
+            $query->whereIn('customers.id', $this->selectedIds);
         }
 
         if ($this->delegateFilter !== '') {
@@ -81,6 +81,7 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
             'الهاتف',
             'البريد الإلكتروني',
             'المنطقة',
+            'المناديب',
             'الفرع',
             'التصنيف',
             'مديونية العميل',
@@ -99,6 +100,7 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
             $customer->phone ?? '—',
             $customer->email ?? '—',
             $customer->area?->name ?? '—',
+            $customer->delegates->pluck('name')->join('، ') ?: '—',
             $customer->branch?->name ?? '—',
             $labels[$customer->classification] ?? $customer->classification,
             number_format((float) $debt, 2),

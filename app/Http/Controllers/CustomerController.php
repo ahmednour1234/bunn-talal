@@ -15,9 +15,53 @@ class CustomerController extends Controller
     {
     }
 
+    /**
+     * نفس فلاتر صفحة العملاء — تُستخدم في العرض والتصدير حتى تتطابق النتائج.
+     * ترجع الاستعلام وإجمالي المديونية (عند تفعيل "عليهم مديونية فقط").
+     */
+    private function filteredQuery(Request $request): array
+    {
+        $search         = (string) $request->input('search', '');
+        $classification = (string) $request->input('classification', '');
+        $areaId         = (string) $request->input('area_id', '');
+        $delegateId     = (string) $request->input('delegate_id', '');
+
+        $query = Customer::query();
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($classification !== '') {
+            $query->where('classification', $classification);
+        }
+
+        if ($areaId !== '') {
+            $query->where('area_id', $areaId);
+        }
+
+        if ($delegateId !== '') {
+            $query->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegateId));
+        }
+
+        $totalDebt = null;
+        if ($request->boolean('debt_only')) {
+            // المديونية محسوبة في PHP، فنحسبها لكل العملاء المطابقين ثم نفلتر بالـ id
+            $allDebts  = \App\Support\CustomerDebt::forCustomers((clone $query)->get(['customers.id']));
+            $debtorIds = array_keys(array_filter($allDebts, fn ($v) => $v > 0.009));
+            $totalDebt = array_sum(array_intersect_key($allDebts, array_flip($debtorIds)));
+            $query->whereIn('customers.id', $debtorIds);
+        }
+
+        return [$query, $totalDebt];
+    }
+
     public function exportExcel(Request $request)
     {
-        $branchFilter = (string) $request->input('branch_id', '');
         $selectedIds = collect(explode(',', (string) $request->input('ids', '')))
             ->map(fn ($id) => (int) trim($id))
             ->filter()
@@ -25,22 +69,22 @@ class CustomerController extends Controller
             ->values()
             ->all();
 
+        [$query] = $this->filteredQuery($request);
+
         // قيّد التصدير بفرع المستخدم إن كان مرتبطاً بفرع
         $scopedBranchId = auth('admin')->user()?->scopedBranchId();
         if ($scopedBranchId) {
-            $branchFilter = (string) $scopedBranchId;
+            $query->where('branch_id', $scopedBranchId);
         }
 
+        if (! empty($selectedIds)) {
+            $query->whereIn('customers.id', $selectedIds);
+        }
+
+        $ids = $query->pluck('customers.id')->all();
+
         return Excel::download(
-            new CustomersExport(
-                (string) $request->input('search', ''),
-                (string) $request->input('classification', ''),
-                (string) $request->input('area_id', ''),
-                $branchFilter,
-                $selectedIds,
-                (string) $request->input('delegate_id', ''),
-                $request->boolean('debt_only'),
-            ),
+            new CustomersExport(selectedIds: $ids ?: [0]),
             'العملاء.xlsx'
         );
     }
@@ -53,36 +97,8 @@ class CustomerController extends Controller
         $delegateId     = $request->input('delegate_id', '');
         $debtOnly       = $request->boolean('debt_only');
 
-        $query = Customer::query()->with(['area', 'delegates:id,name']);
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if ($classification) {
-            $query->where('classification', $classification);
-        }
-
-        if ($areaId) {
-            $query->where('area_id', $areaId);
-        }
-
-        if ($delegateId) {
-            $query->whereHas('delegates', fn ($q) => $q->where('delegates.id', $delegateId));
-        }
-
-        $totalDebt = null;
-        if ($debtOnly) {
-            // المديونية محسوبة في PHP، فنحسبها لكل العملاء المطابقين ثم نفلتر بالـ id
-            $allDebts  = \App\Support\CustomerDebt::forCustomers((clone $query)->get(['customers.id']));
-            $debtorIds = array_keys(array_filter($allDebts, fn ($v) => $v > 0.009));
-            $totalDebt = array_sum(array_intersect_key($allDebts, array_flip($debtorIds)));
-            $query->whereIn('customers.id', $debtorIds);
-        }
+        [$query, $totalDebt] = $this->filteredQuery($request);
+        $query->with(['area', 'delegates:id,name']);
 
         $customers = $query->latest()->paginate(10)->withQueryString();
         $areas     = Area::where('is_active', true)->orderBy('name')->get();
