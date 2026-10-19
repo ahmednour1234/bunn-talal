@@ -116,7 +116,7 @@ class PurchaseReturnService
                     'quantity' => $item['quantity'],
                     'unit_id' => $item['unit_id'] ?? null,
                     'unit_price' => $item['unit_price'],
-                    'loss_amount' => $item['loss_amount'] ?? 0,
+                    'loss_amount' => (float) ($item['loss_amount'] ?? 0),
                     'reason' => $item['reason'] ?? null,
                 ]);
             }
