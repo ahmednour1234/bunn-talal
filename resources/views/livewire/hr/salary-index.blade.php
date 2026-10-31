@@ -60,7 +60,7 @@
         @forelse($salaries as $sal)
         <tr class="hover:bg-primary-50/50 transition-colors">
             <td class="px-4 py-4 text-gray-500 text-sm">{{ $sal->id }}</td>
-            <td class="px-4 py-4 font-semibold text-gray-800">{{ $sal->delegate->name }}</td>
+            <td class="px-4 py-4 font-semibold text-gray-800">{{ $sal->delegate?->name ?? '—' }}</td>
             <td class="px-4 py-4 text-sm text-gray-600">{{ $sal->month_label }}</td>
             <td class="px-4 py-4 text-sm text-gray-600">{{ $sal->year }}</td>
             <td class="px-4 py-4 text-sm font-medium text-gray-700">{{ number_format($sal->basic_salary, 2) }}</td>

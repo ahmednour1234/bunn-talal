@@ -52,7 +52,7 @@
         @forelse($attendances as $att)
         <tr class="hover:bg-primary-50/50 transition-colors">
             <td class="px-6 py-4 text-gray-500 text-sm">{{ $att->id }}</td>
-            <td class="px-6 py-4 font-semibold text-gray-800">{{ $att->delegate->name }}</td>
+            <td class="px-6 py-4 font-semibold text-gray-800">{{ $att->delegate?->name ?? '—' }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ $att->date->format('Y-m-d') }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ $att->check_in ?? '-' }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ $att->check_out ?? '-' }}</td>

@@ -24,15 +24,15 @@
         <div class="flex flex-wrap gap-3">
             <div class="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[120px]">
                 <span class="text-[11px] text-gray-400">الفرع</span>
-                <span class="font-bold text-primary-700 text-sm">{{ $dispatch->branch->name }}</span>
+                <span class="font-bold text-primary-700 text-sm">{{ $dispatch->branch?->name ?? '—' }}</span>
             </div>
             <div class="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[140px]">
                 <span class="text-[11px] text-gray-400">المندوب</span>
-                <span class="font-bold text-primary-700 text-sm">{{ $dispatch->delegate->name }}</span>
+                <span class="font-bold text-primary-700 text-sm">{{ $dispatch->delegate?->name ?? '—' }}</span>
             </div>
             <div class="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[120px]">
                 <span class="text-[11px] text-gray-400">المسؤول</span>
-                <span class="font-bold text-gray-700 text-sm">{{ $dispatch->admin->name }}</span>
+                <span class="font-bold text-gray-700 text-sm">{{ $dispatch->admin?->name ?? '—' }}</span>
             </div>
             <div class="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[110px]">
                 <span class="text-[11px] text-gray-400">التاريخ</span>
@@ -121,7 +121,7 @@
                     @foreach($dispatch->items as $item)
                     @php $unitSymbol = $item->unit?->symbol ?? $item->product->unit?->symbol ?? ''; $remaining = $item->quantity - ($item->returned_quantity ?? 0); @endphp
                         <tr class="hover:bg-primary-50/50">
-                            <td class="px-6 py-4 font-medium text-gray-800">{{ $item->product->name }}</td>
+                            <td class="px-6 py-4 font-medium text-gray-800">{{ $item->product?->name ?? '—' }}</td>
                             <td class="px-6 py-4 text-gray-500 text-xs">{{ $unitSymbol }}</td>
                             <td class="px-6 py-4 text-center">
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
@@ -187,7 +187,7 @@
                             @if($remaining > 0)
                                 <tr>
                                     <td class="px-4 py-3 font-medium text-gray-700">
-                                        {{ $item->product->name }}
+                                        {{ $item->product?->name ?? '—' }}
                                         <span class="text-xs text-gray-400 mr-1">(متبقي: {{ $remaining }} {{ $item->product->unit?->symbol ?? '' }})</span>
                                     </td>
                                     <td class="px-4 py-3">
