@@ -119,7 +119,10 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @foreach($dispatch->items as $item)
-                    @php $unitSymbol = $item->unit?->symbol ?? $item->product->unit?->symbol ?? ''; $remaining = $item->quantity - ($item->returned_quantity ?? 0); @endphp
+                    @php
+                        $unitSymbol = $item->unit?->symbol ?? $item->product?->unit?->symbol ?? '';
+                        $remaining = $item->quantity - ($item->returned_quantity ?? 0);
+                    @endphp
                         <tr class="hover:bg-primary-50/50">
                             <td class="px-6 py-4 font-medium text-gray-800">{{ $item->product?->name ?? '—' }}</td>
                             <td class="px-6 py-4 text-gray-500 text-xs">{{ $unitSymbol }}</td>
@@ -183,12 +186,14 @@
                         </thead>
                         <tbody class="divide-y divide-orange-100 bg-white">
                             @foreach($dispatch->items as $item)
-                            @php $remaining = $item->quantity - ($item->returned_quantity ?? 0); @endphp
+                            @php
+                                $remaining = $item->quantity - ($item->returned_quantity ?? 0);
+                            @endphp
                             @if($remaining > 0)
                                 <tr>
                                     <td class="px-4 py-3 font-medium text-gray-700">
                                         {{ $item->product?->name ?? '—' }}
-                                        <span class="text-xs text-gray-400 mr-1">(متبقي: {{ $remaining }} {{ $item->product->unit?->symbol ?? '' }})</span>
+                                        <span class="text-xs text-gray-400 mr-1">(متبقي: {{ $remaining }} {{ $item->product?->unit?->symbol ?? '' }})</span>
                                     </td>
                                     <td class="px-4 py-3">
                                         @if(!empty($returnAvailableUnits[$item->id]))
@@ -199,7 +204,7 @@
                                                 @endforeach
                                             </select>
                                         @else
-                                            <span class="text-gray-400 text-xs">{{ $item->product->unit?->symbol ?? '—' }}</span>
+                                            <span class="text-gray-400 text-xs">{{ $item->product?->unit?->symbol ?? '—' }}</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
