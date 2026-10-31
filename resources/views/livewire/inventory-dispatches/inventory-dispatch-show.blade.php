@@ -272,13 +272,16 @@
                 </div>
 
                 <div class="mt-4">
-                    <x-button type="button" variant="success" wire:click="submitSettle"
-                        @if($dispatch->status === 'settled')
-                            wire:confirm="هل أنت متأكد؟ سيتم إلغاء تأثير التسوية السابقة (خزنة وكميات) وتطبيق التسوية الجديدة."
-                        @endif
-                    >
-                        تأكيد التسوية
-                    </x-button>
+                    @if($dispatch->status === 'settled')
+                        <x-button type="button" variant="success" wire:click="submitSettle"
+                            wire:confirm="هل أنت متأكد؟ سيتم إلغاء تأثير التسوية السابقة (خزنة وكميات) وتطبيق التسوية الجديدة.">
+                            تأكيد التسوية
+                        </x-button>
+                    @else
+                        <x-button type="button" variant="success" wire:click="submitSettle">
+                            تأكيد التسوية
+                        </x-button>
+                    @endif
                 </div>
             </div>
         @endif
