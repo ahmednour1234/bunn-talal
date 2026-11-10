@@ -55,7 +55,7 @@
         @foreach($return->items as $i => $item)
         <tr>
             <td style="text-align:center;">{{ $i + 1 }}</td>
-            <td>{{ $item->product->name }}</td>
+            <td>{{ $item->product?->name }}</td>
             <td style="text-align:center;">{{ $item->unit?->name ?? $item->product->unit?->name ?? '—' }}</td>
             <td style="text-align:center;">{{ number_format($item->quantity, 2) }}</td>
             <td style="text-align:center;">{{ number_format($item->unit_price, 2) }}</td>

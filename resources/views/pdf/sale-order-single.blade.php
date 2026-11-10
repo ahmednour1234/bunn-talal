@@ -31,7 +31,7 @@
         @if($order->treasury)
         <tr>
             <td style="font-weight:bold; color:#1a4480; border:none; padding:4px 6px; background:none;">الخزينة</td>
-            <td colspan="3" style="border:none; padding:4px 6px; background:none;">{{ $order->treasury->name }}</td>
+            <td colspan="3" style="border:none; padding:4px 6px; background:none;">{{ $order->treasury?->name }}</td>
         </tr>
         @endif
         @if($order->notes)

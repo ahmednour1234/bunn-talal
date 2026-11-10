@@ -207,8 +207,8 @@
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-6 py-5 font-mono text-xs text-primary-600 font-semibold">{{ $return->return_number }}</td>
                             <td class="px-6 py-5 font-mono text-xs">{{ $return->invoice?->invoice_number ?? '-' }}</td>
-                            <td class="px-6 py-5">{{ $return->supplier->name }}</td>
-                            <td class="px-6 py-5">{{ $return->branch->name }}</td>
+                            <td class="px-6 py-5">{{ $return->supplier?->name }}</td>
+                            <td class="px-6 py-5">{{ $return->branch?->name }}</td>
                             <td class="px-6 py-5 text-gray-500">{{ $return->date->format('Y-m-d') }}</td>
                             <td class="px-6 py-5 font-semibold">{{ number_format($return->subtotal, 2) }}</td>
                             <td class="px-6 py-5 text-red-600">{{ number_format($return->loss_amount, 2) }}</td>

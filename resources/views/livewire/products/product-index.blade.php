@@ -72,8 +72,8 @@
                     @endif
                 </td>
                 <td class="px-6 py-4 font-medium text-gray-800">{{ $product->name }}</td>
-                <td class="px-6 py-4 text-gray-600">{{ $product->category->name ?? '-' }}</td>
-                <td class="px-6 py-4 text-gray-600">{{ $product->unit->name ?? '-' }}</td>
+                <td class="px-6 py-4 text-gray-600">{{ $product->category?->name ?? '-' }}</td>
+                <td class="px-6 py-4 text-gray-600">{{ $product->unit?->name ?? '-' }}</td>
                 <td class="px-6 py-4 text-gray-600" dir="ltr">{{ number_format($product->cost_price, 2) }}</td>
                 <td class="px-6 py-4 text-gray-600" dir="ltr">{{ number_format($product->selling_price, 2) }}</td>
                 <td class="px-6 py-4 text-gray-600" dir="ltr">
@@ -82,7 +82,7 @@
                 </td>
                 <td class="px-6 py-4 text-gray-600">
                     @if($product->tax)
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">{{ $product->tax->name }} ({{ $product->tax->formatted_rate }})</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">{{ $product->tax?->name }} ({{ $product->tax->formatted_rate }})</span>
                     @else
                         <span class="text-gray-400 text-xs">—</span>
                     @endif

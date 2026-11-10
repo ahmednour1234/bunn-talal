@@ -30,7 +30,7 @@
             </td>
             @if($depreciation->approvedByAdmin)
             <td style="font-weight:bold; color:#6B4F3A; border:none; padding:4px 6px; background:none;">{{ $depreciation->status === 'approved' ? 'وافق بواسطة' : 'رفض بواسطة' }}</td>
-            <td style="border:none; padding:4px 6px; background:none;">{{ $depreciation->approvedByAdmin->name }}</td>
+            <td style="border:none; padding:4px 6px; background:none;">{{ $depreciation->approvedByAdmin?->name }}</td>
             @else
             <td colspan="2" style="border:none; padding:4px 6px; background:none;"></td>
             @endif

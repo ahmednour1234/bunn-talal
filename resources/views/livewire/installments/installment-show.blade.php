@@ -85,7 +85,7 @@
             @if($plan->treasury)
                 <div>
                     <p class="text-xs text-gray-400 mb-1">الخزينة</p>
-                    <p class="text-sm">{{ $plan->treasury->name }}</p>
+                    <p class="text-sm">{{ $plan->treasury?->name }}</p>
                 </div>
             @endif
             @if($plan->notes)

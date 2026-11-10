@@ -46,9 +46,9 @@
         @forelse($transfers as $transfer)
             <tr class="hover:bg-primary-50/50 transition-colors">
                 <td class="px-6 py-4 text-gray-500">{{ $transfer->id }}</td>
-                <td class="px-6 py-4 font-medium text-gray-800">{{ $transfer->fromBranch->name }}</td>
-                <td class="px-6 py-4 font-medium text-gray-800">{{ $transfer->toBranch->name }}</td>
-                <td class="px-6 py-4 text-gray-600">{{ $transfer->requestedBy->name }}</td>
+                <td class="px-6 py-4 font-medium text-gray-800">{{ $transfer->fromBranch?->name }}</td>
+                <td class="px-6 py-4 font-medium text-gray-800">{{ $transfer->toBranch?->name }}</td>
+                <td class="px-6 py-4 text-gray-600">{{ $transfer->requestedBy?->name }}</td>
                 <td class="px-6 py-4 text-gray-600">{{ $transfer->items->count() }}</td>
                 <td class="px-6 py-4">
                     @php
@@ -93,7 +93,7 @@
                         <div class="flex flex-wrap gap-2">
                             @foreach($transfer->items as $item)
                                 <span class="inline-flex items-center gap-1 px-3 py-1 bg-white rounded-lg border border-gray-200 text-xs text-gray-600">
-                                    {{ $item->product->name ?? '-' }}
+                                    {{ $item->product?->name ?? '-' }}
                                     <span class="font-bold text-primary-700">×{{ $item->quantity }}</span>
                                 </span>
                             @endforeach

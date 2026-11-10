@@ -78,7 +78,7 @@
                             {{ $typeLabels[$adminItem->type ?? 'super'] ?? '—' }}
                         </span>
                         @if($adminItem->branch)
-                            <p class="text-xs text-gray-400 mt-0.5">{{ $adminItem->branch->name }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $adminItem->branch?->name }}</p>
                         @endif
                     </td>
                     <td class="px-4 py-3 text-gray-500 text-xs">{{ $adminItem->created_at->format('Y/m/d') }}</td>

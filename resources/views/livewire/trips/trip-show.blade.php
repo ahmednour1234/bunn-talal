@@ -247,7 +247,7 @@
                                 @if($trip->cash_custody_amount > 0)
                                 <p class="text-xl font-extrabold text-amber-800">{{ number_format($trip->cash_custody_amount, 2) }} <span class="text-sm font-normal text-amber-600">ج.م</span></p>
                                 @if($trip->custodyTreasury)
-                                <p class="text-xs text-amber-600 mt-0.5">من خزنة: <strong>{{ $trip->custodyTreasury->name }}</strong></p>
+                                <p class="text-xs text-amber-600 mt-0.5">من خزنة: <strong>{{ $trip->custodyTreasury?->name }}</strong></p>
                                 @endif
                                 @if($trip->cash_custody_note)
                                 <p class="text-xs text-amber-600/80 mt-0.5">{{ $trip->cash_custody_note }}</p>
@@ -837,9 +837,9 @@
                                         <td class="px-3 py-2">{{ $bri->quantity }}</td>
                                         <td class="px-3 py-2">
                                             @if($bri->unit)
-                                            <span class="inline-block bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-md">{{ $bri->unit->name }}</span>
+                                            <span class="inline-block bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-md">{{ $bri->unit?->name }}</span>
                                             @elseif($bri->product?->unit)
-                                            <span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-md">{{ $bri->product->unit->name }}</span>
+                                            <span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-md">{{ $bri->product->unit?->name }}</span>
                                             @else
                                             <span class="text-gray-300">—</span>
                                             @endif

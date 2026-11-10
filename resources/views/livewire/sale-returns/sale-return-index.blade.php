@@ -126,8 +126,8 @@
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-4 py-3 font-mono text-xs text-primary-600 font-semibold">{{ $return->return_number }}</td>
                             <td class="px-4 py-3 font-mono text-xs">{{ $return->order->order_number }}</td>
-                            <td class="px-4 py-3">{{ $return->customer->name }}</td>
-                            <td class="px-4 py-3">{{ $return->branch->name }}</td>
+                            <td class="px-4 py-3">{{ $return->customer?->name }}</td>
+                            <td class="px-4 py-3">{{ $return->branch?->name }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $return->date->format('Y-m-d') }}</td>
                             <td class="px-4 py-3 font-semibold text-green-600">{{ number_format($return->refund_amount, 2) }}</td>
                             <td class="px-4 py-3">

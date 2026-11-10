@@ -12,7 +12,7 @@
                     <span>{{ $customer->phone ?? '—' }}</span>
                     @if($customer->area)
                         <span class="text-gray-300">|</span>
-                        <span>{{ $customer->area->name }}</span>
+                        <span>{{ $customer->area?->name }}</span>
                     @endif
                     <span class="text-gray-300">|</span>
                     @php

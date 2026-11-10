@@ -134,8 +134,8 @@
                     @forelse($invoices as $invoice)
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-4 py-3 font-mono text-xs text-primary-600 font-semibold">{{ $invoice->invoice_number }}</td>
-                            <td class="px-4 py-3">{{ $invoice->supplier->name }}</td>
-                            <td class="px-4 py-3">{{ $invoice->branch->name }}</td>
+                            <td class="px-4 py-3">{{ $invoice->supplier?->name }}</td>
+                            <td class="px-4 py-3">{{ $invoice->branch?->name }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $invoice->date->format('Y-m-d') }}</td>
                             <td class="px-4 py-3 font-semibold">{{ number_format($invoice->total, 2) }}</td>
                             <td class="px-4 py-3 text-green-600">{{ number_format($invoice->paid_amount, 2) }}</td>

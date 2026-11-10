@@ -84,8 +84,8 @@
                         @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-4 py-3 font-mono text-xs text-primary-600 font-semibold">{{ $quotation->quotation_number }}</td>
-                            <td class="px-4 py-3">{{ $quotation->customer->name }}</td>
-                            <td class="px-4 py-3">{{ $quotation->branch->name }}</td>
+                            <td class="px-4 py-3">{{ $quotation->customer?->name }}</td>
+                            <td class="px-4 py-3">{{ $quotation->branch?->name }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $quotation->date->format('Y-m-d') }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $quotation->expiry_date?->format('Y-m-d') ?? '-' }}</td>
                             <td class="px-4 py-3 font-semibold">{{ number_format($quotation->total, 2) }}</td>

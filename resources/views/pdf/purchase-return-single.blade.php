@@ -29,7 +29,7 @@
         @if($return->treasury)
         <tr>
             <td style="font-weight:bold; color:#6B4F3A; border:none; padding:4px 6px; background:none;">الخزينة</td>
-            <td colspan="3" style="border:none; padding:4px 6px; background:none;">{{ $return->treasury->name }}</td>
+            <td colspan="3" style="border:none; padding:4px 6px; background:none;">{{ $return->treasury?->name }}</td>
         </tr>
         @endif
         @if($return->notes)

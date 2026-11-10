@@ -46,7 +46,7 @@
         <div>
             <p class="text-xs font-bold text-amber-800">عهدة نقدية مسجلة — يجب استيفاؤها بشكل منفصل</p>
             <p class="text-lg font-extrabold text-amber-800">{{ number_format($trip->cash_custody_amount, 2) }} ج.م
-                @if($trip->custodyTreasury)<span class="text-xs font-normal text-amber-600"> من خزنة: {{ $trip->custodyTreasury->name }}</span>@endif
+                @if($trip->custodyTreasury)<span class="text-xs font-normal text-amber-600"> من خزنة: {{ $trip->custodyTreasury?->name }}</span>@endif
             </p>
         </div>
     </div>

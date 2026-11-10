@@ -22,9 +22,9 @@
     {{-- Info --}}
     <div class="bg-card rounded-2xl shadow-sm border border-primary-100 p-6 mb-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div><span class="text-xs text-gray-500">الفرع</span><p class="font-semibold text-gray-700 mt-1">{{ $depreciation->branch->name }}</p></div>
+            <div><span class="text-xs text-gray-500">الفرع</span><p class="font-semibold text-gray-700 mt-1">{{ $depreciation->branch?->name }}</p></div>
             <div><span class="text-xs text-gray-500">التاريخ</span><p class="font-semibold text-gray-700 mt-1">{{ $depreciation->date->format('Y-m-d') }}</p></div>
-            <div><span class="text-xs text-gray-500">أنشأ بواسطة</span><p class="font-semibold text-gray-700 mt-1">{{ $depreciation->admin->name }}</p></div>
+            <div><span class="text-xs text-gray-500">أنشأ بواسطة</span><p class="font-semibold text-gray-700 mt-1">{{ $depreciation->admin?->name }}</p></div>
             <div>
                 <span class="text-xs text-gray-500">الحالة</span>
                 @php
@@ -35,7 +35,7 @@
         </div>
         @if($depreciation->approvedByAdmin)
             <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-6">
-                <div><span class="text-xs text-gray-500">{{ $depreciation->status === 'approved' ? 'وافق بواسطة' : 'رفض بواسطة' }}</span><p class="font-semibold text-gray-700 mt-1">{{ $depreciation->approvedByAdmin->name }}</p></div>
+                <div><span class="text-xs text-gray-500">{{ $depreciation->status === 'approved' ? 'وافق بواسطة' : 'رفض بواسطة' }}</span><p class="font-semibold text-gray-700 mt-1">{{ $depreciation->approvedByAdmin?->name }}</p></div>
                 <div><span class="text-xs text-gray-500">تاريخ {{ $depreciation->status === 'approved' ? 'الموافقة' : 'الرفض' }}</span><p class="font-semibold text-gray-700 mt-1">{{ $depreciation->approved_at?->format('Y-m-d H:i') }}</p></div>
             </div>
         @endif
@@ -73,7 +73,7 @@
                 @foreach($depreciation->items as $i => $item)
                     <tr class="hover:bg-gray-50/50">
                         <td class="px-4 py-3 text-gray-500">{{ $i + 1 }}</td>
-                        <td class="px-4 py-3 font-medium">{{ $item->product->name }}</td>
+                        <td class="px-4 py-3 font-medium">{{ $item->product?->name }}</td>
                         <td class="px-4 py-3">{{ $item->quantity }}</td>
                         <td class="px-4 py-3">{{ $item->unit?->name ?? '-' }}</td>
                         <td class="px-4 py-3">{{ number_format($item->cost_price, 2) }}</td>

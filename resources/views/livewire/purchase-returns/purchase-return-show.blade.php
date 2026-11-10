@@ -91,7 +91,7 @@
             @if($return->treasury)
                 <div>
                     <p class="text-xs text-gray-400 mb-1">الخزينة</p>
-                    <p class="text-sm">{{ $return->treasury->name }}</p>
+                    <p class="text-sm">{{ $return->treasury?->name }}</p>
                 </div>
             @endif
             @if($return->notes)
@@ -129,7 +129,7 @@
                         @endphp
                         <tr class="hover:bg-gray-50/50">
                             <td class="px-4 py-3 text-gray-400">{{ $i + 1 }}</td>
-                            <td class="px-4 py-3 font-medium">{{ $item->product->name }}</td>
+                            <td class="px-4 py-3 font-medium">{{ $item->product?->name }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $item->unit?->symbol ?? $item->unit?->name ?? '—' }}</td>
                             <td class="px-4 py-3 font-semibold">{{ number_format($item->quantity) }}</td>
                             <td class="px-4 py-3">{{ number_format($item->unit_price, 2) }}</td>

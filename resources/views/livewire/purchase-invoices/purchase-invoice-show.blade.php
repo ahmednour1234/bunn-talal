@@ -29,8 +29,8 @@
     {{-- Invoice Info --}}
     <div class="bg-card rounded-2xl shadow-sm border border-primary-100 p-6 mb-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div><span class="text-xs text-gray-500">المورد</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->supplier->name }}</p></div>
-            <div><span class="text-xs text-gray-500">الفرع</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->branch->name }}</p></div>
+            <div><span class="text-xs text-gray-500">المورد</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->supplier?->name }}</p></div>
+            <div><span class="text-xs text-gray-500">الفرع</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->branch?->name }}</p></div>
             <div><span class="text-xs text-gray-500">التاريخ</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->date->format('Y-m-d') }}</p></div>
             <div><span class="text-xs text-gray-500">تاريخ الاستحقاق</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->due_date?->format('Y-m-d') ?? '-' }}</p></div>
             <div>
@@ -41,7 +41,7 @@
                 <p class="mt-1"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium {{ $statusColors[$invoice->status] ?? '' }}">{{ $invoice->status_label }}</span></p>
             </div>
             <div><span class="text-xs text-gray-500">طريقة الدفع</span><p class="font-semibold text-gray-700 mt-1">{{ \App\Models\PurchaseInvoice::paymentMethodLabels()[$invoice->payment_method] ?? $invoice->payment_method }}</p></div>
-            <div><span class="text-xs text-gray-500">أنشأ بواسطة</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->admin->name }}</p></div>
+            <div><span class="text-xs text-gray-500">أنشأ بواسطة</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->admin?->name }}</p></div>
             <div><span class="text-xs text-gray-500">الخزينة</span><p class="font-semibold text-gray-700 mt-1">{{ $invoice->treasury?->name ?? '-' }}</p></div>
         </div>
         @if($invoice->notes)
@@ -92,7 +92,7 @@
                 @foreach($invoice->items as $i => $item)
                     <tr class="hover:bg-gray-50/50">
                         <td class="px-4 py-3 text-gray-500">{{ $i + 1 }}</td>
-                        <td class="px-4 py-3 font-medium">{{ $item->product->name }}</td>
+                        <td class="px-4 py-3 font-medium">{{ $item->product?->name }}</td>
                         <td class="px-4 py-3">{{ $item->quantity }} {{ $item->unit?->name ?? '' }}</td>
                         <td class="px-4 py-3">{{ number_format($item->unit_price, 2) }}</td>
                         <td class="px-4 py-3">{{ number_format($item->discount, 2) }}</td>
@@ -164,7 +164,7 @@
                         <td class="px-4 py-3 font-semibold text-green-700">{{ number_format($payment->amount, 2) }}</td>
                         <td class="px-4 py-3">{{ $payment->payment_date->format('Y-m-d') }}</td>
                         <td class="px-4 py-3">{{ $payment->treasury?->name ?? '-' }}</td>
-                        <td class="px-4 py-3">{{ $payment->admin->name }}</td>
+                        <td class="px-4 py-3">{{ $payment->admin?->name }}</td>
                         <td class="px-4 py-3 text-gray-500">{{ $payment->notes ?? '-' }}</td>
                     </tr>
                 @empty

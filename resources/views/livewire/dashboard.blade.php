@@ -422,7 +422,7 @@
                                 @elseif($i===2)<span class="inline-flex w-7 h-7 rounded-full bg-stone-700 text-white text-xs font-extrabold items-center justify-center shadow-sm">3</span>
                                 @else<span class="inline-flex w-7 h-7 rounded-full bg-gray-100 text-gray-500 text-xs font-bold items-center justify-center">{{ $i+1 }}</span>@endif
                             </td>
-                            <td class="px-4 py-3.5"><p class="text-sm font-bold text-gray-800">{{ $item->product?->name ?? '—' }}</p>@if($item->product?->category?->name)<p class="text-xs text-gray-400 mt-0.5">{{ $item->product->category->name }}</p>@endif</td>
+                            <td class="px-4 py-3.5"><p class="text-sm font-bold text-gray-800">{{ $item->product?->name ?? '—' }}</p>@if($item->product?->category?->name)<p class="text-xs text-gray-400 mt-0.5">{{ $item->product->category?->name }}</p>@endif</td>
                             <td class="px-4 py-3.5"><div class="flex items-center gap-2 justify-end"><span class="font-bold text-gray-700">{{ number_format($item->total_qty, 0) }}</span><div class="w-20 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="bg-primary-700 h-2 rounded-full" style="width:{{ min(100,($item->total_qty/$maxQty)*100) }}%"></div></div></div></td>
                             <td class="px-4 py-3.5"><span class="font-bold text-primary-700">{{ number_format($item->total_revenue, 0) }}</span><span class="text-xs text-gray-400 mr-0.5">ج.م</span></td>
                         </tr>

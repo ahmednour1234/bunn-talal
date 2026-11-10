@@ -38,7 +38,7 @@
                     <select wire:model.live="purchase_invoice_id" class="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-300 @error('purchase_invoice_id') border-red-400 ring-1 ring-red-300 @enderror">
                         <option value="">اختر الفاتورة</option>
                         @foreach($invoices as $inv)
-                            <option value="{{ $inv->id }}">{{ $inv->invoice_number }} - {{ $inv->supplier->name }} ({{ number_format($inv->total, 2) }})</option>
+                            <option value="{{ $inv->id }}">{{ $inv->invoice_number }} - {{ $inv->supplier?->name }} ({{ number_format($inv->total, 2) }})</option>
                         @endforeach
                     </select>
                     @error('purchase_invoice_id')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
